@@ -30,7 +30,7 @@
       position: fixed;
       top: 0;
       bottom: 0;
-      width: calc((100vw - 640px) / 2);
+      width: calc((100vw - 800px) / 2);
       z-index: 0;
       pointer-events: none;
     }
@@ -38,13 +38,19 @@
     body::before {
       left: 0;
       background: linear-gradient(180deg, #0d9488 0%, #059669 30%, #10b981 60%, #34d399 100%);
-      opacity: 0.15;
+      opacity: 0.12;
     }
 
     body::after {
       right: 0;
       background: linear-gradient(180deg, #34d399 0%, #10b981 30%, #059669 60%, #0d9488 100%);
-      opacity: 0.15;
+      opacity: 0.12;
+    }
+
+    @media (min-width: 1200px) {
+      body::before, body::after {
+        width: calc((100vw - 800px) / 2);
+      }
     }
 
     .page {
@@ -151,7 +157,7 @@
 
     /* MAIN CONTAINER */
     .container {
-      max-width: 600px;
+      max-width: 750px;
       margin: 0 auto;
       padding: 1.5rem max(1rem, env(safe-area-inset-left)) 1.5rem max(1rem, env(safe-area-inset-right));
       flex: 1;
@@ -2431,6 +2437,15 @@
       }
     }
 
+    function updateAccountBtn() {
+      const btn = document.getElementById('accountBtn');
+      if (gameState.userToken && gameState.username) {
+        btn.textContent = gameState.username;
+      } else {
+        btn.textContent = 'Sign In';
+      }
+    }
+
     async function initGame() {
       try {
         // Load conditions once
@@ -2495,6 +2510,7 @@
         gameState.username = localStorage.getItem('physiodle_username');
       }
 
+      updateAccountBtn();
       await initGame();
     }
 
