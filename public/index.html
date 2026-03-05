@@ -66,45 +66,57 @@
     header {
       background: white;
       border-bottom: 2px solid #d1fae5;
-      padding: 1rem max(1rem, env(safe-area-inset-left)) 1rem max(1rem, env(safe-area-inset-right));
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
+      padding: 0.5rem max(1rem, env(safe-area-inset-left)) 0.5rem max(1rem, env(safe-area-inset-right));
       position: sticky;
       top: 0;
       z-index: 100;
     }
 
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     .header-left {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
+      min-width: 0;
     }
 
-    .logo {
-      font-size: 1.5rem;
+    .logo-icon {
+      font-size: 1.3rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 1.4rem;
       font-weight: 700;
       color: #0d9488;
+      white-space: nowrap;
     }
 
     .day-indicator {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       color: #6b7280;
       font-weight: 500;
+      white-space: nowrap;
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
+      flex-shrink: 0;
     }
 
     .header-btn {
       background: #f0fdf4;
       border: 1.5px solid #0d9488;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
       font-family: 'Inter', sans-serif;
       color: #0d9488;
@@ -112,8 +124,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0.4rem 0.75rem;
-      min-height: 36px;
+      padding: 0.35rem 0.6rem;
+      min-height: 32px;
       border-radius: 0.375rem;
       transition: all 0.2s;
       white-space: nowrap;
@@ -244,22 +256,34 @@
 
     /* GUESS INPUT */
     .guess-section {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
+      position: sticky;
+      top: 52px; /* below header */
+      z-index: 50;
+      background: #e6f5f0;
+      padding: 0.75rem 0;
+    }
+
+    .guess-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: stretch;
     }
 
     .guess-wrapper {
       position: relative;
-      margin-bottom: 1rem;
+      flex: 1;
     }
 
     .guess-input {
       width: 100%;
-      padding: 0.75rem 1rem;
+      padding: 0.6rem 0.75rem;
       font-size: 16px;
       border: 2px solid #e5e7eb;
       border-radius: 0.5rem;
       font-family: 'Inter', sans-serif;
       transition: all 0.2s;
+      height: 100%;
     }
 
     .guess-input:focus {
@@ -274,19 +298,27 @@
       opacity: 0.6;
     }
 
+    #submitBtn {
+      padding: 0.6rem 1.25rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+      border-radius: 0.5rem;
+    }
+
     .autocomplete-dropdown {
       position: absolute;
       top: 100%;
       left: 0;
       right: 0;
       background: white;
-      border: 1px solid #e5e7eb;
+      border: 2px solid #0d9488;
       border-top: none;
-      max-height: 300px;
+      max-height: 200px;
       overflow-y: auto;
       border-radius: 0 0 0.5rem 0.5rem;
-      z-index: 50;
+      z-index: 60;
       display: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .autocomplete-dropdown.show {
@@ -294,15 +326,20 @@
     }
 
     .autocomplete-item {
-      padding: 0.75rem 1rem;
+      padding: 0.6rem 0.75rem;
       cursor: pointer;
       transition: background 0.2s;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
     }
 
     .autocomplete-item:hover,
     .autocomplete-item.selected {
-      background: #f0f9ff;
+      background: #f0fdf4;
       color: #0d9488;
     }
 
@@ -395,39 +432,35 @@
 
     /* GUESS HISTORY */
     .guess-history {
-      margin-bottom: 1.5rem;
+      margin-top: 0.5rem;
     }
 
-    .guess-history-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #6b7280;
-      margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .guess-history:empty {
+      display: none;
     }
 
     .guess-history-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.35rem;
     }
 
     .guess-item {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.25rem;
       background: #fee2e2;
       color: #991b1b;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
       font-weight: 500;
     }
 
     .guess-item-x {
       font-weight: 700;
-      margin-left: 0.25rem;
+      margin-left: 0.15rem;
+      font-size: 0.7rem;
     }
 
     /* RESULT OVERLAY */
@@ -839,60 +872,97 @@
     /* RESPONSIVE */
     @media (max-width: 640px) {
       header {
-        flex-wrap: wrap;
-        padding: 0.75rem max(0.75rem, env(safe-area-inset-left));
-        gap: 0.5rem;
+        padding: 0.4rem max(0.5rem, env(safe-area-inset-left));
+      }
+
+      .header-top {
+        gap: 0.25rem;
       }
 
       .header-left {
-        flex: 1;
+        gap: 0.3rem;
         min-width: 0;
       }
 
-      .logo {
-        font-size: 1.25rem;
+      .logo-icon {
+        font-size: 1.1rem;
+      }
+
+      .logo-text {
+        font-size: 1.1rem;
       }
 
       .day-indicator {
-        font-size: 0.75rem;
+        font-size: 0.65rem;
+        display: none; /* hide on very small — shown below logo instead */
       }
 
       .header-right {
-        gap: 0.35rem;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+        gap: 0.25rem;
       }
 
       .header-btn {
-        font-size: 0.7rem;
-        padding: 0.35rem 0.5rem;
-        min-height: 32px;
+        font-size: 0.65rem;
+        padding: 0.25rem 0.4rem;
+        min-height: 28px;
+        border-width: 1px;
+      }
+
+      .guess-section {
+        top: 42px; /* smaller header */
+        padding: 0.5rem 0;
       }
 
       .container {
-        padding: 0.75rem max(0.5rem, env(safe-area-inset-left)) 1rem max(0.5rem, env(safe-area-inset-right));
+        padding: 0.5rem max(0.5rem, env(safe-area-inset-left)) 1rem max(0.5rem, env(safe-area-inset-right));
       }
 
       .card {
-        padding: 0.875rem;
-        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 0.6rem;
       }
 
       .card.clue-card {
-        min-height: 50px;
+        min-height: auto;
+      }
+
+      .clue-label {
+        font-size: 0.6rem;
       }
 
       .clue-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+
+      .clue-status-icon {
         font-size: 0.9rem;
+        top: 0.5rem;
+        right: 0.5rem;
       }
 
       .guess-input {
         font-size: 16px;
-        padding: 0.7rem 0.75rem;
+        padding: 0.5rem 0.6rem;
+      }
+
+      #submitBtn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        min-height: 40px;
       }
 
       .btn {
-        min-height: 44px;
+        min-height: 40px;
+      }
+
+      .autocomplete-dropdown {
+        max-height: 160px;
+      }
+
+      .autocomplete-item {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.85rem;
       }
 
       .modal-tabs {
@@ -931,6 +1001,24 @@
 
       .result-explanation {
         font-size: 0.9rem;
+      }
+
+      /* Hide green side panels on mobile */
+      body::before, body::after {
+        display: none;
+      }
+    }
+
+    /* Very small screens (iPhone SE etc) */
+    @media (max-width: 375px) {
+      .logo-text {
+        font-size: 1rem;
+      }
+
+      .header-btn {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.3rem;
+        min-height: 26px;
       }
     }
 
@@ -1020,44 +1108,47 @@
 <body>
   <!-- HEADER -->
   <header>
-    <div class="header-left">
-      <span class="logo">🦴 Physiodle</span>
-      <span class="day-indicator" id="dayIndicator"></span>
-    </div>
-    <div class="header-right">
-      <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
-      <button class="header-btn" id="archiveBtn">Archive</button>
-      <button class="header-btn" id="friendsBtn">Friends</button>
-      <button class="header-btn" id="accountBtn">Account</button>
+    <div class="header-top">
+      <div class="header-left">
+        <span class="logo-icon">🦴</span>
+        <span class="logo-text">Physiodle</span>
+        <span class="day-indicator" id="dayIndicator"></span>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
+        <button class="header-btn" id="archiveBtn">Archive</button>
+        <button class="header-btn" id="friendsBtn">Friends</button>
+        <button class="header-btn" id="accountBtn">Account</button>
+      </div>
     </div>
   </header>
 
   <!-- MAIN CONTENT -->
   <div class="page active" id="gamePage">
     <div class="container">
+      <!-- GUESS SECTION (top, always visible) -->
+      <div class="guess-section">
+        <div class="guess-row">
+          <div class="guess-wrapper">
+            <input
+              type="text"
+              class="guess-input"
+              id="guessInput"
+              placeholder="Type a condition name..."
+              autocomplete="off"
+            >
+            <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+          </div>
+          <button class="btn btn-primary" id="submitBtn">Guess</button>
+        </div>
+        <!-- GUESS HISTORY (inline, compact) -->
+        <div class="guess-history" id="guessHistorySection">
+          <div class="guess-history-list" id="guessHistoryList"></div>
+        </div>
+      </div>
+
       <!-- CLUES -->
       <div id="cluesContainer"></div>
-
-      <!-- GUESS SECTION -->
-      <div class="guess-section">
-        <div class="guess-wrapper">
-          <input
-            type="text"
-            class="guess-input"
-            id="guessInput"
-            placeholder="Type a condition name..."
-            autocomplete="off"
-          >
-          <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
-        </div>
-        <button class="btn btn-primary btn-full" id="submitBtn">Submit Guess</button>
-      </div>
-
-      <!-- GUESS HISTORY -->
-      <div class="guess-history">
-        <div class="guess-history-title">Wrong Guesses</div>
-        <div class="guess-history-list" id="guessHistoryList"></div>
-      </div>
 
     </div>
   </div>
@@ -1860,13 +1951,15 @@
 
     function renderGuessHistory() {
       const list = document.getElementById('guessHistoryList');
+      const section = document.getElementById('guessHistorySection');
       list.innerHTML = '';
 
       if (gameState.guesses.length === 0) {
-        list.innerHTML = '<span style="color: #999; font-size: 0.875rem;">No guesses yet</span>';
+        section.style.display = 'none';
         return;
       }
 
+      section.style.display = 'block';
       gameState.guesses.forEach(guess => {
         const item = document.createElement('div');
         item.className = 'guess-item';
