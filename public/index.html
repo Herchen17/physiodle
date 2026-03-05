@@ -1627,12 +1627,17 @@
         const card = document.createElement('div');
         card.className = 'card clue-card';
 
+        // Clues can be plain strings or {label, text} objects
+        const clueLabel = clue && clue.label ? clue.label : `Clue ${index + 1}`;
+        const clueText  = clue && clue.text  ? clue.text  : String(clue);
+        const clueHTML  = `<span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;opacity:0.6;margin-right:0.4rem;">${clueLabel}:</span>${clueText}`;
+
         if (gameState.revealed[index]) {
           card.classList.add('revealed');
-          card.textContent = clue;
+          card.innerHTML = clueHTML;
         } else {
           card.classList.add('blurred');
-          card.textContent = clue;
+          card.innerHTML = clueHTML;
           card.addEventListener('click', () => revealClue(index));
         }
 
