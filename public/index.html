@@ -224,10 +224,22 @@
 
     .clue-status-icon {
       position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
+      top: 0.5rem;
+      right: 0.6rem;
       font-size: 1.1rem;
       line-height: 1;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .clue-icon-wrong {
+      color: #dc2626;
+      font-size: 1.3rem;
+    }
+
+    .clue-icon-correct {
+      color: #059669;
+      font-size: 1.2rem;
     }
 
     .clue-label {
@@ -461,6 +473,46 @@
       font-weight: 700;
       margin-left: 0.15rem;
       font-size: 0.7rem;
+    }
+
+    /* ANSWER SUMMARY (persists after popup close) */
+    .answer-summary {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 2px solid #059669;
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .answer-summary.lost {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-color: #dc2626;
+    }
+
+    .answer-summary-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #059669;
+      margin-bottom: 0.25rem;
+    }
+
+    .answer-summary.lost .answer-summary-label {
+      color: #dc2626;
+    }
+
+    .answer-summary-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 0.4rem;
+    }
+
+    .answer-summary-explanation {
+      font-size: 0.875rem;
+      color: #374151;
+      line-height: 1.5;
     }
 
     /* RESULT OVERLAY */
@@ -1145,6 +1197,13 @@
         <div class="guess-history" id="guessHistorySection">
           <div class="guess-history-list" id="guessHistoryList"></div>
         </div>
+      </div>
+
+      <!-- ANSWER SUMMARY (shown after game ends, persists) -->
+      <div class="answer-summary" id="answerSummary" style="display:none;">
+        <div class="answer-summary-label" id="answerSummaryLabel">Answer</div>
+        <div class="answer-summary-name" id="answerSummaryName"></div>
+        <div class="answer-summary-explanation" id="answerSummaryExplanation"></div>
       </div>
 
       <!-- CLUES -->
@@ -1927,10 +1986,10 @@
 
           if (clueState === 'wrong') {
             card.classList.add('clue-wrong');
-            statusIcon = '<span class="clue-status-icon">&#10060;</span>'; // red X
+            statusIcon = '<span class="clue-status-icon clue-icon-wrong">&times;</span>';
           } else if (clueState === 'correct') {
             card.classList.add('clue-correct');
-            statusIcon = '<span class="clue-status-icon">&#10004;</span>'; // green checkmark
+            statusIcon = '<span class="clue-status-icon clue-icon-correct">&#10003;</span>';
           }
 
           card.innerHTML = `${statusIcon}<span class="clue-label">${clueLabel}</span><span class="clue-text">${clueText}</span>`;
@@ -2141,25 +2200,64 @@
         title.className = 'result-title win';
         const guessCount = gameState.guesses.length + 1;
         if (guessCount === 1) {
-          title.textContent = 'Incredible! First Try! 🏆';
+          title.textContent = 'Incredible! First Try!';
         } else if (guessCount <= 3) {
-          title.textContent = 'Well Done! 🎉';
+          title.textContent = 'Well Done!';
         } else {
-          title.textContent = 'You Got It! ✅';
+          title.textContent = 'You Got It!';
         }
       } else {
         title.className = 'result-title lose';
-        title.textContent = 'Better Luck Tomorrow 😔';
+        title.textContent = 'Better Luck Tomorrow';
       }
 
-      answer.textContent = data.answer || gameState.puzzle.answer;
-      explanation.textContent = data.explanation || gameState.puzzle.explanation || '';
+      const answerText = data.answer || gameState.puzzle.answer;
+      const explanationText = data.explanation || gameState.puzzle.explanation || '';
+
+      answer.textContent = answerText;
+      explanation.textContent = explanationText;
 
       document.getElementById('guessInput').disabled = true;
       document.getElementById('submitBtn').disabled = true;
 
+      // Show the persistent answer summary block
+      showAnswerSummary(won, answerText, explanationText);
+
+      // Save completion to localStorage (so it persists even without account)
+      saveLocalCompletion(gameState.currentDay, won, gameState.guesses);
+
       // Show as popup overlay
       document.getElementById('resultOverlay').classList.add('show');
+    }
+
+    function showAnswerSummary(won, answerText, explanationText) {
+      const summary = document.getElementById('answerSummary');
+      const label = document.getElementById('answerSummaryLabel');
+      const name = document.getElementById('answerSummaryName');
+      const desc = document.getElementById('answerSummaryExplanation');
+
+      summary.className = won ? 'answer-summary' : 'answer-summary lost';
+      label.textContent = won ? 'Correct Answer' : 'The Answer Was';
+      name.textContent = answerText;
+      desc.textContent = explanationText;
+      summary.style.display = 'block';
+    }
+
+    function saveLocalCompletion(dayNumber, won, guesses) {
+      try {
+        localStorage.setItem('physiodle_lastDay', dayNumber);
+        localStorage.setItem('physiodle_lastResult', JSON.stringify({ won, guesses }));
+      } catch (e) { /* localStorage may be unavailable */ }
+    }
+
+    function getLocalCompletion(dayNumber) {
+      try {
+        const lastDay = parseInt(localStorage.getItem('physiodle_lastDay'));
+        if (lastDay === dayNumber) {
+          return JSON.parse(localStorage.getItem('physiodle_lastResult'));
+        }
+      } catch (e) { /* ignore */ }
+      return null;
     }
 
     function generateEmojiGrid() {
@@ -2550,16 +2648,20 @@
         gameState.puzzle = todayData.puzzle;
         gameState.clueStates = {};
 
-        if (todayData.completed) {
+        // Check server-side completion (logged in) or localStorage (logged out)
+        const localResult = getLocalCompletion(todayData.dayNumber);
+        const completionData = todayData.completed || localResult;
+
+        if (completionData) {
           // Already completed — restore state
           gameState.isCompleted = true;
-          gameState.guesses = todayData.completed.guesses || [];
+          gameState.guesses = completionData.guesses || [];
           gameState.revealed = [true, true, true, true, true];
 
           // Reconstruct clue states from history
           const numWrong = gameState.guesses.length;
           for (let i = 0; i < 5; i++) {
-            if (todayData.completed.won) {
+            if (completionData.won) {
               gameState.clueStates[i] = i < numWrong ? 'wrong' : 'correct';
             } else {
               gameState.clueStates[i] = 'wrong';
@@ -2569,13 +2671,14 @@
           document.getElementById('guessInput').disabled = true;
           document.getElementById('submitBtn').disabled = true;
 
-          // Show result immediately
+          // Show result and answer summary
           renderClues();
           renderGuessHistory();
-          showResult(todayData.completed.won, {
-            answer: todayData.puzzle.answer,
-            explanation: todayData.puzzle.explanation || '',
-          });
+
+          const answerText = todayData.puzzle.answer;
+          const explanationText = todayData.puzzle.explanation || '';
+          showAnswerSummary(completionData.won, answerText, explanationText);
+          // Don't auto-show popup on reload — just show the summary block
         } else {
           gameState.isCompleted = false;
           // Reveal first clue by default
