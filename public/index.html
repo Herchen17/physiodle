@@ -191,6 +191,25 @@
       color: #1f2937;
       filter: blur(0);
       border-left: 4px solid #0d9488;
+      position: relative;
+    }
+
+    .card.clue-card.revealed.clue-wrong {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+    }
+
+    .card.clue-card.revealed.clue-correct {
+      border-left: 4px solid #059669;
+      background: #f0fdf4;
+    }
+
+    .clue-status-icon {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 1.1rem;
+      line-height: 1;
     }
 
     .clue-label {
@@ -201,6 +220,14 @@
       letter-spacing: 0.5px;
       color: #0d9488;
       margin-bottom: 0.35rem;
+    }
+
+    .card.clue-card.clue-wrong .clue-label {
+      color: #dc2626;
+    }
+
+    .card.clue-card.clue-correct .clue-label {
+      color: #059669;
     }
 
     .clue-text {
@@ -425,6 +452,30 @@
       width: 100%;
       text-align: center;
       animation: resultPopIn 0.35s ease-out;
+      position: relative;
+    }
+
+    .result-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #9ca3af;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .result-close:hover {
+      background: #f3f4f6;
+      color: #1f2937;
     }
 
     @keyframes resultPopIn {
@@ -1008,6 +1059,7 @@
   <!-- RESULT POPUP OVERLAY -->
   <div class="result-overlay" id="resultOverlay">
     <div class="result-area" id="resultArea">
+      <button class="result-close" id="resultCloseBtn" title="Close">&times;</button>
       <div class="result-title" id="resultTitle"></div>
       <div class="result-answer" id="resultAnswer"></div>
       <div class="result-explanation" id="resultExplanation"></div>
@@ -1771,7 +1823,20 @@
 
         if (gameState.revealed[index]) {
           card.classList.add('revealed');
-          card.innerHTML = `<span class="clue-label">${clueLabel}</span><span class="clue-text">${clueText}</span>`;
+
+          // Determine clue color state
+          const clueState = gameState.clueStates ? gameState.clueStates[index] : null;
+          let statusIcon = '';
+
+          if (clueState === 'wrong') {
+            card.classList.add('clue-wrong');
+            statusIcon = '<span class="clue-status-icon">&#10060;</span>'; // red X
+          } else if (clueState === 'correct') {
+            card.classList.add('clue-correct');
+            statusIcon = '<span class="clue-status-icon">&#10004;</span>'; // green checkmark
+          }
+
+          card.innerHTML = `${statusIcon}<span class="clue-label">${clueLabel}</span><span class="clue-text">${clueText}</span>`;
         } else {
           card.classList.add('blurred');
           card.innerHTML = `<span class="clue-label">${clueLabel}</span><span class="clue-text">${clueText}</span>`;
@@ -1867,6 +1932,14 @@
         return;
       }
 
+      // Initialize clue states tracker if not present
+      if (!gameState.clueStates) {
+        gameState.clueStates = {};
+      }
+
+      // The current clue index the player is on (= number of wrong guesses so far)
+      const currentClueIndex = gameState.guesses.length;
+
       // Check locally
       const result = checkGuess(guess, gameState.puzzle);
 
@@ -1874,6 +1947,16 @@
         // Won — score = total guesses (lower is better: 1 = first try, 5 = last chance)
         const score = gameState.guesses.length + 1;
         gameState.isCompleted = true;
+
+        // Mark the current clue as correct (the one they were guessing on)
+        gameState.clueStates[currentClueIndex] = 'correct';
+
+        // Reveal all remaining clues as green (correct)
+        for (let i = currentClueIndex + 1; i < gameState.puzzle.clues.length; i++) {
+          gameState.revealed[i] = true;
+          gameState.clueStates[i] = 'correct';
+        }
+        renderClues();
 
         if (gameState.userToken) {
           try {
@@ -1898,11 +1981,19 @@
           });
         }
       } else {
-        // Wrong
+        // Wrong — mark the current clue as wrong (red)
+        gameState.clueStates[currentClueIndex] = 'wrong';
         gameState.guesses.push(guess);
 
         if (gameState.guesses.length >= 5) {
-          // Lost
+          // Lost — reveal all clues but mark them as wrong
+          for (let i = 0; i < gameState.puzzle.clues.length; i++) {
+            gameState.revealed[i] = true;
+            if (!gameState.clueStates[i]) {
+              gameState.clueStates[i] = 'wrong';
+            }
+          }
+          renderClues();
           gameState.isCompleted = true;
 
           if (gameState.userToken) {
@@ -1933,6 +2024,7 @@
           if (nextClueIndex < gameState.puzzle.clues.length) {
             revealClue(nextClueIndex);
           }
+          renderClues();
           renderGuessHistory();
           input.value = '';
           showToast(`Incorrect. ${5 - gameState.guesses.length} guesses left.`, 'error');
@@ -1948,10 +2040,17 @@
 
       if (won) {
         title.className = 'result-title win';
-        title.textContent = 'You Won! 🎉';
+        const guessCount = gameState.guesses.length + 1;
+        if (guessCount === 1) {
+          title.textContent = 'Incredible! First Try! 🏆';
+        } else if (guessCount <= 3) {
+          title.textContent = 'Well Done! 🎉';
+        } else {
+          title.textContent = 'You Got It! ✅';
+        }
       } else {
         title.className = 'result-title lose';
-        title.textContent = 'You Lost 😢';
+        title.textContent = 'Better Luck Tomorrow 😔';
       }
 
       answer.textContent = data.answer || gameState.puzzle.answer;
@@ -2341,12 +2440,24 @@
         const todayData = await getTodaysPuzzle();
         gameState.currentDay = todayData.dayNumber;
         gameState.puzzle = todayData.puzzle;
+        gameState.clueStates = {};
 
         if (todayData.completed) {
           // Already completed — restore state
           gameState.isCompleted = true;
           gameState.guesses = todayData.completed.guesses || [];
           gameState.revealed = [true, true, true, true, true];
+
+          // Reconstruct clue states from history
+          const numWrong = gameState.guesses.length;
+          for (let i = 0; i < 5; i++) {
+            if (todayData.completed.won) {
+              gameState.clueStates[i] = i < numWrong ? 'wrong' : 'correct';
+            } else {
+              gameState.clueStates[i] = 'wrong';
+            }
+          }
+
           document.getElementById('guessInput').disabled = true;
           document.getElementById('submitBtn').disabled = true;
 
@@ -2407,6 +2518,18 @@
       });
     });
 
+    // Close result popup — X button
+    document.getElementById('resultCloseBtn').addEventListener('click', () => {
+      document.getElementById('resultOverlay').classList.remove('show');
+    });
+
+    // Close result popup — click outside
+    document.getElementById('resultOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('resultOverlay')) {
+        document.getElementById('resultOverlay').classList.remove('show');
+      }
+    });
+
     document.getElementById('nextDayBtn').addEventListener('click', async () => {
       if (gameState.currentDay) {
         try {
@@ -2415,7 +2538,8 @@
           gameState.puzzle = nextData.puzzle;
           gameState.isCompleted = nextData.completed;
           gameState.guesses = [];
-          gameState.revealed = [false, false, false, false, false];
+          gameState.revealed = [true, false, false, false, false];
+          gameState.clueStates = {};
           renderClues();
           renderGuessHistory();
           updateDayIndicator();
