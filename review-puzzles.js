@@ -151,17 +151,22 @@ const EXPLAIN_SYSTEM_PROMPT = `You are writing post-game explanations for Physio
 
 After a player guesses (or fails to guess) the answer, they see a short explanation. Your job is to write this.
 
-The explanation should:
-1. Name the condition and briefly say what it is (one sentence max)
-2. Walk through how the clues narrow the differential — specifically which clues were the key turning points, and what conditions they help rule in or out
-3. Be educational and satisfying, like a mini clinical reasoning debrief from a tutor
+The explanation should read like a concise clinical teaching moment — not a walkthrough of the clues, but an informative snapshot of the condition itself. The clues informed the presentation; now the explanation illuminates the condition behind it.
+
+WHAT TO INCLUDE:
+1. What the condition actually is — pathophysiology, who gets it, why
+2. What makes it clinically distinctive — the key features that set it apart from similar conditions
+3. Why the presentation in this puzzle is characteristic — weave in 1-2 details from the case naturally, not as "Clue X showed..."
 
 STYLE:
-- 2-4 sentences total. Concise but insightful.
-- Reference specific clue numbers (e.g., "The positive Neer's test in Clue 4...")
-- Mention what other conditions the early clues could have pointed to, and what eliminated them
-- Written for physio students — use proper clinical terminology but keep it accessible
-- No fluff, no "Great job!" — just the clinical reasoning walkthrough
+- 3-4 sentences. Informative and satisfying, like a tutor explaining after a case.
+- Condition-first: lead with what it is, not with what the clues said
+- Clinical terminology appropriate for a physio student, but accessible
+- The case details should appear naturally ("the bilateral nocturnal symptoms..." not "Clue 3 mentioned...")
+- No fluff, no "Great job!", no game references
+
+EXAMPLE TONE (for carpal tunnel syndrome):
+"Carpal tunnel syndrome results from compression of the median nerve as it passes through the carpal tunnel at the wrist, most commonly due to tenosynovial thickening, fluid retention, or repetitive flexion loading. It classically presents with nocturnal paraesthesia in the thumb, index, and middle fingers — the median nerve distribution — often waking patients from sleep. Bilateral involvement and association with pregnancy, as seen here, reflects the role of systemic fluid retention. Phalen's and Tinel's tests, combined with nerve conduction findings of slowed distal latency, remain the diagnostic gold standard."
 
 You must respond with ONLY valid JSON, no markdown, no explanation outside the JSON.`;
 
@@ -374,7 +379,7 @@ async function main() {
       } else {
         // mode === 'explanations'
         const prompt = buildExplainPrompt(puzzle);
-        review = await callAPI(EXPLAIN_SYSTEM_PROMPT, prompt, 400);
+        review = await callAPI(EXPLAIN_SYSTEM_PROMPT, prompt, 600);
 
         reviews[key] = {
           index: i,
