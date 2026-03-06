@@ -861,6 +861,66 @@
       color: #6b7280;
     }
 
+    /* LEADERBOARD CONTROLS (tabs + scope toggle) */
+    .lb-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .lb-tabs {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .lb-scope-toggle {
+      display: flex;
+      gap: 0;
+      align-self: flex-end;
+      border: 1.5px solid #0d9488;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .lb-scope-btn {
+      padding: 0.25rem 0.8rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: white;
+      color: #0d9488;
+      transition: all 0.15s;
+    }
+
+    .lb-scope-btn.active {
+      background: #0d9488;
+      color: white;
+    }
+
+    /* Sortable column header */
+    .lb-col-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      color: inherit;
+      font: inherit;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .lb-col-btn:hover { color: #0d9488; }
+    .lb-col-btn.sort-active { color: #0d9488; }
+
+    .lb-sort-arrow {
+      font-size: 0.6em;
+      line-height: 1;
+    }
+
     /* LEADERBOARD TABLE LAYOUT */
     .lb-header, .lb-row {
       display: grid;
@@ -1248,6 +1308,16 @@
       }
 
       /* Compact leaderboard table for mobile */
+      .lb-controls {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+
+      .lb-tabs { flex: 1; }
+
       .lb-header, .lb-row {
         grid-template-columns: 1.8rem 1fr 2.5rem 2.5rem 2.5rem 2.5rem;
         gap: 0.15rem;
@@ -1259,6 +1329,7 @@
       .lb-rank { font-size: 0.7rem; }
       .lb-name { font-size: 0.75rem; }
       .lb-stat { font-size: 0.7rem; }
+      .lb-scope-btn { font-size: 0.65rem; padding: 0.2rem 0.6rem; }
 
       .result-area {
         padding: 1.25rem;
@@ -1664,17 +1735,23 @@
         <button class="modal-close" onclick="closeModal('leaderboardModal')">×</button>
       </div>
       <div class="modal-body">
-        <div class="modal-tabs">
-          <button class="modal-tab active" data-tab="leaderboardWeekly">Weekly</button>
-          <button class="modal-tab" data-tab="leaderboardMonthly">Monthly</button>
-          <button class="modal-tab" data-tab="leaderboardYearly">Yearly</button>
-          <button class="modal-tab" data-tab="leaderboardGlobal">Global</button>
+        <div class="lb-controls">
+          <div class="modal-tabs lb-tabs">
+            <button class="modal-tab active" data-tab="leaderboardWeekly">Weekly</button>
+            <button class="modal-tab" data-tab="leaderboardMonthly">Monthly</button>
+            <button class="modal-tab" data-tab="leaderboardYearly">Yearly</button>
+            <button class="modal-tab" data-tab="leaderboardAlltime">All-Time</button>
+          </div>
+          <div class="lb-scope-toggle">
+            <button class="lb-scope-btn active" id="lbScopeFriends">Friends</button>
+            <button class="lb-scope-btn" id="lbScopeGlobal">Global</button>
+          </div>
         </div>
 
         <div class="tab-content active" id="leaderboardWeekly"></div>
         <div class="tab-content" id="leaderboardMonthly"></div>
         <div class="tab-content" id="leaderboardYearly"></div>
-        <div class="tab-content" id="leaderboardGlobal"></div>
+        <div class="tab-content" id="leaderboardAlltime"></div>
       </div>
     </div>
   </div>
@@ -2172,11 +2249,12 @@
       return await apiCall(`/friends/${userId}`, { method: 'DELETE' });
     }
 
-    async function getLeaderboard(period) {
-      if (period === 'weekly') return await apiCall('/leaderboard/weekly');
-      if (period === 'monthly') return await apiCall('/leaderboard/monthly');
-      if (period === 'yearly') return await apiCall('/leaderboard/yearly');
-      if (period === 'global') return await apiCall('/leaderboard/global');
+    async function getLeaderboard(period, isGlobal = false) {
+      const suffix = isGlobal ? '?global=true' : '';
+      if (period === 'weekly')  return await apiCall(`/leaderboard/weekly${suffix}`);
+      if (period === 'monthly') return await apiCall(`/leaderboard/monthly${suffix}`);
+      if (period === 'yearly')  return await apiCall(`/leaderboard/yearly${suffix}`);
+      if (period === 'alltime') return await apiCall(`/leaderboard/alltime${suffix}`);
     }
 
     async function getPuzzleHistory(all = false) {
@@ -2756,67 +2834,145 @@
     // MODALS: LEADERBOARD
     // ============================================================================
 
+    // Leaderboard state
+    let lbCurrentPeriod = 'weekly';
+    let lbIsGlobal = false;
+    let lbSortKey = 'totalPoints';
+    let lbSortAsc = false; // false = descending (highest first)
+
     async function loadLeaderboardModal() {
       showModal('leaderboardModal');
-      const defaultTab = gameState.userToken ? 'weekly' : 'global';
-      const tabId = `leaderboard${defaultTab.charAt(0).toUpperCase() + defaultTab.slice(1)}`;
+
+      // Default scope: friends if logged in, global otherwise
+      lbIsGlobal = !gameState.userToken;
+      lbCurrentPeriod = 'weekly';
+      lbSortKey = 'totalPoints';
+      lbSortAsc = false;
+
       const modal = document.getElementById('leaderboardModal');
+
+      // Set tab active state
+      const defaultTabId = 'leaderboardWeekly';
       modal.querySelectorAll('.modal-tab').forEach(t => {
-        t.classList.toggle('active', t.getAttribute('data-tab') === tabId);
+        t.classList.toggle('active', t.getAttribute('data-tab') === defaultTabId);
       });
       modal.querySelectorAll('.tab-content').forEach(c => {
-        c.classList.toggle('active', c.id === tabId);
+        c.classList.toggle('active', c.id === defaultTabId);
       });
-      loadLeaderboardTab(defaultTab);
+
+      // Sync scope toggle buttons
+      syncScopeToggle();
+
+      // Wire up scope toggle buttons
+      document.getElementById('lbScopeFriends').onclick = () => {
+        if (!gameState.userToken) { showToast('Sign in to view friend leaderboards', 'error'); return; }
+        lbIsGlobal = false;
+        syncScopeToggle();
+        loadLeaderboardTab(lbCurrentPeriod);
+      };
+      document.getElementById('lbScopeGlobal').onclick = () => {
+        lbIsGlobal = true;
+        syncScopeToggle();
+        loadLeaderboardTab(lbCurrentPeriod);
+      };
+
+      loadLeaderboardTab(lbCurrentPeriod);
+    }
+
+    function syncScopeToggle() {
+      document.getElementById('lbScopeFriends').classList.toggle('active', !lbIsGlobal);
+      document.getElementById('lbScopeGlobal').classList.toggle('active', lbIsGlobal);
     }
 
     async function loadLeaderboardTab(period) {
+      lbCurrentPeriod = period;
       const contentId = `leaderboard${period.charAt(0).toUpperCase() + period.slice(1)}`;
       const content = document.getElementById(contentId);
 
-      if (!gameState.userToken && period !== 'global') {
+      if (!lbIsGlobal && !gameState.userToken) {
         content.innerHTML = '<p class="list-empty">Sign in to view friend leaderboards</p>';
         return;
       }
 
-      try {
-        const data = await getLeaderboard(period);
-        const entries = data.entries || [];
+      content.innerHTML = '<p class="list-empty" style="padding:1rem">Loading...</p>';
 
-        if (entries.length === 0) {
-          content.innerHTML = '<p class="list-empty">No data available yet</p>';
+      try {
+        const data = await getLeaderboard(period, lbIsGlobal);
+        const rawEntries = data.entries || [];
+
+        if (rawEntries.length === 0) {
+          content.innerHTML = `<p class="list-empty">No data yet${!lbIsGlobal ? ' — play some games or add friends!' : ''}</p>`;
           return;
         }
 
-        // Table-style header
-        let html = `<div class="lb-header">
-          <span class="lb-h-rank">#</span>
-          <span class="lb-h-name">Player</span>
-          <span class="lb-h-stat">Games</span>
-          <span class="lb-h-stat">Win%</span>
-          <span class="lb-h-stat">Avg</span>
-          <span class="lb-h-stat">Pts</span>
-        </div>`;
-
-        html += entries.map((entry, idx) => {
-          const isCurrentUser = gameState.userId && entry.userId == gameState.userId;
-          return `
-            <div class="lb-row${isCurrentUser ? ' lb-you' : ''}">
-              <span class="lb-rank">#${entry.rank || idx + 1}</span>
-              <span class="lb-name">${entry.username}${isCurrentUser ? ' <em>(you)</em>' : ''}</span>
-              <span class="lb-stat">${entry.played}</span>
-              <span class="lb-stat">${entry.winRate}%</span>
-              <span class="lb-stat">${entry.avgPoints}</span>
-              <span class="lb-stat lb-pts">${entry.totalPoints}</span>
-            </div>
-          `;
-        }).join('');
-
-        content.innerHTML = html;
+        renderLeaderboardEntries(content, rawEntries);
       } catch (e) {
         console.error('Failed to load leaderboard:', e);
         content.innerHTML = '<p class="list-empty">Failed to load data</p>';
       }
+    }
+
+    function renderLeaderboardEntries(content, entries) {
+      // Sort entries client-side
+      const sorted = [...entries].sort((a, b) => {
+        let va = a[lbSortKey], vb = b[lbSortKey];
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+        if (va < vb) return lbSortAsc ? -1 : 1;
+        if (va > vb) return lbSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      // Re-rank after sort
+      sorted.forEach((e, i) => { e._displayRank = i + 1; });
+
+      const cols = [
+        { key: null,           label: '#',      cls: 'lb-h-rank'  },
+        { key: 'username',     label: 'Player', cls: 'lb-h-name'  },
+        { key: 'played',       label: 'Games',  cls: 'lb-h-stat'  },
+        { key: 'winRate',      label: 'Win%',   cls: 'lb-h-stat'  },
+        { key: 'avgPoints',    label: 'Avg',    cls: 'lb-h-stat'  },
+        { key: 'totalPoints',  label: 'Pts',    cls: 'lb-h-stat'  },
+      ];
+
+      const headerCells = cols.map(col => {
+        if (!col.key) return `<span class="${col.cls}">${col.label}</span>`;
+        const isActive = lbSortKey === col.key;
+        const arrow = isActive ? (lbSortAsc ? '▲' : '▼') : '⇅';
+        return `<span class="${col.cls}">
+          <button class="lb-col-btn${isActive ? ' sort-active' : ''}" data-sort="${col.key}">
+            ${col.label} <span class="lb-sort-arrow">${arrow}</span>
+          </button>
+        </span>`;
+      }).join('');
+
+      const rows = sorted.map(entry => {
+        const isCurrentUser = gameState.userId && entry.userId == gameState.userId;
+        return `<div class="lb-row${isCurrentUser ? ' lb-you' : ''}">
+          <span class="lb-rank">#${entry._displayRank}</span>
+          <span class="lb-name">${entry.username}${isCurrentUser ? ' <em>(you)</em>' : ''}</span>
+          <span class="lb-stat">${entry.played}</span>
+          <span class="lb-stat">${entry.winRate}%</span>
+          <span class="lb-stat">${entry.avgPoints}</span>
+          <span class="lb-stat lb-pts">${entry.totalPoints}</span>
+        </div>`;
+      }).join('');
+
+      content.innerHTML = `<div class="lb-header">${headerCells}</div>${rows}`;
+
+      // Wire sort buttons — no API re-fetch, just re-render
+      content.querySelectorAll('.lb-col-btn[data-sort]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-sort');
+          if (lbSortKey === key) {
+            lbSortAsc = !lbSortAsc; // flip direction
+          } else {
+            lbSortKey = key;
+            lbSortAsc = key === 'username'; // names asc by default, numbers desc
+          }
+          renderLeaderboardEntries(content, entries); // re-render with same data
+        });
+      });
     }
 
     // ============================================================================
