@@ -1,7 +1,18 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
+// Use DATABASE_PATH env var for persistent storage (e.g. Railway volumes)
+// Falls back to local file for development
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'physiodle.db');
+
+// Ensure parent directory exists (for volume mounts like /data/)
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+console.log(`Database path: ${dbPath}`);
 const db = new Database(dbPath);
 
 // Enable WAL mode for better concurrent read performance (may fail on some filesystems)

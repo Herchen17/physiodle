@@ -2792,8 +2792,7 @@
           document.getElementById('guessInput').value = '';
           document.getElementById('answerSummary').style.display = 'none';
 
-          const localResult = getLocalCompletion(todayData.dayNumber);
-          const completionData = todayData.completed || localResult;
+          const completionData = todayData.completed;
 
           if (completionData) {
             gameState.isCompleted = true;
@@ -3062,12 +3061,12 @@
         gameState.puzzle = todayData.puzzle;
         gameState.clueStates = {};
 
-        // Check server-side completion (logged in) or localStorage (logged out)
-        const localResult = getLocalCompletion(todayData.dayNumber);
-        const completionData = todayData.completed || localResult;
+        // Only use SERVER-side completion (requires auth) — not localStorage
+        // localStorage was causing ghost completions after logout / in incognito
+        const completionData = todayData.completed;
 
         if (completionData) {
-          // Already completed — restore state
+          // Already completed (server confirmed) — restore state
           gameState.isCompleted = true;
           gameState.guesses = completionData.guesses || [];
           gameState.revealed = [true, true, true, true, true];
