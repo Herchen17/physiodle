@@ -1,8 +1,8 @@
 /**
- * Fix REWORK Puzzles
+ * Fix REWORK Puzzles (Solo Processing)
  *
- * Reads batch-reviews.json, finds all REWORK puzzles, sends them to the API
- * in batches of 3 for substantial clue rewrites. Heavy touch — rebuild the
+ * Reads batch-reviews.json, finds all REWORK puzzles, sends each ONE AT A TIME
+ * to the API for substantial clue rewrites. Heavy touch — rebuild the
  * progressive reveal from scratch while keeping the same answer/category.
  *
  * Usage:
@@ -21,8 +21,7 @@ const PROGRESS_FILE  = path.join(__dirname, 'data', '.fix_rework_progress.json')
 
 const API_KEY        = process.env.ANTHROPIC_API_KEY;
 const MODEL          = 'claude-haiku-4-5-20251001';
-const BATCH_SIZE     = 3;  // smaller batches — these need more thought
-const DELAY_MS       = 600;
+const DELAY_MS       = 400;
 const MAX_RETRIES    = 3;
 
 const SYSTEM_PROMPT = `You are rewriting clues from scratch for Physiodle, a Wordle-style physiotherapy diagnosis game.
@@ -32,7 +31,7 @@ GAME RULES:
 - Each wrong guess reveals the next clue. Max 5 guesses.
 - The game DEPENDS on each clue adding MEANINGFUL NEW INFORMATION
 
-These puzzles have SERIOUS structural problems and need to be rebuilt from scratch. The answer and category stay the same, but the clues need complete reworking.
+This puzzle has SERIOUS structural problems and needs to be rebuilt from scratch. The answer and category stay the same, but the clues need complete reworking.
 
 WHEN REWRITING ALL 5 CLUES, follow this framework:
 
@@ -70,38 +69,31 @@ CRITICAL RULES:
 4. Use realistic, terse, third-person clinical language
 5. Clue 5 should always reference actual imaging or diagnostic test findings
 
-Respond with ONLY valid JSON array, no markdown.`;
+Respond with ONLY valid JSON, no markdown.`;
 
-function buildBatchPrompt(batch) {
-  const puzzleTexts = batch.map((item, idx) => {
-    const clueLines = item.puzzle.clues
-      .map((c, i) => `  C${i+1} (${c.label}): "${c.text}"`)
-      .join('\n');
+function buildSoloPrompt(item) {
+  const clueLines = item.puzzle.clues
+    .map((c, i) => `  C${i+1} (${c.label}): "${c.text}"`)
+    .join('\n');
 
-    return `PUZZLE ${idx+1}: "${item.puzzle.answer}" [${item.puzzle.category}]
+  return `Completely rewrite ALL 5 clues for this puzzle. Build a proper progressive reveal from scratch.
+
+PUZZLE: "${item.puzzle.answer}" [${item.puzzle.category}]
 PROBLEM: ${item.reason}
 CURRENT CLUES (broken — rewrite from scratch):
-${clueLines}`;
-  }).join('\n\n');
+${clueLines}
 
-  return `Completely rewrite ALL 5 clues for these ${batch.length} puzzles. Build a proper progressive reveal from scratch.
-
-${puzzleTexts}
-
-Respond with a JSON array:
-[
-  {
-    "index": 0,
-    "answer": "Condition Name",
-    "clues": [
-      {"label": "Complaint", "text": "..."},
-      {"label": "Activity", "text": "..."},
-      {"label": "History", "text": "..."},
-      {"label": "Examination", "text": "..."},
-      {"label": "Imaging", "text": "..."}
-    ]
-  }
-]
+Respond with a JSON object:
+{
+  "answer": "${item.puzzle.answer}",
+  "clues": [
+    {"label": "Complaint", "text": "..."},
+    {"label": "Activity", "text": "..."},
+    {"label": "History", "text": "..."},
+    {"label": "Examination", "text": "..."},
+    {"label": "Imaging", "text": "..."}
+  ]
+}
 
 Remember: Clue 1 = broadest (10+ conditions possible), Clue 5 = near-definitive. Each clue adds NEW distinct information.`;
 }
@@ -110,7 +102,7 @@ function callAPI(userPrompt, retries = 0) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
       model: MODEL,
-      max_tokens: 4000,
+      max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }]
     });
@@ -134,7 +126,7 @@ function callAPI(userPrompt, retries = 0) {
         if (res.statusCode === 429 || res.statusCode >= 500) {
           if (retries < MAX_RETRIES) {
             const wait = Math.pow(2, retries) * 2000;
-            console.log(`    ⏳ Retrying in ${wait/1000}s...`);
+            console.log(`    Retrying in ${wait/1000}s...`);
             setTimeout(() => callAPI(userPrompt, retries + 1).then(resolve).catch(reject), wait);
           } else {
             reject(new Error(`API error ${res.statusCode}`));
@@ -165,7 +157,7 @@ function callAPI(userPrompt, retries = 0) {
 }
 
 async function main() {
-  if (!API_KEY) { console.error('❌ Missing ANTHROPIC_API_KEY'); process.exit(1); }
+  if (!API_KEY) { console.error('Missing ANTHROPIC_API_KEY'); process.exit(1); }
 
   const args = process.argv.slice(2);
   const countArg = args.find(a => a.startsWith('--count='));
@@ -203,61 +195,59 @@ async function main() {
   const remaining = toFix.filter(r => !completedSet.has(r.globalIndex));
 
   const total = countLimit ? Math.min(countLimit, remaining.length) : remaining.length;
-  const totalBatches = Math.ceil(total / BATCH_SIZE);
 
-  console.log(`\n🔨 REWORK Pipeline`);
+  console.log(`\n=== REWORK Pipeline (Solo Mode) ===`);
   console.log(`   Total REWORK puzzles: ${toFix.length}`);
   console.log(`   Already completed: ${completedSet.size}`);
-  console.log(`   To process: ${total} (${totalBatches} batches of ${BATCH_SIZE})`);
+  console.log(`   To process: ${total} (one at a time for best quality)`);
   console.log('');
 
   let processed = 0, errors = 0;
 
-  for (let b = 0; b < totalBatches; b++) {
-    const batchItems = remaining.slice(b * BATCH_SIZE, (b + 1) * BATCH_SIZE);
-    if (batchItems.length === 0) break;
+  for (let i = 0; i < total; i++) {
+    const item = remaining[i];
+    const gi = item.globalIndex;
+    const puzzle = puzzleData.puzzles[gi];
 
-    const batch = batchItems.map(r => ({
-      globalIndex: r.globalIndex,
-      puzzle: puzzleData.puzzles[r.globalIndex],
-      reason: r.reason || 'Fundamental structural issues — needs complete rewrite'
-    }));
-
-    const names = batch.map(b => `#${b.globalIndex+1}`).join(',');
-    process.stdout.write(`[Batch ${b+1}/${totalBatches}] ${names} `);
+    process.stdout.write(`[${i+1}/${total}] #${gi+1} "${puzzle.answer}" `);
 
     try {
-      const prompt = buildBatchPrompt(batch);
-      const results = await callAPI(prompt);
-
-      results.forEach((r, idx) => {
-        const gi = batch[idx].globalIndex;
-        if (r.clues && r.clues.length === 5) {
-          outputData.puzzles[gi].clues = r.clues;
-          outputData.puzzles[gi]._reworked = true;
-        }
-        progress.completed = progress.completed || [];
-        progress.completed.push(gi);
+      const prompt = buildSoloPrompt({
+        globalIndex: gi,
+        puzzle: puzzle,
+        reason: item.reason || 'Fundamental structural issues — needs complete rewrite'
       });
 
-      console.log(`✓ (${batch.length} rewritten)`);
-      processed += batch.length;
+      const result = await callAPI(prompt);
+
+      if (result.clues && result.clues.length === 5) {
+        outputData.puzzles[gi].clues = result.clues;
+        outputData.puzzles[gi]._reworked = true;
+        console.log('OK');
+      } else {
+        console.log('WARN: bad clue count, skipped');
+        errors++;
+      }
+
+      progress.completed = progress.completed || [];
+      progress.completed.push(gi);
+      processed++;
 
     } catch (err) {
-      console.log(`ERROR: ${err.message.slice(0, 50)}`);
+      console.log(`ERROR: ${err.message.slice(0, 60)}`);
       errors++;
     }
 
+    // Save after every puzzle
     fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(outputData, null, 2));
 
-    if (b < totalBatches - 1) await new Promise(r => setTimeout(r, DELAY_MS));
+    if (i < total - 1) await new Promise(r => setTimeout(r, DELAY_MS));
   }
 
-  console.log('\n' + '─'.repeat(50));
-  console.log(`✅ Rework done! ${processed} puzzles rewritten.`);
-  if (errors > 0) console.log(`   ${errors} batch errors`);
-  console.log(`📦 Output: data/puzzles.rework-fixed.json`);
+  console.log('\n' + '-'.repeat(50));
+  console.log(`Done! ${processed} puzzles rewritten, ${errors} errors.`);
+  console.log(`Output: data/puzzles.rework-fixed.json`);
 }
 
-main().catch(err => { console.error('❌', err.message); process.exit(1); });
+main().catch(err => { console.error(err.message); process.exit(1); });
