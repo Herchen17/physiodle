@@ -665,9 +665,9 @@
       border-radius: 0.75rem;
       width: 100%;
       max-width: 500px;
-      max-height: 80vh;
+      max-height: 90vh;
       overflow-y: auto;
-      margin-top: 2rem;
+      margin-top: 1rem;
       box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
     }
 
@@ -707,6 +707,10 @@
 
     .modal-body {
       padding: 1.5rem;
+    }
+
+    #archiveModal .modal-body {
+      padding: 0.75rem 1rem;
     }
 
     .modal-tabs {
@@ -860,7 +864,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .archive-nav-btn {
@@ -971,11 +975,11 @@
 
     .archive-legend {
       display: flex;
-      gap: 0.5rem 0.75rem;
+      gap: 0.3rem 0.6rem;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 0.6rem;
-      padding-top: 0.5rem;
+      margin-top: 0.4rem;
+      padding-top: 0.4rem;
       border-top: 1px solid #e5e7eb;
     }
 
@@ -1132,8 +1136,11 @@
       }
 
       .autocomplete-item {
-        padding: 0.5rem 0.6rem;
-        font-size: 0.85rem;
+        padding: 0.7rem 0.6rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
       }
 
       .modal-tabs {
@@ -1592,8 +1599,8 @@
           <span class="archive-nav-month" id="archiveMonthLabel"></span>
           <button class="archive-nav-btn" id="archiveNextMonth">&rarr;</button>
         </div>
-        <div style="text-align:center;margin-bottom:0.75rem;">
-          <button class="btn btn-primary btn-small" id="archiveTodayBtn" style="font-size:0.75rem;padding:0.3rem 0.8rem;">Go to Today</button>
+        <div style="text-align:center;margin-bottom:0.4rem;">
+          <button class="btn btn-primary btn-small" id="archiveTodayBtn" style="font-size:0.7rem;padding:0.2rem 0.7rem;">Go to Today</button>
         </div>
         <div class="archive-weekdays">
           <div class="archive-weekday">Mon</div>
@@ -1954,7 +1961,20 @@
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API error: ${response.status} - ${errorText}`);
+        // If we get 401, token is invalid — clear auth state
+        if (response.status === 401 && gameState.userToken) {
+          console.log('Got 401, clearing auth state');
+          gameState.userToken = null;
+          gameState.userId = null;
+          gameState.username = null;
+          localStorage.removeItem('physiodle_token');
+          localStorage.removeItem('physiodle_userId');
+          localStorage.removeItem('physiodle_username');
+          updateAccountBtn();
+        }
+        let errorMsg;
+        try { errorMsg = JSON.parse(errorText).error; } catch (_) { errorMsg = errorText; }
+        throw new Error(errorMsg || `API error: ${response.status}`);
       }
 
       return response.json();
@@ -1995,6 +2015,9 @@
       localStorage.removeItem('physiodle_token');
       localStorage.removeItem('physiodle_userId');
       localStorage.removeItem('physiodle_username');
+      // Clear game completion data so logout truly resets state
+      localStorage.removeItem('physiodle_lastDay');
+      localStorage.removeItem('physiodle_lastResult');
     }
 
     async function getCurrentUser() {
@@ -2198,7 +2221,13 @@
       });
 
       // Touch support — same fix for mobile
+      // Use touchend instead of touchstart for more reliable selection
       dropdown.addEventListener('touchstart', (e) => {
+        // Prevent blur on any touch within dropdown
+        e.preventDefault();
+      }, { passive: false });
+
+      dropdown.addEventListener('touchend', (e) => {
         const item = e.target.closest('.autocomplete-item');
         if (item) {
           e.preventDefault();
@@ -2636,19 +2665,35 @@
 
     async function loadLeaderboardModal() {
       showModal('leaderboardModal');
-      loadLeaderboardTab('today');
+      // Default to 'global' if not logged in (other tabs require auth)
+      const defaultTab = gameState.userToken ? 'today' : 'global';
+      // Activate the correct tab visually
+      const modal = document.getElementById('leaderboardModal');
+      modal.querySelectorAll('.modal-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-tab') === `leaderboard${defaultTab.charAt(0).toUpperCase() + defaultTab.slice(1)}`);
+      });
+      modal.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.id === `leaderboard${defaultTab.charAt(0).toUpperCase() + defaultTab.slice(1)}`);
+      });
+      loadLeaderboardTab(defaultTab);
     }
 
     async function loadLeaderboardTab(period) {
+      const contentId = `leaderboard${period.charAt(0).toUpperCase() + period.slice(1)}`;
+      const content = document.getElementById(contentId);
+
+      // Auth-required tabs
+      if (!gameState.userToken && period !== 'global') {
+        content.innerHTML = '<p class="list-empty">Sign in to view friend leaderboards</p>';
+        return;
+      }
+
       try {
         const data = await getLeaderboard(period);
         const entries = data.entries || [];
 
-        const contentId = `leaderboard${period.charAt(0).toUpperCase() + period.slice(1)}`;
-        const content = document.getElementById(contentId);
-
         if (entries.length === 0) {
-          content.innerHTML = '<p class="list-empty">No data available</p>';
+          content.innerHTML = '<p class="list-empty">No data available yet</p>';
           return;
         }
 
@@ -2695,16 +2740,22 @@
         return;
       }
 
-      // Fetch all history
-      const history = await getPuzzleHistory(true);
+      // Fetch all history (requires auth for colour coding)
       archiveHistory = {};
-      (history.results || []).forEach(r => {
-        archiveHistory[r.dayNumber] = {
-          won: r.won,
-          score: r.score,
-          completedAt: r.completedAt,
-        };
-      });
+      if (gameState.userToken) {
+        try {
+          const history = await getPuzzleHistory(true);
+          (history.results || []).forEach(r => {
+            archiveHistory[r.dayNumber] = {
+              won: r.won,
+              score: r.score,
+              completedAt: r.completedAt,
+            };
+          });
+        } catch (e) {
+          console.error('Failed to load puzzle history for archive:', e);
+        }
+      }
 
       // Default to current month
       const now = new Date();
@@ -3067,6 +3118,28 @@
         gameState.userToken = token;
         gameState.userId = localStorage.getItem('physiodle_userId');
         gameState.username = localStorage.getItem('physiodle_username');
+
+        // Validate token — if expired or invalid, clear auth state
+        try {
+          const user = await getCurrentUser();
+          if (!user) {
+            console.log('Token invalid, clearing auth state');
+            gameState.userToken = null;
+            gameState.userId = null;
+            gameState.username = null;
+            localStorage.removeItem('physiodle_token');
+            localStorage.removeItem('physiodle_userId');
+            localStorage.removeItem('physiodle_username');
+          }
+        } catch (e) {
+          console.log('Token validation failed, clearing auth state');
+          gameState.userToken = null;
+          gameState.userId = null;
+          gameState.username = null;
+          localStorage.removeItem('physiodle_token');
+          localStorage.removeItem('physiodle_userId');
+          localStorage.removeItem('physiodle_username');
+        }
       }
 
       updateAccountBtn();
@@ -3165,9 +3238,11 @@
       e.preventDefault();
       const username = document.getElementById('loginUsername').value.trim();
       const password = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginUsernameError');
+      errorEl.textContent = '';
 
       if (!username || !password) {
-        showToast('Please fill in all fields', 'error');
+        errorEl.textContent = 'Please fill in all fields';
         return;
       }
 
@@ -3176,8 +3251,10 @@
         showToast('Logged in!', 'success');
         closeModal('loginModal');
         location.reload();
-      } catch (e) {
-        document.getElementById('loginUsernameError').textContent = e.message || 'Login failed';
+      } catch (err) {
+        const msg = err.message || 'Login failed';
+        // Clean up the error message (remove "API error:" prefix if present)
+        errorEl.textContent = msg.replace(/^API error:\s*\d+\s*-?\s*/, '');
       }
     });
 
@@ -3186,9 +3263,11 @@
       e.preventDefault();
       const username = document.getElementById('signupUsername').value.trim();
       const password = document.getElementById('signupPassword').value;
+      const errorEl = document.getElementById('signupUsernameError');
+      errorEl.textContent = '';
 
       if (!username || !password) {
-        showToast('Please fill in all fields', 'error');
+        errorEl.textContent = 'Please fill in all fields';
         return;
       }
 
@@ -3197,8 +3276,9 @@
         showToast('Account created!', 'success');
         closeModal('signupModal');
         location.reload();
-      } catch (e) {
-        document.getElementById('signupUsernameError').textContent = e.message || 'Signup failed';
+      } catch (err) {
+        const msg = err.message || 'Signup failed';
+        errorEl.textContent = msg.replace(/^API error:\s*\d+\s*-?\s*/, '');
       }
     });
 
