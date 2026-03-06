@@ -911,12 +911,12 @@
 
     .cal-cell {
       aspect-ratio: 1;
-      border-radius: 0.4rem;
+      border-radius: 0.35rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.15s;
       position: relative;
@@ -929,13 +929,13 @@
 
     .cal-cell-date {
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
     .cal-cell-score {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       font-weight: 600;
-      margin-top: 1px;
+      margin-top: 0;
     }
 
     /* Colour coding */
@@ -971,25 +971,26 @@
 
     .archive-legend {
       display: flex;
-      gap: 1rem;
+      gap: 0.5rem 0.75rem;
       flex-wrap: wrap;
-      margin-top: 1rem;
-      padding-top: 0.75rem;
+      justify-content: center;
+      margin-top: 0.6rem;
+      padding-top: 0.5rem;
       border-top: 1px solid #e5e7eb;
     }
 
     .archive-legend-item {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
-      font-size: 0.7rem;
+      gap: 0.25rem;
+      font-size: 0.62rem;
       color: #6b7280;
     }
 
     .archive-legend-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
     }
 
     /* AUTH PAGES */
@@ -1590,6 +1591,9 @@
           <button class="archive-nav-btn" id="archivePrevMonth">&larr;</button>
           <span class="archive-nav-month" id="archiveMonthLabel"></span>
           <button class="archive-nav-btn" id="archiveNextMonth">&rarr;</button>
+        </div>
+        <div style="text-align:center;margin-bottom:0.75rem;">
+          <button class="btn btn-primary btn-small" id="archiveTodayBtn" style="font-size:0.75rem;padding:0.3rem 0.8rem;">Go to Today</button>
         </div>
         <div class="archive-weekdays">
           <div class="archive-weekday">Mon</div>
@@ -2686,7 +2690,7 @@
     async function loadArchiveModal() {
       showModal('archiveModal');
 
-      if (!gameState.currentDay) {
+      if (!gameState.todayDay && !gameState.currentDay) {
         document.getElementById('archiveGrid').innerHTML = '<p class="list-empty">Loading...</p>';
         return;
       }
@@ -2724,6 +2728,53 @@
         archiveViewMonth.month = normMonth;
         archiveViewMonth.year = nextYear;
         renderArchiveCalendar();
+      };
+
+      // "Go to Today" button — loads today's puzzle and closes archive
+      document.getElementById('archiveTodayBtn').onclick = async () => {
+        closeAllModals();
+        try {
+          const todayData = await getTodaysPuzzle();
+          gameState.currentDay = todayData.dayNumber;
+          gameState.puzzle = todayData.puzzle;
+          document.getElementById('resultOverlay').classList.remove('show');
+          document.getElementById('guessInput').value = '';
+          document.getElementById('answerSummary').style.display = 'none';
+
+          const localResult = getLocalCompletion(todayData.dayNumber);
+          const completionData = todayData.completed || localResult;
+
+          if (completionData) {
+            gameState.isCompleted = true;
+            gameState.guesses = completionData.guesses || [];
+            gameState.revealed = [true, true, true, true, true];
+            gameState.clueStates = {};
+            const numWrong = gameState.guesses.length;
+            for (let i = 0; i < 5; i++) {
+              gameState.clueStates[i] = completionData.won ? (i < numWrong ? 'wrong' : 'correct') : 'wrong';
+            }
+            document.getElementById('guessInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            renderClues();
+            renderGuessHistory();
+            const answerText = todayData.puzzle.answer;
+            const explanationText = todayData.puzzle.explanation || '';
+            showAnswerSummary(completionData.won, answerText, explanationText);
+          } else {
+            gameState.isCompleted = false;
+            gameState.guesses = [];
+            gameState.clueStates = {};
+            gameState.revealed = [true, false, false, false, false];
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            renderClues();
+            renderGuessHistory();
+          }
+
+          updateDayIndicator();
+        } catch (e) {
+          showToast('Failed to load today\'s puzzle', 'error');
+        }
       };
     }
 
@@ -2772,7 +2823,7 @@
           // Before launch
           cell.className = 'cal-cell cal-cell-empty';
           cell.innerHTML = `<div class="cal-cell-date" style="color:#e5e7eb;">${d}</div>`;
-        } else if (dayNumber > gameState.currentDay) {
+        } else if (dayNumber > (gameState.todayDay || gameState.currentDay)) {
           // Future puzzle
           cell.className = 'cal-cell cal-future';
           cell.innerHTML = `<div class="cal-cell-date">${d}</div>`;
@@ -2782,18 +2833,26 @@
 
           if (result) {
             // Determine if completed on release day or via archive
-            const releaseDate = new Date(launchDate.getTime() + (dayNumber - 1) * 86400000);
-            const completedDate = new Date(result.completedAt);
-            const sameDay = releaseDate.getUTCFullYear() === completedDate.getUTCFullYear()
-              && releaseDate.getUTCMonth() === completedDate.getUTCMonth()
-              && releaseDate.getUTCDate() === completedDate.getUTCDate();
+            // completedAt from SQLite is UTC but missing Z suffix — add it
+            let sameDay = false;
+            if (result.completedAt) {
+              const caStr = result.completedAt.endsWith('Z') ? result.completedAt : result.completedAt + 'Z';
+              const completedDate = new Date(caStr);
+              const releaseDate = new Date(launchDate.getTime() + (dayNumber - 1) * 86400000);
+              sameDay = releaseDate.getUTCFullYear() === completedDate.getUTCFullYear()
+                && releaseDate.getUTCMonth() === completedDate.getUTCMonth()
+                && releaseDate.getUTCDate() === completedDate.getUTCDate();
+            }
 
             if (sameDay && result.won) {
               cell.className = 'cal-cell cal-green';
             } else if (sameDay && !result.won) {
               cell.className = 'cal-cell cal-red';
-            } else {
+            } else if (!sameDay && result.completedAt) {
               cell.className = 'cal-cell cal-dark-grey';
+            } else {
+              // Completed but no timestamp — treat as on-day based on won
+              cell.className = result.won ? 'cal-cell cal-green' : 'cal-cell cal-red';
             }
 
             const scoreText = result.won ? result.score : 'X';
@@ -2948,6 +3007,7 @@
         // Load today's puzzle
         const todayData = await getTodaysPuzzle();
         gameState.currentDay = todayData.dayNumber;
+        gameState.todayDay = todayData.dayNumber; // Never changes — used for archive limits
         gameState.puzzle = todayData.puzzle;
         gameState.clueStates = {};
 
