@@ -129,6 +129,11 @@ const puzzleCards = reviewed.map((r, i) => {
         </div>
       </div>
       ${r.notes ? `<div style="padding:8px 16px;background:#f9fafb;font-size:12px;color:#374151;border-bottom:1px solid #e5e7eb">📝 ${escHtml(r.notes)}</div>` : ''}
+      ${r.explanation ? `
+      <div style="padding:10px 16px;background:#eff6ff;border-bottom:1px solid #bfdbfe">
+        <div style="font-size:11px;font-weight:700;color:#1e40af;margin-bottom:4px;letter-spacing:.5px">POST-GAME EXPLANATION (shown to player after guessing)</div>
+        <div style="font-size:13px;color:#1e3a5f;line-height:1.5">${escHtml(r.explanation)}</div>
+      </div>` : ''}
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr style="background:#f3f4f6">
           <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;width:50%;border-right:1px solid #e5e7eb">BEFORE (ORIGINAL)</th>
