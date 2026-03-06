@@ -555,7 +555,7 @@
       border-radius: 1rem;
       padding: 2rem;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-      max-width: 420px;
+      max-width: 500px;
       width: 100%;
       text-align: center;
       animation: resultPopIn 0.35s ease-out;
@@ -1524,8 +1524,9 @@
       </div>
       <div class="result-buttons">
         <button class="btn btn-primary" id="shareBtn">Copy Result</button>
-        <button class="btn btn-secondary" id="nextDayBtn">Next Puzzle</button>
+        <button class="btn btn-secondary" id="archiveFromResultBtn">Browse Archive</button>
       </div>
+      <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #6b7280;">Check back tomorrow for the next Physiodle!</p>
     </div>
   </div>
 
@@ -3434,27 +3435,9 @@
       }
     });
 
-    document.getElementById('nextDayBtn').addEventListener('click', async () => {
-      if (gameState.currentDay) {
-        try {
-          const nextData = await getPuzzle(gameState.currentDay + 1);
-          gameState.currentDay += 1;
-          gameState.puzzle = nextData.puzzle;
-          gameState.isCompleted = nextData.completed;
-          gameState.guesses = [];
-          gameState.revealed = [true, false, false, false, false];
-          gameState.clueStates = {};
-          renderClues();
-          renderGuessHistory();
-          updateDayIndicator();
-          document.getElementById('guessInput').value = '';
-          document.getElementById('guessInput').disabled = nextData.completed;
-          document.getElementById('submitBtn').disabled = nextData.completed;
-          document.getElementById('resultOverlay').classList.remove('show');
-        } catch (e) {
-          showToast('Failed to load next puzzle', 'error');
-        }
-      }
+    document.getElementById('archiveFromResultBtn').addEventListener('click', () => {
+      document.getElementById('resultOverlay').classList.remove('show');
+      loadArchiveModal();
     });
 
     document.getElementById('leaderboardBtn').addEventListener('click', loadLeaderboardModal);
