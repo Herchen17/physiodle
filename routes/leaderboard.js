@@ -26,20 +26,24 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
 
   const limitClause = userIds ? '' : 'LIMIT 200';
 
+  // Points only awarded for on-day completions (completed_at date matches puzzle release date)
+  // Puzzle day N was released on 2026-03-04 + (N-1) days
+  const onDayExpr = `DATE(gr.completed_at) = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+
   const rows = db.prepare(`
     SELECT
       gr.user_id,
       u.username,
       COUNT(*) as played,
       SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) as won,
-      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) as totalPoints
+      SUM(CASE WHEN gr.won = 1 AND ${onDayExpr} THEN (6 - gr.score) ELSE 0 END) as totalPoints
     FROM game_results gr
     JOIN users u ON u.id = gr.user_id
     ${whereClause}
     GROUP BY gr.user_id
     HAVING played > 0
     ORDER BY
-      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) DESC,
+      SUM(CASE WHEN gr.won = 1 AND ${onDayExpr} THEN (6 - gr.score) ELSE 0 END) DESC,
       CAST(SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) AS REAL) / COUNT(*) DESC,
       COUNT(*) DESC
     ${limitClause}
