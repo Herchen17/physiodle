@@ -227,7 +227,19 @@ function callAPI(systemPrompt, userPrompt, maxTokens, retries = 0) {
           if (response.error) return reject(new Error(response.error.message));
           const text = response.content[0].text.trim();
           const cleaned = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
-          const parsed = JSON.parse(cleaned);
+          let parsed;
+          try {
+            parsed = JSON.parse(cleaned);
+          } catch {
+            // Try extracting JSON object from response
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
+            if (start !== -1 && end > start) {
+              parsed = JSON.parse(text.slice(start, end + 1));
+            } else {
+              throw new Error('No valid JSON found in response');
+            }
+          }
           resolve(parsed);
         } catch (e) {
           reject(new Error(`Failed to parse response: ${e.message}`));
