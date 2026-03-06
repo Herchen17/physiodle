@@ -63,7 +63,7 @@ for (let i = 0; i < totalPuzzles; i++) {
   }
 
   // Check if minor-fixed version exists and has updated clues
-  if (minorData && minorData.puzzles[i] && minorData.puzzles[i]._minorFixed) {
+  if (minorData && minorData.puzzles[i] && (minorData.puzzles[i]._minorFixed || minorData.puzzles[i]._minor_fixed)) {
     finalData.puzzles[i].clues = minorData.puzzles[i].clues;
     finalData.puzzles[i]._source = 'minor-fixed';
     minorMerged++;
