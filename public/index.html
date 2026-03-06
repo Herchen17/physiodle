@@ -709,8 +709,12 @@
       padding: 1.5rem;
     }
 
+    #archiveModal .modal {
+      max-width: 420px;
+    }
+
     #archiveModal .modal-body {
-      padding: 0.75rem 1rem;
+      padding: 0.5rem 0.75rem;
     }
 
     .modal-tabs {
@@ -1040,21 +1044,22 @@
     .archive-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
+      gap: 2px;
     }
 
     .cal-cell {
-      aspect-ratio: 1;
-      border-radius: 0.35rem;
+      border-radius: 0.3rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       cursor: pointer;
       transition: all 0.15s;
       position: relative;
       border: 2px solid transparent;
+      padding: 0.3rem 0;
+      min-height: 2.2rem;
     }
 
     .cal-cell:hover { border-color: #0d9488; }
@@ -1063,11 +1068,11 @@
 
     .cal-cell-date {
       font-weight: 700;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
     }
 
     .cal-cell-score {
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       font-weight: 600;
       margin-top: 0;
     }

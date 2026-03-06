@@ -18,6 +18,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/puzzle', require('./routes/puzzles'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Health check
 app.get('/api/health', (req, res) => {
