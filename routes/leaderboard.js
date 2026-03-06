@@ -10,7 +10,9 @@ function getFriendIds(userId) {
   return [userId, ...friends.map(f => f.friend_id)];
 }
 
-// Helper: compute user stats from game_results for a set of users within a date range
+// Helper: compute point-based leaderboard for a set of users within a date range
+// Points: 6 - guessCount for wins (5 pts first try, 1 pt on 5th guess), 0 for losses
+// Ranking: totalPoints DESC, winRate DESC, avgPoints DESC
 function computeLeaderboard(userIds, dateFilter, currentUserId) {
   const placeholders = userIds.map(() => '?').join(',');
 
@@ -28,16 +30,16 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
       u.username,
       COUNT(*) as played,
       SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) as won,
-      AVG(CASE WHEN gr.won = 1 THEN gr.score ELSE NULL END) as avgScore
+      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) as totalPoints
     FROM game_results gr
     JOIN users u ON u.id = gr.user_id
     WHERE gr.user_id IN (${placeholders}) ${dateClause}
     GROUP BY gr.user_id
     HAVING played > 0
     ORDER BY
+      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) DESC,
       CAST(SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) AS REAL) / COUNT(*) DESC,
-      AVG(CASE WHEN gr.won = 1 THEN gr.score ELSE NULL END) ASC,
-      COUNT(*) DESC
+      CAST(SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) AS REAL) / COUNT(*) DESC
   `).all(...params);
 
   return rows.map((r, i) => ({
@@ -47,51 +49,13 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
     played: r.played,
     won: r.won,
     winRate: r.played > 0 ? Math.round((r.won / r.played) * 100) : 0,
-    avgScore: r.avgScore ? parseFloat(r.avgScore.toFixed(1)) : null,
+    totalPoints: r.totalPoints || 0,
+    avgPoints: r.played > 0 ? parseFloat((r.totalPoints / r.played).toFixed(1)) : 0,
     isYou: r.user_id === currentUserId,
   }));
 }
 
-// GET /api/leaderboard/today — friends' scores on today's puzzle
-router.get('/today', requireAuth, (req, res) => {
-  const dayNumber = pm.getCurrentDayNumber();
-  if (dayNumber < 1) {
-    return res.json({ dayNumber: 0, entries: [] });
-  }
-
-  const friendIds = getFriendIds(req.user.userId);
-  const placeholders = friendIds.map(() => '?').join(',');
-
-  const rows = db.prepare(`
-    SELECT
-      gr.user_id,
-      u.username,
-      gr.won,
-      gr.score,
-      gr.completed_at
-    FROM game_results gr
-    JOIN users u ON u.id = gr.user_id
-    WHERE gr.day_number = ? AND gr.user_id IN (${placeholders})
-    ORDER BY
-      gr.won DESC,
-      gr.score ASC,
-      gr.completed_at ASC
-  `).all(dayNumber, ...friendIds);
-
-  const entries = rows.map((r, i) => ({
-    rank: i + 1,
-    userId: r.user_id,
-    username: r.username,
-    won: !!r.won,
-    score: r.score,
-    completedAt: r.completed_at,
-    isYou: r.user_id === req.user.userId,
-  }));
-
-  res.json({ dayNumber, entries });
-});
-
-// GET /api/leaderboard/weekly — this week Mon-Sun
+// GET /api/leaderboard/weekly — this week Mon-Sun (friends)
 router.get('/weekly', requireAuth, (req, res) => {
   const now = new Date();
   const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon, ...
@@ -114,7 +78,7 @@ router.get('/weekly', requireAuth, (req, res) => {
   });
 });
 
-// GET /api/leaderboard/monthly — current month
+// GET /api/leaderboard/monthly — current month (friends)
 router.get('/monthly', requireAuth, (req, res) => {
   const now = new Date();
   const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
@@ -133,11 +97,22 @@ router.get('/monthly', requireAuth, (req, res) => {
   });
 });
 
-// GET /api/leaderboard/alltime — lifetime stats among friends
-router.get('/alltime', requireAuth, (req, res) => {
+// GET /api/leaderboard/yearly — current year (friends)
+router.get('/yearly', requireAuth, (req, res) => {
+  const now = new Date();
+  const firstDay = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const lastDay = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1));
+
   const friendIds = getFriendIds(req.user.userId);
-  const entries = computeLeaderboard(friendIds, null, req.user.userId);
-  res.json({ entries });
+  const entries = computeLeaderboard(friendIds, {
+    from: firstDay.toISOString(),
+    to: lastDay.toISOString(),
+  }, req.user.userId);
+
+  res.json({
+    period: `${now.getUTCFullYear()}`,
+    entries,
+  });
 });
 
 // GET /api/leaderboard/global — all users, no friend filter
@@ -150,15 +125,15 @@ router.get('/global', optionalAuth, (req, res) => {
       u.username,
       COUNT(*) as played,
       SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) as won,
-      AVG(CASE WHEN gr.won = 1 THEN gr.score ELSE NULL END) as avgScore
+      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) as totalPoints
     FROM game_results gr
     JOIN users u ON u.id = gr.user_id
     GROUP BY gr.user_id
     HAVING played > 0
     ORDER BY
+      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) DESC,
       CAST(SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) AS REAL) / COUNT(*) DESC,
-      AVG(CASE WHEN gr.won = 1 THEN gr.score ELSE NULL END) ASC,
-      COUNT(*) DESC
+      CAST(SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) AS REAL) / COUNT(*) DESC
     LIMIT ?
   `).all(limit);
 
@@ -171,7 +146,8 @@ router.get('/global', optionalAuth, (req, res) => {
     played: r.played,
     won: r.won,
     winRate: r.played > 0 ? Math.round((r.won / r.played) * 100) : 0,
-    avgScore: r.avgScore ? parseFloat(r.avgScore.toFixed(1)) : null,
+    totalPoints: r.totalPoints || 0,
+    avgPoints: r.played > 0 ? parseFloat((r.totalPoints / r.played).toFixed(1)) : 0,
     isYou: r.user_id === currentUserId,
   }));
 

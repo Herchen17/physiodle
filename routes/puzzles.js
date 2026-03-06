@@ -173,11 +173,12 @@ router.post('/submit', requireAuth, (req, res) => {
   // Return answer + explanation + updated stats
   const fullData = pm.fullPuzzle(puzzle);
 
-  // Recompute stats
+  // Recompute stats with point-based scoring
   const statsRow = db.prepare(`
     SELECT
       COUNT(*) as played,
-      SUM(CASE WHEN won = 1 THEN 1 ELSE 0 END) as wonCount
+      SUM(CASE WHEN won = 1 THEN 1 ELSE 0 END) as wonCount,
+      SUM(CASE WHEN won = 1 THEN (6 - score) ELSE 0 END) as totalPoints
     FROM game_results WHERE user_id = ?
   `).get(req.user.userId);
 
@@ -195,14 +196,20 @@ router.post('/submit', requireAuth, (req, res) => {
     else break;
   }
 
+  // Points for this game: 6 - guessCount for wins, 0 for losses
+  const gamePoints = won ? (6 - score) : 0;
+
   res.json({
     answer: fullData.answer,
     aliases: fullData.aliases,
     explanation: fullData.explanation,
+    gamePoints,
     stats: {
       played: statsRow.played,
       won: statsRow.wonCount,
       winRate: statsRow.played > 0 ? Math.round((statsRow.wonCount / statsRow.played) * 100) : 0,
+      totalPoints: statsRow.totalPoints || 0,
+      avgPoints: statsRow.played > 0 ? parseFloat((statsRow.totalPoints / statsRow.played).toFixed(1)) : 0,
       currentStreak,
       maxStreak,
     }
