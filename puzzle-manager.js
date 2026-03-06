@@ -1,8 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-// Launch date: March 4, 2026 UTC
-const LAUNCH_DATE = new Date(Date.UTC(2026, 2, 4)); // months are 0-indexed
+// Launch date: March 4, 2026 in AEST (Australia/Sydney)
+// Stored as UTC equivalent: March 3, 2026 14:00 UTC (midnight AEST = UTC-10h)
+const LAUNCH_DATE = new Date(Date.UTC(2026, 2, 3, 14, 0, 0)); // months are 0-indexed
+
+// Timezone offset: AEST = UTC+10. Puzzles roll over at midnight AEST.
+const TZ_OFFSET_HOURS = 10;
 
 let puzzles = [];
 let conditionNames = [];
@@ -24,11 +28,16 @@ function loadPuzzles() {
 }
 
 function getCurrentDayNumber() {
+  // Get current time in AEST by adding the timezone offset
   const now = new Date();
-  now.setUTCHours(0, 0, 0, 0);
+  const nowAEST = new Date(now.getTime() + TZ_OFFSET_HOURS * 3600000);
+  // Zero out the time portion to get start of AEST day
+  nowAEST.setUTCHours(0, 0, 0, 0);
+
   const launch = new Date(LAUNCH_DATE);
   launch.setUTCHours(0, 0, 0, 0);
-  const diff = Math.floor((now - launch) / 86400000);
+
+  const diff = Math.floor((nowAEST - launch) / 86400000);
   if (diff < 0) return -1; // Before launch
   return diff + 1; // Day 1 = launch day
 }

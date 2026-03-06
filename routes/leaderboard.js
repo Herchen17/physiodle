@@ -27,8 +27,9 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
   const limitClause = userIds ? '' : 'LIMIT 200';
 
   // Only on-day completions count towards ALL leaderboard metrics
-  // Puzzle day N was released on 2026-03-04 + (N-1) days
-  const onDayExpr = `DATE(gr.completed_at) = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+  // Puzzle day N was released on 2026-03-04 AEST (= 2026-03-03 14:00 UTC)
+  // Convert completed_at (stored in UTC) to AEST by adding 10 hours before comparing
+  const onDayExpr = `DATE(gr.completed_at, '+10 hours') = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
 
   const rows = db.prepare(`
     SELECT
