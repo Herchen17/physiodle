@@ -510,9 +510,25 @@
     }
 
     .answer-summary-explanation {
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       color: #374151;
-      line-height: 1.5;
+      line-height: 1.6;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .answer-summary-explanation-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #059669;
+      margin-bottom: 0.25rem;
+    }
+
+    .answer-summary.lost .answer-summary-explanation-label {
+      color: #dc2626;
     }
 
     /* RESULT OVERLAY */
@@ -596,14 +612,24 @@
     }
 
     .result-explanation {
-      background: #f9fafb;
-      padding: 1rem;
+      background: #f0fdf4;
+      border-left: 3px solid #059669;
+      padding: 1rem 1.25rem;
       border-radius: 0.5rem;
       margin-bottom: 1.25rem;
-      font-size: 0.95rem;
-      line-height: 1.6;
+      font-size: 0.9rem;
+      line-height: 1.65;
       color: #374151;
       text-align: left;
+    }
+
+    .result-explanation-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #059669;
+      margin-bottom: 0.4rem;
     }
 
     .result-buttons {
@@ -829,49 +855,141 @@
       color: #6b7280;
     }
 
-    /* ARCHIVE */
+    /* ARCHIVE CALENDAR */
+    .archive-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .archive-nav-btn {
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #374151;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .archive-nav-btn:hover { background: #f3f4f6; }
+    .archive-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+    .archive-nav-month {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .archive-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .archive-weekday {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      padding: 0.25rem 0;
+    }
+
     .archive-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
     }
 
-    .archive-card {
-      background: white;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      text-align: center;
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 0.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
       cursor: pointer;
-      transition: all 0.2s;
-      border: 2px solid #e5e7eb;
+      transition: all 0.15s;
       position: relative;
+      border: 2px solid transparent;
     }
 
-    .archive-card:hover {
-      border-color: #0d9488;
-      box-shadow: 0 4px 6px rgba(13, 148, 136, 0.2);
-    }
+    .cal-cell:hover { border-color: #0d9488; }
+    .cal-cell-empty { cursor: default; background: transparent; }
+    .cal-cell-empty:hover { border-color: transparent; }
 
-    .archive-card-day {
-      font-size: 1.5rem;
+    .cal-cell-date {
       font-weight: 700;
-      color: #0d9488;
-      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
     }
 
-    .archive-card-category {
-      font-size: 0.875rem;
+    .cal-cell-score {
+      font-size: 0.6rem;
+      font-weight: 600;
+      margin-top: 1px;
+    }
+
+    /* Colour coding */
+    .cal-grey {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    .cal-green {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .cal-green .cal-cell-score { color: #059669; }
+
+    .cal-red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .cal-red .cal-cell-score { color: #dc2626; }
+
+    .cal-dark-grey {
+      background: #d1d5db;
+      color: #374151;
+    }
+    .cal-dark-grey .cal-cell-score { color: #4b5563; }
+
+    .cal-future {
+      background: transparent;
+      color: #d1d5db;
+      cursor: default;
+    }
+    .cal-future:hover { border-color: transparent; }
+
+    .archive-legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .archive-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.7rem;
       color: #6b7280;
-      margin-bottom: 0.5rem;
     }
 
-    .archive-card-checkmark {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      color: #059669;
-      font-size: 1.25rem;
+    .archive-legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
     }
 
     /* AUTH PAGES */
@@ -1203,7 +1321,10 @@
       <div class="answer-summary" id="answerSummary" style="display:none;">
         <div class="answer-summary-label" id="answerSummaryLabel">Answer</div>
         <div class="answer-summary-name" id="answerSummaryName"></div>
-        <div class="answer-summary-explanation" id="answerSummaryExplanation"></div>
+        <div class="answer-summary-explanation" id="answerSummaryExplanation">
+          <div class="answer-summary-explanation-label">Clinical Insight</div>
+          <div id="answerSummaryExplanationText"></div>
+        </div>
       </div>
 
       <!-- CLUES -->
@@ -1218,7 +1339,10 @@
       <button class="result-close" id="resultCloseBtn" title="Close">&times;</button>
       <div class="result-title" id="resultTitle"></div>
       <div class="result-answer" id="resultAnswer"></div>
-      <div class="result-explanation" id="resultExplanation"></div>
+      <div class="result-explanation" id="resultExplanation">
+        <div class="result-explanation-label">Clinical Insight</div>
+        <div id="resultExplanationText"></div>
+      </div>
       <div class="result-buttons">
         <button class="btn btn-primary" id="shareBtn">Copy Result</button>
         <button class="btn btn-secondary" id="nextDayBtn">Next Puzzle</button>
@@ -1462,7 +1586,27 @@
         <button class="modal-close" onclick="closeModal('archiveModal')">×</button>
       </div>
       <div class="modal-body">
+        <div class="archive-nav">
+          <button class="archive-nav-btn" id="archivePrevMonth">&larr;</button>
+          <span class="archive-nav-month" id="archiveMonthLabel"></span>
+          <button class="archive-nav-btn" id="archiveNextMonth">&rarr;</button>
+        </div>
+        <div class="archive-weekdays">
+          <div class="archive-weekday">Mon</div>
+          <div class="archive-weekday">Tue</div>
+          <div class="archive-weekday">Wed</div>
+          <div class="archive-weekday">Thu</div>
+          <div class="archive-weekday">Fri</div>
+          <div class="archive-weekday">Sat</div>
+          <div class="archive-weekday">Sun</div>
+        </div>
         <div class="archive-grid" id="archiveGrid"></div>
+        <div class="archive-legend">
+          <div class="archive-legend-item"><div class="archive-legend-dot" style="background:#d1fae5;"></div>Correct (on day)</div>
+          <div class="archive-legend-item"><div class="archive-legend-dot" style="background:#fee2e2;"></div>Wrong (on day)</div>
+          <div class="archive-legend-item"><div class="archive-legend-dot" style="background:#d1d5db;"></div>Done (archive)</div>
+          <div class="archive-legend-item"><div class="archive-legend-dot" style="background:#f3f4f6;"></div>Not attempted</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1916,9 +2060,9 @@
       if (period === 'global') return await apiCall('/leaderboard/global');
     }
 
-    async function getPuzzleHistory() {
+    async function getPuzzleHistory(all = false) {
       if (!gameState.userToken) return { total: 0, results: [] };
-      return await apiCall('/puzzle/history/list');
+      return await apiCall(`/puzzle/history/list${all ? '?all=true' : ''}`);
     }
 
     // ============================================================================
@@ -2034,9 +2178,36 @@
     function setupAutocomplete() {
       const input = document.getElementById('guessInput');
       const dropdown = document.getElementById('autocompleteDropdown');
+      let selectedIndex = -1;
+
+      // Event delegation on dropdown — mousedown fires BEFORE blur, preventing
+      // the race condition where blur closes the dropdown before click registers
+      dropdown.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // Prevent input blur
+        const item = e.target.closest('.autocomplete-item');
+        if (item) {
+          input.value = item.textContent;
+          dropdown.classList.remove('show');
+          selectedIndex = -1;
+          input.focus();
+        }
+      });
+
+      // Touch support — same fix for mobile
+      dropdown.addEventListener('touchstart', (e) => {
+        const item = e.target.closest('.autocomplete-item');
+        if (item) {
+          e.preventDefault();
+          input.value = item.textContent;
+          dropdown.classList.remove('show');
+          selectedIndex = -1;
+          input.focus();
+        }
+      });
 
       input.addEventListener('input', (e) => {
         const value = e.target.value.trim().toLowerCase();
+        selectedIndex = -1;
 
         if (!value) {
           dropdown.classList.remove('show');
@@ -2057,18 +2228,35 @@
           .join('');
 
         dropdown.classList.add('show');
+      });
 
-        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
-          item.addEventListener('click', () => {
-            input.value = item.textContent;
-            dropdown.classList.remove('show');
-            document.getElementById('submitBtn').focus();
-          });
-        });
+      // Keyboard navigation: arrows to move, Enter to select
+      input.addEventListener('keydown', (e) => {
+        if (!dropdown.classList.contains('show')) return;
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+        if (items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+          items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          selectedIndex = Math.max(selectedIndex - 1, 0);
+          items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
+        } else if (e.key === 'Enter' && selectedIndex >= 0) {
+          e.preventDefault();
+          input.value = items[selectedIndex].textContent;
+          dropdown.classList.remove('show');
+          selectedIndex = -1;
+        }
       });
 
       input.addEventListener('blur', () => {
-        setTimeout(() => dropdown.classList.remove('show'), 100);
+        setTimeout(() => {
+          dropdown.classList.remove('show');
+          selectedIndex = -1;
+        }, 200);
       });
     }
 
@@ -2215,7 +2403,13 @@
       const explanationText = data.explanation || gameState.puzzle.explanation || '';
 
       answer.textContent = answerText;
-      explanation.textContent = explanationText;
+      const explanationTextEl = document.getElementById('resultExplanationText');
+      if (explanationText) {
+        explanationTextEl.textContent = explanationText;
+        explanation.style.display = 'block';
+      } else {
+        explanation.style.display = 'none';
+      }
 
       document.getElementById('guessInput').disabled = true;
       document.getElementById('submitBtn').disabled = true;
@@ -2235,11 +2429,17 @@
       const label = document.getElementById('answerSummaryLabel');
       const name = document.getElementById('answerSummaryName');
       const desc = document.getElementById('answerSummaryExplanation');
+      const descText = document.getElementById('answerSummaryExplanationText');
 
       summary.className = won ? 'answer-summary' : 'answer-summary lost';
       label.textContent = won ? 'Correct Answer' : 'The Answer Was';
       name.textContent = answerText;
-      desc.textContent = explanationText;
+      if (explanationText) {
+        descText.textContent = explanationText;
+        desc.style.display = 'block';
+      } else {
+        desc.style.display = 'none';
+      }
       summary.style.display = 'block';
     }
 
@@ -2479,6 +2679,10 @@
     // MODALS: ARCHIVE
     // ============================================================================
 
+    // Archive state
+    let archiveViewMonth = null; // { year, month } currently displayed
+    let archiveHistory = {};     // dayNumber -> { won, score, completedAt }
+
     async function loadArchiveModal() {
       showModal('archiveModal');
 
@@ -2487,68 +2691,167 @@
         return;
       }
 
-      const history = await getPuzzleHistory();
-      const completed = new Set(history.results?.map(r => r.dayNumber) || []);
+      // Fetch all history
+      const history = await getPuzzleHistory(true);
+      archiveHistory = {};
+      (history.results || []).forEach(r => {
+        archiveHistory[r.dayNumber] = {
+          won: r.won,
+          score: r.score,
+          completedAt: r.completedAt,
+        };
+      });
 
+      // Default to current month
+      const now = new Date();
+      archiveViewMonth = { year: now.getFullYear(), month: now.getMonth() };
+
+      renderArchiveCalendar();
+
+      // Nav buttons
+      document.getElementById('archivePrevMonth').onclick = () => {
+        archiveViewMonth.month--;
+        if (archiveViewMonth.month < 0) { archiveViewMonth.month = 11; archiveViewMonth.year--; }
+        renderArchiveCalendar();
+      };
+      document.getElementById('archiveNextMonth').onclick = () => {
+        const now = new Date();
+        const nextMonth = archiveViewMonth.month + 1;
+        const nextYear = nextMonth > 11 ? archiveViewMonth.year + 1 : archiveViewMonth.year;
+        const normMonth = nextMonth > 11 ? 0 : nextMonth;
+        // Don't go past current month
+        if (nextYear > now.getFullYear() || (nextYear === now.getFullYear() && normMonth > now.getMonth())) return;
+        archiveViewMonth.month = normMonth;
+        archiveViewMonth.year = nextYear;
+        renderArchiveCalendar();
+      };
+    }
+
+    function renderArchiveCalendar() {
       const grid = document.getElementById('archiveGrid');
+      const label = document.getElementById('archiveMonthLabel');
+      const { year, month } = archiveViewMonth;
+      const now = new Date();
+
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      label.textContent = `${monthNames[month]} ${year}`;
+
+      // Disable nav buttons appropriately
+      const launchDate = new Date(Date.UTC(2026, 2, 4));
+      const prevBtn = document.getElementById('archivePrevMonth');
+      const nextBtn = document.getElementById('archiveNextMonth');
+      prevBtn.disabled = (year === launchDate.getUTCFullYear() && month <= launchDate.getUTCMonth());
+      nextBtn.disabled = (year === now.getFullYear() && month >= now.getMonth());
+
+      // First day of month and number of days
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Day of week for first day (0=Sun, convert to Mon=0)
+      let startDow = firstDay.getDay() - 1;
+      if (startDow < 0) startDow = 6; // Sunday -> 6
+
       grid.innerHTML = '';
 
-      // Show days 1 through currentDay only (most recent first)
-      for (let day = gameState.currentDay; day >= 1; day--) {
-        const card = document.createElement('div');
-        card.className = 'archive-card';
+      // Empty cells before first day
+      for (let i = 0; i < startDow; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'cal-cell cal-cell-empty';
+        grid.appendChild(empty);
+      }
 
-        const isDone = completed.has(day);
+      // Calendar cells
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cellDate = new Date(Date.UTC(year, month, d));
+        // Calculate day number for this date
+        const dayNumber = Math.floor((cellDate - launchDate) / 86400000) + 1;
 
-        // Calculate the date for this day number
-        const launchDate = new Date(Date.UTC(2026, 2, 4)); // March 4 2026
-        const puzzleDate = new Date(launchDate.getTime() + (day - 1) * 86400000);
-        const dateStr = puzzleDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        const cell = document.createElement('div');
 
-        card.innerHTML = `
-          <div class="archive-card-day">${dateStr}</div>
-          <div class="archive-card-category">Day ${day}</div>
-          ${isDone ? '<div class="archive-card-checkmark">✓</div>' : ''}
-        `;
+        if (dayNumber < 1) {
+          // Before launch
+          cell.className = 'cal-cell cal-cell-empty';
+          cell.innerHTML = `<div class="cal-cell-date" style="color:#e5e7eb;">${d}</div>`;
+        } else if (dayNumber > gameState.currentDay) {
+          // Future puzzle
+          cell.className = 'cal-cell cal-future';
+          cell.innerHTML = `<div class="cal-cell-date">${d}</div>`;
+        } else {
+          // Valid puzzle day
+          const result = archiveHistory[dayNumber];
 
-        card.addEventListener('click', async () => {
-          closeAllModals();
-          try {
-            const puzzleData = await getPuzzle(day);
-            gameState.currentDay = day;
-            gameState.puzzle = puzzleData.puzzle;
-            document.getElementById('resultOverlay').classList.remove('show');
-            document.getElementById('guessInput').value = '';
+          if (result) {
+            // Determine if completed on release day or via archive
+            const releaseDate = new Date(launchDate.getTime() + (dayNumber - 1) * 86400000);
+            const completedDate = new Date(result.completedAt);
+            const sameDay = releaseDate.getUTCFullYear() === completedDate.getUTCFullYear()
+              && releaseDate.getUTCMonth() === completedDate.getUTCMonth()
+              && releaseDate.getUTCDate() === completedDate.getUTCDate();
 
-            if (puzzleData.completed) {
-              gameState.isCompleted = true;
-              gameState.guesses = puzzleData.completed.guesses || [];
-              gameState.revealed = [true, true, true, true, true];
-              document.getElementById('guessInput').disabled = true;
-              document.getElementById('submitBtn').disabled = true;
-              renderClues();
-              renderGuessHistory();
-              showResult(puzzleData.completed.won, {
-                answer: puzzleData.puzzle.answer,
-                explanation: puzzleData.puzzle.explanation || '',
-              });
+            if (sameDay && result.won) {
+              cell.className = 'cal-cell cal-green';
+            } else if (sameDay && !result.won) {
+              cell.className = 'cal-cell cal-red';
             } else {
-              gameState.isCompleted = false;
-              gameState.guesses = [];
-              gameState.revealed = [true, false, false, false, false];
-              document.getElementById('guessInput').disabled = false;
-              document.getElementById('submitBtn').disabled = false;
-              renderClues();
-              renderGuessHistory();
+              cell.className = 'cal-cell cal-dark-grey';
             }
 
-            updateDayIndicator();
-          } catch (e) {
-            showToast('Failed to load puzzle', 'error');
+            const scoreText = result.won ? result.score : 'X';
+            cell.innerHTML = `<div class="cal-cell-date">${d}</div><div class="cal-cell-score">${scoreText}</div>`;
+          } else {
+            cell.className = 'cal-cell cal-grey';
+            cell.innerHTML = `<div class="cal-cell-date">${d}</div>`;
           }
-        });
 
-        grid.appendChild(card);
+          // Click handler to load puzzle
+          cell.addEventListener('click', () => loadArchivePuzzle(dayNumber));
+        }
+
+        grid.appendChild(cell);
+      }
+    }
+
+    async function loadArchivePuzzle(dayNumber) {
+      closeAllModals();
+      try {
+        const puzzleData = await getPuzzle(dayNumber);
+        gameState.currentDay = dayNumber;
+        gameState.puzzle = puzzleData.puzzle;
+        document.getElementById('resultOverlay').classList.remove('show');
+        document.getElementById('guessInput').value = '';
+        document.getElementById('answerSummary').style.display = 'none';
+
+        if (puzzleData.completed) {
+          gameState.isCompleted = true;
+          gameState.guesses = puzzleData.completed.guesses || [];
+          gameState.revealed = [true, true, true, true, true];
+          gameState.clueStates = {};
+          const numWrong = gameState.guesses.length;
+          for (let i = 0; i < 5; i++) {
+            gameState.clueStates[i] = puzzleData.completed.won ? (i < numWrong ? 'wrong' : 'correct') : 'wrong';
+          }
+          document.getElementById('guessInput').disabled = true;
+          document.getElementById('submitBtn').disabled = true;
+          renderClues();
+          renderGuessHistory();
+          showResult(puzzleData.completed.won, {
+            answer: puzzleData.puzzle.answer,
+            explanation: puzzleData.puzzle.explanation || '',
+          });
+        } else {
+          gameState.isCompleted = false;
+          gameState.guesses = [];
+          gameState.clueStates = {};
+          gameState.revealed = [true, false, false, false, false];
+          document.getElementById('guessInput').disabled = false;
+          document.getElementById('submitBtn').disabled = false;
+          renderClues();
+          renderGuessHistory();
+        }
+
+        updateDayIndicator();
+      } catch (e) {
+        showToast('Failed to load puzzle', 'error');
       }
     }
 

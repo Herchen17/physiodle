@@ -56,7 +56,7 @@ function sanitizePuzzle(puzzle) {
     aliases: puzzle.aliases || [],
     category: puzzle.category,
     clues: puzzle.clues,
-    // explanation intentionally omitted until completion
+    explanation: puzzle.explanation || '',
   };
 }
 

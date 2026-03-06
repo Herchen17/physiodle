@@ -52,7 +52,8 @@ router.get('/conditions', (req, res) => {
 
 // GET /api/puzzle/history — user's completed puzzles (MUST be before /:dayNumber)
 router.get('/history/list', requireAuth, (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  const all = req.query.all === 'true';
+  const limit = all ? 10000 : Math.min(parseInt(req.query.limit) || 50, 200);
   const offset = parseInt(req.query.offset) || 0;
 
   const total = db.prepare('SELECT COUNT(*) as cnt FROM game_results WHERE user_id = ?').get(req.user.userId);
