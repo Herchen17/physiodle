@@ -1526,7 +1526,27 @@
         <button class="btn btn-primary" id="shareBtn">Copy Result</button>
         <button class="btn btn-secondary" id="archiveFromResultBtn">Browse Archive</button>
       </div>
+      <!-- Login CTA for unauthenticated users -->
+      <div id="resultLoginCTA" style="display:none; margin-top: 0.75rem; padding: 0.75rem; background: #f0fdf4; border: 1px solid #d1fae5; border-radius: 0.5rem;">
+        <p style="font-size: 0.8rem; color: #374151; margin-bottom: 0.5rem;">Sign in to save your result to the leaderboard!</p>
+        <button class="btn btn-primary btn-small" id="resultLoginBtn" style="font-size: 0.8rem;">Sign In / Create Account</button>
+      </div>
       <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #6b7280;">Check back tomorrow for the next Physiodle!</p>
+    </div>
+  </div>
+
+  <!-- LOGIN PROMPT OVERLAY (shown once to unauthenticated users) -->
+  <div class="result-overlay" id="loginPromptOverlay">
+    <div class="result-area" style="max-width: 400px;">
+      <button class="result-close" id="loginPromptClose" title="Close">&times;</button>
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">🦴</div>
+      <div style="font-size: 1.4rem; font-weight: 700; color: #0d9488; margin-bottom: 0.5rem;">Welcome to Physiodle!</div>
+      <p style="color: #4b5563; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">The daily physiotherapy diagnosis game. Create a free account to track your stats, compete on leaderboards, and add friends.</p>
+      <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-primary" id="loginPromptSignup">Create Account</button>
+        <button class="btn btn-ghost" id="loginPromptLogin">Sign In</button>
+      </div>
+      <button class="btn btn-link" id="loginPromptSkip" style="margin-top: 0.75rem; font-size: 0.8rem; color: #9ca3af;">Play without an account</button>
     </div>
   </div>
 
@@ -2630,6 +2650,17 @@
       // Save completion to localStorage (so it persists even without account)
       saveLocalCompletion(gameState.currentDay, won, gameState.guesses);
 
+      // Show/hide login CTA in result popup
+      const loginCTA = document.getElementById('resultLoginCTA');
+      if (!gameState.userToken) {
+        loginCTA.style.display = 'block';
+        // Save pending completion so it can be recorded when they sign in
+        const score = won ? (gameState.guesses.length + 1) : 0;
+        savePendingCompletion(gameState.currentDay, won, won ? score : 0, gameState.guesses);
+      } else {
+        loginCTA.style.display = 'none';
+      }
+
       // Show as popup overlay
       document.getElementById('resultOverlay').classList.add('show');
     }
@@ -3140,15 +3171,18 @@
 
           if (result) {
             // Determine if completed on release day or via archive
-            // completedAt from SQLite is UTC but missing Z suffix — add it
+            // Compare in AEST (UTC+10) since day numbers are AEST-based
             let sameDay = false;
             if (result.completedAt) {
               const caStr = result.completedAt.endsWith('Z') ? result.completedAt : result.completedAt + 'Z';
               const completedDate = new Date(caStr);
-              const releaseDate = new Date(launchDate.getTime() + (dayNumber - 1) * 86400000);
-              sameDay = releaseDate.getUTCFullYear() === completedDate.getUTCFullYear()
-                && releaseDate.getUTCMonth() === completedDate.getUTCMonth()
-                && releaseDate.getUTCDate() === completedDate.getUTCDate();
+              // Convert completed_at to AEST by adding 10 hours
+              const completedAEST = new Date(completedDate.getTime() + 10 * 3600000);
+              // Release date for this day number (AEST calendar date)
+              const releaseAEST = new Date(Date.UTC(2026, 2, 4 + (dayNumber - 1)));
+              sameDay = releaseAEST.getUTCFullYear() === completedAEST.getUTCFullYear()
+                && releaseAEST.getUTCMonth() === completedAEST.getUTCMonth()
+                && releaseAEST.getUTCDate() === completedAEST.getUTCDate();
             }
 
             if (sameDay && result.won) {
@@ -3401,6 +3435,14 @@
 
       updateAccountBtn();
       await initGame();
+
+      // After login, try to submit any completion done while logged out
+      if (gameState.userToken) {
+        await submitPendingCompletion();
+      } else {
+        // Show login prompt for unauthenticated users
+        showLoginPrompt();
+      }
     }
 
     // ============================================================================
@@ -3571,6 +3613,85 @@
         }
       });
     });
+
+    // ============================================================================
+    // LOGIN PROMPT (for unauthenticated users)
+    // ============================================================================
+
+    function showLoginPrompt() {
+      // Only show if not logged in and haven't dismissed recently
+      if (gameState.userToken) return;
+      const dismissed = localStorage.getItem('physiodle_loginPromptDismissed');
+      if (dismissed) {
+        // Don't show again for 24 hours after dismissal
+        const dismissedAt = parseInt(dismissed);
+        if (Date.now() - dismissedAt < 24 * 3600000) return;
+      }
+      document.getElementById('loginPromptOverlay').classList.add('show');
+    }
+
+    function dismissLoginPrompt() {
+      document.getElementById('loginPromptOverlay').classList.remove('show');
+      localStorage.setItem('physiodle_loginPromptDismissed', Date.now().toString());
+    }
+
+    document.getElementById('loginPromptClose').addEventListener('click', dismissLoginPrompt);
+    document.getElementById('loginPromptSkip').addEventListener('click', dismissLoginPrompt);
+
+    document.getElementById('loginPromptSignup').addEventListener('click', () => {
+      dismissLoginPrompt();
+      showModal('signupModal');
+    });
+
+    document.getElementById('loginPromptLogin').addEventListener('click', () => {
+      dismissLoginPrompt();
+      showModal('loginModal');
+    });
+
+    // Result popup login CTA
+    document.getElementById('resultLoginBtn').addEventListener('click', () => {
+      document.getElementById('resultOverlay').classList.remove('show');
+      showModal('signupModal');
+    });
+
+    // Login prompt overlay — click outside to dismiss
+    document.getElementById('loginPromptOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('loginPromptOverlay')) {
+        dismissLoginPrompt();
+      }
+    });
+
+    // ============================================================================
+    // DEFERRED COMPLETION (play without account, record on login)
+    // ============================================================================
+
+    // Save pending completion to localStorage (overwritten each game)
+    function savePendingCompletion(dayNumber, won, score, guesses) {
+      try {
+        localStorage.setItem('physiodle_pendingCompletion', JSON.stringify({
+          dayNumber, won, score, guesses, savedAt: Date.now()
+        }));
+      } catch (e) { /* ignore */ }
+    }
+
+    // After login/signup, try to submit any pending completion
+    async function submitPendingCompletion() {
+      try {
+        const raw = localStorage.getItem('physiodle_pendingCompletion');
+        if (!raw || !gameState.userToken) return;
+        const pending = JSON.parse(raw);
+        // Only submit if it's today's puzzle (server will validate)
+        await submitPuzzle(pending.dayNumber, pending.won, pending.score, pending.guesses);
+        localStorage.removeItem('physiodle_pendingCompletion');
+        console.log('Pending completion submitted successfully');
+      } catch (e) {
+        // 409 = already submitted, which is fine
+        if (e.message && e.message.includes('already submitted')) {
+          localStorage.removeItem('physiodle_pendingCompletion');
+        }
+        console.log('Pending completion submit:', e.message);
+      }
+    }
 
     // Initialize on load
     init();
