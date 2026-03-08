@@ -881,6 +881,12 @@
       margin-bottom: 0;
     }
 
+    .lb-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
     .lb-scope-toggle {
       display: flex;
       gap: 0;
@@ -1823,10 +1829,12 @@
   <div class="modal-overlay" id="leaderboardModal">
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Leaderboard</h2>
-        <div class="lb-scope-toggle">
-          <button class="lb-scope-btn active" id="lbScopeFriends">Friends</button>
-          <button class="lb-scope-btn" id="lbScopeGlobal">Global</button>
+        <div class="lb-header-left">
+          <h2 class="modal-title">Leaderboard</h2>
+          <div class="lb-scope-toggle">
+            <button class="lb-scope-btn active" id="lbScopeFriends">Friends</button>
+            <button class="lb-scope-btn" id="lbScopeGlobal">Global</button>
+          </div>
         </div>
         <button class="modal-close" onclick="closeModal('leaderboardModal')">×</button>
       </div>
