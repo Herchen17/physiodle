@@ -1020,6 +1020,13 @@
       font-size: 0.85rem;
     }
 
+    .lb-row.lb-gold .lb-name { color: #b8860b; }
+    .lb-row.lb-gold .lb-rank { color: #b8860b; }
+    .lb-row.lb-silver .lb-name { color: #6b7280; }
+    .lb-row.lb-silver .lb-rank { color: #6b7280; }
+    .lb-row.lb-bronze .lb-name { color: #a0522d; }
+    .lb-row.lb-bronze .lb-rank { color: #a0522d; }
+
     .lb-name em {
       font-weight: 400;
       color: #6b7280;
@@ -1621,6 +1628,67 @@
       <button class="btn btn-link" id="loginPromptSkip" style="margin-top: 0.75rem; font-size: 0.8rem; color: #9ca3af;">Play without an account</button>
     </div>
   </div>
+
+  <!-- INDEPENDENT login prompt script — runs even if main script errors -->
+  <script>
+  (function() {
+    try {
+      // Wait for page to be ready, then show login prompt if not logged in
+      function tryShowLoginPrompt() {
+        var token = localStorage.getItem('physiodle_token');
+        if (token) return; // logged in
+
+        var dismissed = localStorage.getItem('physiodle_loginPromptDismissed');
+        if (dismissed) {
+          var dismissedAt = parseInt(dismissed);
+          if (Date.now() - dismissedAt < 4 * 3600000) return; // cooldown
+        }
+
+        var overlay = document.getElementById('loginPromptOverlay');
+        if (!overlay) return;
+        overlay.style.zIndex = '9999';
+        overlay.style.display = 'flex';
+        overlay.classList.add('show');
+      }
+
+      function dismissPrompt() {
+        var overlay = document.getElementById('loginPromptOverlay');
+        if (overlay) {
+          overlay.classList.remove('show');
+          overlay.style.display = 'none';
+        }
+        localStorage.setItem('physiodle_loginPromptDismissed', Date.now().toString());
+      }
+
+      // Wire up buttons immediately (they exist in the DOM above)
+      var closeBtn = document.getElementById('loginPromptClose');
+      var skipBtn = document.getElementById('loginPromptSkip');
+      var signupBtn = document.getElementById('loginPromptSignup');
+      var loginBtn = document.getElementById('loginPromptLogin');
+      var overlayEl = document.getElementById('loginPromptOverlay');
+
+      if (closeBtn) closeBtn.addEventListener('click', dismissPrompt);
+      if (skipBtn) skipBtn.addEventListener('click', dismissPrompt);
+      if (signupBtn) signupBtn.addEventListener('click', function() {
+        dismissPrompt();
+        // Try to open signup modal if the main app function exists
+        if (typeof showModal === 'function') showModal('signupModal');
+      });
+      if (loginBtn) loginBtn.addEventListener('click', function() {
+        dismissPrompt();
+        if (typeof showModal === 'function') showModal('loginModal');
+      });
+      if (overlayEl) overlayEl.addEventListener('click', function(e) {
+        if (e.target === overlayEl) dismissPrompt();
+      });
+
+      // Show after a delay to let page render
+      setTimeout(tryShowLoginPrompt, 1500);
+    } catch (e) {
+      // Silently fail — this should never block anything
+    }
+  })();
+  </script>
 
   <!-- AUTH PAGE -->
   <div class="page" id="authPage">
@@ -3074,7 +3142,8 @@
       const rows = paginated.map(entry => {
         const isCurrentUser = gameState.userId && entry.userId == gameState.userId;
         const streakBadge = entry.streak >= 3 ? ` <span class="lb-streak" title="${entry.streak} day streak">🔥${entry.streak}</span>` : '';
-        return `<div class="lb-row${isCurrentUser ? ' lb-you' : ''}">
+        const rankClass = entry._displayRank === 1 ? ' lb-gold' : entry._displayRank === 2 ? ' lb-silver' : entry._displayRank === 3 ? ' lb-bronze' : '';
+        return `<div class="lb-row${isCurrentUser ? ' lb-you' : ''}${rankClass}">
           <span class="lb-rank">#${entry._displayRank}</span>
           <span class="lb-name">${entry.username}${streakBadge}${isCurrentUser ? ' <em>(you)</em>' : ''}</span>
           <span class="lb-stat">${entry.played}</span>
@@ -3764,55 +3833,14 @@
     // LOGIN PROMPT (for unauthenticated users)
     // ============================================================================
 
-    let loginPromptShown = false;
-    function showLoginPrompt() {
-      // Only show once per session, and only if not logged in
-      if (loginPromptShown) return;
-      if (gameState.userToken) return;
-      const dismissed = localStorage.getItem('physiodle_loginPromptDismissed');
-      if (dismissed) {
-        const dismissedAt = parseInt(dismissed);
-        if (Date.now() - dismissedAt < 4 * 3600000) return;
-      }
-      loginPromptShown = true;
-      const overlay = document.getElementById('loginPromptOverlay');
-      if (!overlay) return;
-      overlay.style.zIndex = '9999';
-      overlay.style.display = 'flex';
-      overlay.classList.add('show');
-    }
-
-    function dismissLoginPrompt() {
-      const overlay = document.getElementById('loginPromptOverlay');
-      overlay.classList.remove('show');
-      overlay.style.display = 'none';
-      localStorage.setItem('physiodle_loginPromptDismissed', Date.now().toString());
-    }
-
-    document.getElementById('loginPromptClose').addEventListener('click', dismissLoginPrompt);
-    document.getElementById('loginPromptSkip').addEventListener('click', dismissLoginPrompt);
-
-    document.getElementById('loginPromptSignup').addEventListener('click', () => {
-      dismissLoginPrompt();
-      showModal('signupModal');
-    });
-
-    document.getElementById('loginPromptLogin').addEventListener('click', () => {
-      dismissLoginPrompt();
-      showModal('loginModal');
-    });
+    // Login prompt is handled by independent script above the main script.
+    // This function is kept as a no-op so init() doesn't error.
+    function showLoginPrompt() {}
 
     // Result popup login CTA
     document.getElementById('resultLoginBtn').addEventListener('click', () => {
       document.getElementById('resultOverlay').classList.remove('show');
       showModal('signupModal');
-    });
-
-    // Login prompt overlay — click outside to dismiss
-    document.getElementById('loginPromptOverlay').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('loginPromptOverlay')) {
-        dismissLoginPrompt();
-      }
     });
 
     // ============================================================================
@@ -3849,11 +3877,6 @@
 
     // Initialize on load
     init();
-
-    // Fallback: if init somehow fails or takes too long, still show login prompt
-    window.addEventListener('load', () => {
-      setTimeout(() => showLoginPrompt(), 2000);
-    });
   </script>
 </body>
 </html>
