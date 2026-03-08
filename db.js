@@ -69,6 +69,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
   CREATE INDEX IF NOT EXISTS idx_friend_requests_to ON friend_requests(to_user_id, status);
   CREATE INDEX IF NOT EXISTS idx_friend_requests_from ON friend_requests(from_user_id, status);
+
+  CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    day_number INTEGER NOT NULL,
+    rating TEXT NOT NULL,
+    comment TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+  );
 `);
 
 module.exports = db;

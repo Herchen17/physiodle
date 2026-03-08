@@ -9,6 +9,52 @@ function getFriendIds(userId) {
   return [userId, ...friends.map(f => f.friend_id)];
 }
 
+// Helper: compute current on-day win streak for given users
+// Streak = consecutive day_numbers with on-day wins, counting back from today
+function computeStreaks(userIds) {
+  const pm = require('../puzzle-manager');
+  const currentDay = pm.getCurrentDayNumber();
+  const onDayExpr = `DATE(gr.completed_at, '+10 hours') = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+
+  const whereUser = userIds
+    ? `AND gr.user_id IN (${userIds.map(() => '?').join(',')})`
+    : '';
+  const params = userIds ? [...userIds] : [];
+
+  // Get all on-day wins, ordered by day descending, for each user
+  const rows = db.prepare(`
+    SELECT gr.user_id, gr.day_number
+    FROM game_results gr
+    WHERE gr.won = 1 AND ${onDayExpr} ${whereUser}
+    ORDER BY gr.user_id, gr.day_number DESC
+  `).all(...params);
+
+  // Group by user
+  const byUser = {};
+  rows.forEach(r => {
+    if (!byUser[r.user_id]) byUser[r.user_id] = [];
+    byUser[r.user_id].push(r.day_number);
+  });
+
+  // Compute streak: count consecutive days from currentDay backwards
+  const streaks = {};
+  Object.entries(byUser).forEach(([userId, days]) => {
+    let streak = 0;
+    let expectedDay = currentDay;
+    for (const day of days) {
+      if (day === expectedDay) {
+        streak++;
+        expectedDay--;
+      } else if (day < expectedDay) {
+        break; // gap found
+      }
+    }
+    streaks[parseInt(userId)] = streak;
+  });
+
+  return streaks;
+}
+
 // Helper: compute point-based leaderboard
 // If userIds is null → global (all users)
 // Points: 6 - guessCount for wins, 0 for losses
@@ -51,6 +97,10 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
     ${limitClause}
   `).all(...params);
 
+  // Compute streaks for all users in results
+  const resultUserIds = rows.map(r => r.user_id);
+  const streaks = resultUserIds.length > 0 ? computeStreaks(resultUserIds) : {};
+
   return rows.map((r, i) => ({
     rank: i + 1,
     userId: r.user_id,
@@ -60,6 +110,7 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
     winRate: r.played > 0 ? Math.round((r.won / r.played) * 100) : 0,
     totalPoints: r.totalPoints || 0,
     avgPoints: r.played > 0 ? parseFloat(((r.totalPoints || 0) / r.played).toFixed(1)) : 0,
+    streak: streaks[r.user_id] || 0,
     isYou: r.user_id === currentUserId,
   }));
 }
