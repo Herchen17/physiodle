@@ -3756,23 +3756,28 @@
     // LOGIN PROMPT (for unauthenticated users)
     // ============================================================================
 
+    let loginPromptShown = false;
     function showLoginPrompt() {
-      // Only show if not logged in and haven't dismissed recently
+      // Only show once per session, and only if not logged in
+      if (loginPromptShown) return;
       if (gameState.userToken) return;
       const dismissed = localStorage.getItem('physiodle_loginPromptDismissed');
       if (dismissed) {
-        // Don't show again for 4 hours after dismissal
         const dismissedAt = parseInt(dismissed);
         if (Date.now() - dismissedAt < 4 * 3600000) return;
       }
-      // Ensure overlay is visible above everything
+      loginPromptShown = true;
       const overlay = document.getElementById('loginPromptOverlay');
+      if (!overlay) return;
       overlay.style.zIndex = '9999';
+      overlay.style.display = 'flex';
       overlay.classList.add('show');
     }
 
     function dismissLoginPrompt() {
-      document.getElementById('loginPromptOverlay').classList.remove('show');
+      const overlay = document.getElementById('loginPromptOverlay');
+      overlay.classList.remove('show');
+      overlay.style.display = 'none';
       localStorage.setItem('physiodle_loginPromptDismissed', Date.now().toString());
     }
 
@@ -3836,6 +3841,11 @@
 
     // Initialize on load
     init();
+
+    // Fallback: if init somehow fails or takes too long, still show login prompt
+    window.addEventListener('load', () => {
+      setTimeout(() => showLoginPrompt(), 2000);
+    });
   </script>
 </body>
 </html>
