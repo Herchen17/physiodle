@@ -26,7 +26,7 @@ const db = require('./db');
 app.post('/api/feedback', optionalAuth, (req, res) => {
   const { dayNumber, rating, comment } = req.body;
   if (!dayNumber || !rating) return res.status(400).json({ error: 'dayNumber and rating required' });
-  const validRatings = ['love', 'good', 'ok', 'hard', 'easy'];
+  const validRatings = ['love', 'good', 'ok', 'hard', 'easy', 'comment'];
   if (!validRatings.includes(rating)) return res.status(400).json({ error: 'Invalid rating' });
   const userId = req.user ? req.user.userId : null;
   db.prepare('INSERT INTO feedback (user_id, day_number, rating, comment) VALUES (?, ?, ?, ?)').run(userId, dayNumber, rating, (comment || '').slice(0, 500) || null);

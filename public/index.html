@@ -1431,30 +1431,6 @@
       margin: 1rem 0;
     }
 
-    /* FEEDBACK BUTTONS */
-    .feedback-btn {
-      font-size: 1.5rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
-      border-radius: 0.5rem;
-      padding: 0.4rem 0.6rem;
-      cursor: pointer;
-      transition: all 0.15s;
-      line-height: 1;
-    }
-
-    .feedback-btn:hover {
-      border-color: #0d9488;
-      background: #f0fdf4;
-      transform: scale(1.15);
-    }
-
-    .feedback-btn.selected {
-      border-color: #0d9488;
-      background: #d1fae5;
-      transform: scale(1.1);
-    }
-
     .spinner {
       display: inline-block;
       width: 16px;
@@ -1547,21 +1523,14 @@
       <div id="cluesContainer"></div>
 
       <!-- FEEDBACK FOOTER -->
-      <div style="margin-top: 2rem; padding: 1rem; background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;">
-        <p style="font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">How was today's puzzle?</p>
-        <div id="feedbackButtons" style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-          <button class="feedback-btn" data-rating="love" title="Loved it">😍</button>
-          <button class="feedback-btn" data-rating="good" title="Good">👍</button>
-          <button class="feedback-btn" data-rating="ok" title="It was okay">😐</button>
-          <button class="feedback-btn" data-rating="hard" title="Too hard">🤯</button>
-          <button class="feedback-btn" data-rating="easy" title="Too easy">🥱</button>
-        </div>
+      <div style="margin-top: 2rem; text-align: center;" id="feedbackSection">
+        <button class="btn-link" id="feedbackToggle" style="font-size: 0.75rem; color: #9ca3af;">Leave feedback</button>
         <div id="feedbackForm" style="display:none; margin-top: 0.5rem;">
-          <textarea id="feedbackText" placeholder="Any other thoughts? (optional)" style="width: 100%; padding: 0.5rem; border: 1.5px solid #e5e7eb; border-radius: 0.375rem; font-family: 'Inter', sans-serif; font-size: 0.8rem; resize: vertical; min-height: 50px; max-height: 120px;"></textarea>
-          <button class="btn btn-primary btn-small" id="feedbackSubmitBtn" style="margin-top: 0.35rem; font-size: 0.75rem;">Send Feedback</button>
+          <textarea id="feedbackText" placeholder="What do you think of Physiodle? Suggestions, bugs, anything..." style="width: 100%; padding: 0.5rem; border: 1.5px solid #e5e7eb; border-radius: 0.375rem; font-family: 'Inter', sans-serif; font-size: 0.8rem; resize: vertical; min-height: 60px; max-height: 120px; background: white;"></textarea>
+          <button class="btn btn-primary btn-small" id="feedbackSubmitBtn" style="margin-top: 0.35rem; font-size: 0.75rem;">Send</button>
         </div>
         <div id="feedbackThanks" style="display:none;">
-          <p style="font-size: 0.8rem; color: #059669; font-weight: 500;">Thanks for your feedback!</p>
+          <p style="font-size: 0.75rem; color: #059669;">Thanks for your feedback!</p>
         </div>
       </div>
 
@@ -3679,24 +3648,15 @@
     // FEEDBACK SYSTEM
     // ============================================================================
 
-    let selectedRating = null;
-
-    document.querySelectorAll('.feedback-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Check if already submitted today
-        const feedbackDay = localStorage.getItem('physiodle_feedbackDay');
-        if (feedbackDay && parseInt(feedbackDay) === gameState.currentDay) return;
-
-        document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedRating = btn.getAttribute('data-rating');
-        document.getElementById('feedbackForm').style.display = 'block';
-      });
+    document.getElementById('feedbackToggle').addEventListener('click', () => {
+      document.getElementById('feedbackToggle').style.display = 'none';
+      document.getElementById('feedbackForm').style.display = 'block';
+      document.getElementById('feedbackText').focus();
     });
 
     document.getElementById('feedbackSubmitBtn').addEventListener('click', async () => {
-      if (!selectedRating) return;
       const text = document.getElementById('feedbackText').value.trim();
+      if (!text) { document.getElementById('feedbackText').focus(); return; }
 
       try {
         await fetch('/api/feedback', {
@@ -3707,27 +3667,17 @@
           },
           body: JSON.stringify({
             dayNumber: gameState.currentDay,
-            rating: selectedRating,
-            comment: text || null,
+            rating: 'comment',
+            comment: text,
           }),
         });
-      } catch (e) { /* ignore errors */ }
+      } catch (e) { /* ignore */ }
 
-      // Show thanks, hide form
-      document.getElementById('feedbackButtons').style.display = 'none';
       document.getElementById('feedbackForm').style.display = 'none';
       document.getElementById('feedbackThanks').style.display = 'block';
-      localStorage.setItem('physiodle_feedbackDay', gameState.currentDay);
     });
 
-    // Hide feedback if already submitted today
-    function checkFeedbackState() {
-      const feedbackDay = localStorage.getItem('physiodle_feedbackDay');
-      if (feedbackDay && gameState.currentDay && parseInt(feedbackDay) === gameState.currentDay) {
-        document.getElementById('feedbackButtons').style.display = 'none';
-        document.getElementById('feedbackThanks').style.display = 'block';
-      }
-    }
+    function checkFeedbackState() { /* no-op for simple version */ }
 
     // ============================================================================
     // LOGIN PROMPT (for unauthenticated users)
