@@ -3542,8 +3542,8 @@
       if (gameState.userToken) {
         await submitPendingCompletion();
       } else {
-        // Show login prompt for unauthenticated users
-        showLoginPrompt();
+        // Show login prompt for unauthenticated users (small delay to ensure page is rendered)
+        setTimeout(() => showLoginPrompt(), 500);
       }
     }
 
@@ -3761,11 +3761,14 @@
       if (gameState.userToken) return;
       const dismissed = localStorage.getItem('physiodle_loginPromptDismissed');
       if (dismissed) {
-        // Don't show again for 24 hours after dismissal
+        // Don't show again for 4 hours after dismissal
         const dismissedAt = parseInt(dismissed);
-        if (Date.now() - dismissedAt < 24 * 3600000) return;
+        if (Date.now() - dismissedAt < 4 * 3600000) return;
       }
-      document.getElementById('loginPromptOverlay').classList.add('show');
+      // Ensure overlay is visible above everything
+      const overlay = document.getElementById('loginPromptOverlay');
+      overlay.style.zIndex = '9999';
+      overlay.classList.add('show');
     }
 
     function dismissLoginPrompt() {
