@@ -1636,13 +1636,7 @@
       // Wait for page to be ready, then show login prompt if not logged in
       function tryShowLoginPrompt() {
         var token = localStorage.getItem('physiodle_token');
-        if (token) return; // logged in
-
-        var dismissed = localStorage.getItem('physiodle_loginPromptDismissed');
-        if (dismissed) {
-          var dismissedAt = parseInt(dismissed);
-          if (Date.now() - dismissedAt < 4 * 3600000) return; // cooldown
-        }
+        if (token) return; // logged in — don't show
 
         var overlay = document.getElementById('loginPromptOverlay');
         if (!overlay) return;
@@ -1657,7 +1651,6 @@
           overlay.classList.remove('show');
           overlay.style.display = 'none';
         }
-        localStorage.setItem('physiodle_loginPromptDismissed', Date.now().toString());
       }
 
       // Wire up buttons immediately (they exist in the DOM above)
@@ -1682,8 +1675,8 @@
         if (e.target === overlayEl) dismissPrompt();
       });
 
-      // Show after a delay to let page render
-      setTimeout(tryShowLoginPrompt, 1500);
+      // Show after a short delay to let page render
+      setTimeout(tryShowLoginPrompt, 750);
     } catch (e) {
       // Silently fail — this should never block anything
     }
