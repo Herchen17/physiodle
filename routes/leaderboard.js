@@ -115,63 +115,88 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
   }));
 }
 
-// GET /api/leaderboard/weekly — this week Mon-Sun
+// Helper: get current AEST date components
+// All date boundaries should be in AEST since the game is AEST-based
+const TZ_OFFSET = 10; // AEST = UTC+10
+function nowAEST() {
+  const now = new Date();
+  return new Date(now.getTime() + TZ_OFFSET * 3600000);
+}
+// Format as SQLite-compatible datetime string (YYYY-MM-DD HH:MM:SS)
+function sqlDate(d) {
+  return d.toISOString().replace('T', ' ').replace(/\.\d+Z$/, '');
+}
+
+// GET /api/leaderboard/weekly — this week Mon-Sun (AEST)
 // ?global=true → all users; otherwise friends only (requires auth)
 router.get('/weekly', optionalAuth, (req, res) => {
   const isGlobal = req.query.global === 'true';
   if (!isGlobal && !req.user) return res.status(401).json({ error: 'Authentication required' });
 
-  const now = new Date();
-  const dayOfWeek = now.getUTCDay();
-  const monday = new Date(now);
-  monday.setUTCDate(now.getUTCDate() - ((dayOfWeek + 6) % 7));
+  const aest = nowAEST();
+  const dayOfWeek = aest.getUTCDay(); // 0=Sun .. 6=Sat
+  const monday = new Date(aest);
+  monday.setUTCDate(aest.getUTCDate() - ((dayOfWeek + 6) % 7));
   monday.setUTCHours(0, 0, 0, 0);
-  const sunday = new Date(monday);
-  sunday.setUTCDate(monday.getUTCDate() + 7);
+  const nextMonday = new Date(monday);
+  nextMonday.setUTCDate(monday.getUTCDate() + 7);
+
+  // Convert AEST boundaries back to UTC for comparison with completed_at (stored UTC)
+  const fromUTC = new Date(monday.getTime() - TZ_OFFSET * 3600000);
+  const toUTC = new Date(nextMonday.getTime() - TZ_OFFSET * 3600000);
 
   const userIds = isGlobal ? null : getFriendIds(req.user.userId);
   const currentUserId = req.user ? req.user.userId : null;
-  const entries = computeLeaderboard(userIds, { from: monday.toISOString(), to: sunday.toISOString() }, currentUserId);
+  const entries = computeLeaderboard(userIds, { from: sqlDate(fromUTC), to: sqlDate(toUTC) }, currentUserId);
 
+  const sundayLabel = new Date(nextMonday - 86400000);
   res.json({
-    period: `${monday.toISOString().split('T')[0]} to ${new Date(sunday - 86400000).toISOString().split('T')[0]}`,
+    period: `${monday.toISOString().split('T')[0]} to ${sundayLabel.toISOString().split('T')[0]}`,
     entries,
   });
 });
 
-// GET /api/leaderboard/monthly — current calendar month
+// GET /api/leaderboard/monthly — current calendar month (AEST)
 // ?global=true → all users; otherwise friends only (requires auth)
 router.get('/monthly', optionalAuth, (req, res) => {
   const isGlobal = req.query.global === 'true';
   if (!isGlobal && !req.user) return res.status(401).json({ error: 'Authentication required' });
 
-  const now = new Date();
-  const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const lastDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const aest = nowAEST();
+  const year = aest.getUTCFullYear();
+  const month = aest.getUTCMonth();
+  // AEST midnight boundaries, then convert to UTC
+  const firstAEST = new Date(Date.UTC(year, month, 1));
+  const lastAEST = new Date(Date.UTC(year, month + 1, 1));
+  const fromUTC = new Date(firstAEST.getTime() - TZ_OFFSET * 3600000);
+  const toUTC = new Date(lastAEST.getTime() - TZ_OFFSET * 3600000);
 
   const userIds = isGlobal ? null : getFriendIds(req.user.userId);
   const currentUserId = req.user ? req.user.userId : null;
-  const entries = computeLeaderboard(userIds, { from: firstDay.toISOString(), to: lastDay.toISOString() }, currentUserId);
+  const entries = computeLeaderboard(userIds, { from: sqlDate(fromUTC), to: sqlDate(toUTC) }, currentUserId);
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  res.json({ period: `${monthNames[now.getUTCMonth()]} ${now.getUTCFullYear()}`, entries });
+  res.json({ period: `${monthNames[month]} ${year}`, entries });
 });
 
-// GET /api/leaderboard/yearly — current calendar year
+// GET /api/leaderboard/yearly — current calendar year (AEST)
 // ?global=true → all users; otherwise friends only (requires auth)
 router.get('/yearly', optionalAuth, (req, res) => {
   const isGlobal = req.query.global === 'true';
   if (!isGlobal && !req.user) return res.status(401).json({ error: 'Authentication required' });
 
-  const now = new Date();
-  const firstDay = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-  const lastDay = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1));
+  const aest = nowAEST();
+  const year = aest.getUTCFullYear();
+  const firstAEST = new Date(Date.UTC(year, 0, 1));
+  const lastAEST = new Date(Date.UTC(year + 1, 0, 1));
+  const fromUTC = new Date(firstAEST.getTime() - TZ_OFFSET * 3600000);
+  const toUTC = new Date(lastAEST.getTime() - TZ_OFFSET * 3600000);
 
   const userIds = isGlobal ? null : getFriendIds(req.user.userId);
   const currentUserId = req.user ? req.user.userId : null;
-  const entries = computeLeaderboard(userIds, { from: firstDay.toISOString(), to: lastDay.toISOString() }, currentUserId);
+  const entries = computeLeaderboard(userIds, { from: sqlDate(fromUTC), to: sqlDate(toUTC) }, currentUserId);
 
-  res.json({ period: `${now.getUTCFullYear()}`, entries });
+  res.json({ period: `${year}`, entries });
 });
 
 // GET /api/leaderboard/alltime — all time
