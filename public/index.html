@@ -1906,14 +1906,14 @@
             <button class="modal-tab active" data-tab="leaderboardWeekly">Weekly</button>
             <button class="modal-tab" data-tab="leaderboardMonthly">Monthly</button>
             <button class="modal-tab" data-tab="leaderboardYearly">Yearly</button>
-            <button class="modal-tab" data-tab="leaderboardAlltime">All-Time</button>
+            <button class="modal-tab" data-tab="leaderboardGlobal">Global</button>
           </div>
         </div>
 
         <div class="tab-content active" id="leaderboardWeekly"></div>
         <div class="tab-content" id="leaderboardMonthly"></div>
         <div class="tab-content" id="leaderboardYearly"></div>
-        <div class="tab-content" id="leaderboardAlltime"></div>
+        <div class="tab-content" id="leaderboardGlobal"></div>
       </div>
     </div>
   </div>
@@ -2419,7 +2419,7 @@
       if (period === 'weekly')  return await apiCall(`/leaderboard/weekly${suffix}`);
       if (period === 'monthly') return await apiCall(`/leaderboard/monthly${suffix}`);
       if (period === 'yearly')  return await apiCall(`/leaderboard/yearly${suffix}`);
-      if (period === 'alltime') return await apiCall(`/leaderboard/alltime${suffix}`);
+      if (period === 'global') return await apiCall(`/leaderboard/alltime${suffix}`);
     }
 
     async function getPuzzleHistory(all = false) {
