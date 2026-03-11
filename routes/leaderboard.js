@@ -72,28 +72,24 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
 
   const limitClause = userIds ? '' : 'LIMIT 200';
 
-  // Only on-day completions count towards ALL leaderboard metrics
-  // Puzzle day N was released on 2026-03-04 AEST (= 2026-03-03 14:00 UTC)
-  // Convert completed_at (stored in UTC) to AEST by adding 10 hours before comparing
-  const onDayExpr = `DATE(gr.completed_at, '+10 hours') = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
-
+  // Count ALL game completions towards leaderboard metrics
+  // (on-day restriction removed — every completed game counts)
   const rows = db.prepare(`
     SELECT
       gr.user_id,
       u.username,
-      SUM(CASE WHEN ${onDayExpr} THEN 1 ELSE 0 END) as played,
-      SUM(CASE WHEN gr.won = 1 AND ${onDayExpr} THEN 1 ELSE 0 END) as won,
-      SUM(CASE WHEN gr.won = 1 AND ${onDayExpr} THEN (6 - gr.score) ELSE 0 END) as totalPoints
+      COUNT(*) as played,
+      SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) as won,
+      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) as totalPoints
     FROM game_results gr
     JOIN users u ON u.id = gr.user_id
     ${whereClause}
     GROUP BY gr.user_id
     HAVING played > 0
     ORDER BY
-      SUM(CASE WHEN gr.won = 1 AND ${onDayExpr} THEN (6 - gr.score) ELSE 0 END) DESC,
-      CAST(SUM(CASE WHEN gr.won = 1 AND ${onDayExpr} THEN 1 ELSE 0 END) AS REAL) /
-        NULLIF(SUM(CASE WHEN ${onDayExpr} THEN 1 ELSE 0 END), 0) DESC,
-      SUM(CASE WHEN ${onDayExpr} THEN 1 ELSE 0 END) DESC
+      SUM(CASE WHEN gr.won = 1 THEN (6 - gr.score) ELSE 0 END) DESC,
+      CAST(SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) AS REAL) / COUNT(*) DESC,
+      COUNT(*) DESC
     ${limitClause}
   `).all(...params);
 
