@@ -350,6 +350,7 @@
       border-bottom: none;
     }
 
+    .autocomplete-item strong { color: #0d9488; font-weight: 700; }
     .autocomplete-item:hover,
     .autocomplete-item.selected {
       background: #f0fdf4;
@@ -2548,7 +2549,7 @@
         e.preventDefault(); // Prevent input blur
         const item = e.target.closest('.autocomplete-item');
         if (item) {
-          input.value = item.textContent;
+          input.value = item.getAttribute('data-value') || item.textContent;
           dropdown.classList.remove('show');
           selectedIndex = -1;
           input.focus();
@@ -2566,7 +2567,7 @@
         const item = e.target.closest('.autocomplete-item');
         if (item) {
           e.preventDefault();
-          input.value = item.textContent;
+          input.value = item.getAttribute('data-value') || item.textContent;
           dropdown.classList.remove('show');
           selectedIndex = -1;
           input.focus();
@@ -2577,22 +2578,55 @@
         const value = e.target.value.trim().toLowerCase();
         selectedIndex = -1;
 
-        if (!value) {
+        if (!value || value.length < 2) {
           dropdown.classList.remove('show');
           return;
         }
 
-        const matches = gameState.allConditions
-          .filter(c => c.toLowerCase().includes(value))
-          .slice(0, 8);
+        // Split search into words for multi-word matching
+        const searchWords = value.split(/\s+/).filter(w => w.length > 0);
 
-        if (matches.length === 0) {
+        // Score each condition: higher = better match
+        const scored = gameState.allConditions
+          .map(c => {
+            const cl = c.toLowerCase();
+            // All search words must appear somewhere in the condition
+            const allMatch = searchWords.every(w => cl.includes(w));
+            if (!allMatch) return null;
+
+            let score = 0;
+            // Exact match
+            if (cl === value) score += 1000;
+            // Starts with the search string
+            if (cl.startsWith(value)) score += 100;
+            // Each word starts a word boundary in the condition
+            searchWords.forEach(w => {
+              if (cl.startsWith(w) || cl.includes(' ' + w) || cl.includes('-' + w)) score += 20;
+            });
+            // Shorter names rank higher (more specific)
+            score += Math.max(0, 60 - c.length);
+
+            return { name: c, score };
+          })
+          .filter(Boolean)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 12);
+
+        if (scored.length === 0) {
           dropdown.classList.remove('show');
           return;
         }
 
-        dropdown.innerHTML = matches
-          .map((m, i) => `<div class="autocomplete-item" data-index="${i}">${m}</div>`)
+        // Highlight matching portions in results
+        dropdown.innerHTML = scored
+          .map((m, i) => {
+            let display = m.name;
+            searchWords.forEach(w => {
+              const regex = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+              display = display.replace(regex, '<strong>$1</strong>');
+            });
+            return `<div class="autocomplete-item" data-index="${i}" data-value="${m.name}">${display}</div>`;
+          })
           .join('');
 
         dropdown.classList.add('show');
@@ -2614,7 +2648,7 @@
           items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
         } else if (e.key === 'Enter' && selectedIndex >= 0) {
           e.preventDefault();
-          input.value = items[selectedIndex].textContent;
+          input.value = items[selectedIndex].getAttribute('data-value') || items[selectedIndex].textContent;
           dropdown.classList.remove('show');
           selectedIndex = -1;
         }
