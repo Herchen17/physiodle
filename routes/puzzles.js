@@ -4,14 +4,15 @@ const db = require('../db');
 const { requireAuth, optionalAuth } = require('../auth');
 const pm = require('../puzzle-manager');
 
-// GET /api/puzzle/today
+// GET /api/puzzle/today?tz=Australia/Sydney
 router.get('/today', optionalAuth, (req, res) => {
-  const dayNumber = pm.getCurrentDayNumber();
+  const tz = req.query.tz || 'Australia/Sydney';
+  const dayNumber = pm.getDayNumberForTimezone(tz);
   if (dayNumber < 1) {
     return res.status(404).json({ error: 'Game has not launched yet.' });
   }
 
-  const puzzle = pm.getTodaysPuzzle();
+  const puzzle = pm.getPuzzleForDay(dayNumber);
   if (!puzzle) {
     return res.status(500).json({ error: 'Could not load puzzle.' });
   }
@@ -32,14 +33,13 @@ router.get('/today', optionalAuth, (req, res) => {
     }
   }
 
-  // If completed, send full puzzle with answer; otherwise sanitized
   const puzzleData = completed
     ? pm.fullPuzzle(puzzle)
     : pm.sanitizePuzzle(puzzle);
 
   res.json({
     dayNumber,
-    totalDays: pm.getCurrentDayNumber(),
+    totalDays: pm.getCurrentDayNumber(), // Server AEST day for reference
     puzzle: puzzleData,
     completed,
   });
@@ -66,7 +66,6 @@ router.get('/history/list', requireAuth, (req, res) => {
     LIMIT ? OFFSET ?
   `).all(req.user.userId, limit, offset);
 
-  // Add puzzle answers for completed ones
   const enriched = results.map(r => {
     const puzzle = pm.getPuzzleForDay(r.day_number);
     return {
@@ -89,7 +88,9 @@ router.get('/:dayNumber', optionalAuth, (req, res) => {
     return res.status(400).json({ error: 'Invalid day number.' });
   }
 
-  const currentDay = pm.getCurrentDayNumber();
+  // Use client timezone to determine "today" for preventing future access
+  const tz = req.query.tz || 'Australia/Sydney';
+  const currentDay = pm.getDayNumberForTimezone(tz);
   if (dayNumber > currentDay) {
     return res.status(403).json({ error: 'Future puzzles are not available.' });
   }
@@ -99,7 +100,6 @@ router.get('/:dayNumber', optionalAuth, (req, res) => {
     return res.status(404).json({ error: 'Puzzle not found.' });
   }
 
-  // Check if user completed this puzzle
   let completed = null;
   if (req.user) {
     const result = db.prepare(
@@ -130,11 +130,11 @@ router.get('/:dayNumber', optionalAuth, (req, res) => {
 router.post('/submit', requireAuth, (req, res) => {
   const { dayNumber, won, score, guesses } = req.body;
 
-  // Validate
   if (!dayNumber || typeof won !== 'boolean') {
     return res.status(400).json({ error: 'dayNumber and won are required.' });
   }
 
+  // Use server AEST as the authority for valid day range
   const currentDay = pm.getCurrentDayNumber();
   if (dayNumber > currentDay || dayNumber < 1) {
     return res.status(403).json({ error: 'Invalid day number.' });
@@ -149,7 +149,6 @@ router.post('/submit', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'Puzzle not found.' });
   }
 
-  // Check if already submitted
   const existing = db.prepare(
     'SELECT id FROM game_results WHERE user_id = ? AND day_number = ?'
   ).get(req.user.userId, dayNumber);
@@ -157,7 +156,6 @@ router.post('/submit', requireAuth, (req, res) => {
     return res.status(409).json({ error: 'You have already submitted a result for this puzzle.' });
   }
 
-  // Insert result
   db.prepare(`
     INSERT INTO game_results (user_id, puzzle_id, day_number, won, score, guesses)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -170,10 +168,8 @@ router.post('/submit', requireAuth, (req, res) => {
     JSON.stringify(guesses || [])
   );
 
-  // Return answer + explanation + updated stats
   const fullData = pm.fullPuzzle(puzzle);
 
-  // Recompute stats with point-based scoring
   const statsRow = db.prepare(`
     SELECT
       COUNT(*) as played,
@@ -196,7 +192,6 @@ router.post('/submit', requireAuth, (req, res) => {
     else break;
   }
 
-  // Points for this game: 6 - guessCount for wins, 0 for losses
   const gamePoints = won ? (6 - score) : 0;
 
   res.json({

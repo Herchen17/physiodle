@@ -227,14 +227,10 @@ router.get('/dashboard', requireAdmin, (req, res) => {
 
 // ============================================================================
 // ADMIN DASHBOARD UI
-// Access: /api/analytics/admin?key=YOUR_ADMIN_KEY
+// Access: /api/analytics/admin (login form, key never in URL)
 // ============================================================================
 router.get('/admin', (req, res) => {
-  const key = req.query.key;
-  if (!key || key !== process.env.ADMIN_KEY) {
-    return res.status(401).send('<h1 style="color:#ef4444;font-family:sans-serif;padding:2rem;">Unauthorized</h1><p style="font-family:sans-serif;padding:0 2rem;">Append <code>?key=YOUR_ADMIN_KEY</code> to the URL.</p>');
-  }
-
+  // Always serve the page — auth happens via JS fetch, never in URL
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -337,7 +333,19 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 </head>
 <body>
 
-<nav class="nav">
+<!-- Login Screen -->
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;width:320px;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:0.5rem;">&#129468;</div>
+    <h2 style="color:#fff;margin-bottom:0.25rem;">Physiodle Admin</h2>
+    <p style="color:var(--text3);font-size:0.85rem;margin-bottom:1.25rem;">Enter your admin key to continue</p>
+    <input type="password" id="adminKeyInput" placeholder="Admin key" style="width:100%;padding:0.6rem 0.75rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:#fff;font-size:0.9rem;margin-bottom:0.75rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" style="width:100%;padding:0.6rem;" onclick="doLogin()">Unlock Dashboard</button>
+    <p id="loginError" style="color:var(--red);font-size:0.8rem;margin-top:0.75rem;display:none;">Invalid admin key</p>
+  </div>
+</div>
+
+<nav class="nav" id="mainNav" style="display:none;">
   <div class="nav-left">
     <span class="nav-logo">&#129468;</span>
     <span class="nav-title">Physiodle Admin</span>
@@ -349,7 +357,7 @@ tr:hover td { background: rgba(59,130,246,0.04); }
   </div>
 </nav>
 
-<div class="container">
+<div class="container" id="mainDash" style="display:none;">
   <!-- KPI Row -->
   <div class="stats-row" id="kpiRow"></div>
 
@@ -412,8 +420,31 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 </div>
 
 <script>
-const K = new URLSearchParams(window.location.search).get('key');
+let K = null; // admin key — stored in memory only, never in URL
 let charts = {};
+
+async function doLogin() {
+  const input = document.getElementById('adminKeyInput');
+  const key = input.value.trim();
+  if (!key) return;
+  try {
+    const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': key } });
+    if (!r.ok) throw new Error('bad key');
+    K = key;
+    // Strip any key from URL (in case someone bookmarked the old URL)
+    if (window.location.search) history.replaceState(null, '', window.location.pathname);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainNav').style.display = '';
+    document.getElementById('mainDash').style.display = '';
+    const d = await r.json();
+    renderAll(d);
+    setInterval(loadData, 30000);
+  } catch (e) {
+    document.getElementById('loginError').style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
 
 function updateClock() {
   const now = new Date();
@@ -431,9 +462,7 @@ Chart.defaults.plugins.legend.labels.boxWidth = 10;
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
-async function loadData() {
-  const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': K } });
-  const d = await r.json();
+function renderAll(d) {
   renderKPIs(d);
   renderTrafficChart(d);
   renderWinLoss(d);
@@ -445,6 +474,15 @@ async function loadData() {
   renderRecentSignups(d.recentSignups);
   renderFeedback(d.feedback);
   renderLbPop(d.leaderboardPopularity);
+}
+
+async function loadData() {
+  if (!K) return;
+  try {
+    const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': K } });
+    const d = await r.json();
+    renderAll(d);
+  } catch (e) { console.error('Dashboard refresh failed:', e); }
 }
 
 function renderKPIs(d) {
@@ -588,8 +626,16 @@ function renderLbPop(rows) {
   }).join('');
 }
 
-loadData();
-setInterval(loadData, 30000);
+// Auto-login if key was passed in URL (backwards compat), then strip it
+(function() {
+  const urlKey = new URLSearchParams(window.location.search).get('key');
+  if (urlKey) {
+    document.getElementById('adminKeyInput').value = urlKey;
+    doLogin();
+  } else {
+    document.getElementById('adminKeyInput').focus();
+  }
+})();
 </script>
 </body>
 </html>`);

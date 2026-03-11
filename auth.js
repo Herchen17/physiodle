@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
-const JWT_EXPIRY = '30d';
+const JWT_EXPIRY = '7d';
 
 async function hashPassword(password) {
   return bcrypt.hash(password, 10);

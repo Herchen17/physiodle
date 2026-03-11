@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const pm = require('./puzzle-manager');
 
@@ -9,9 +11,74 @@ pm.loadPuzzles();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ---- Security headers ----
+app.use(helmet({
+  contentSecurityPolicy: false,   // SPA serves inline scripts; CSP would break it
+  crossOriginEmbedderPolicy: false,
+}));
+
+// ---- CORS — restrict to our own origin ----
+const ALLOWED_ORIGINS = [
+  'https://physiodle.up.railway.app',
+  'http://localhost:3000',
+];
+if (process.env.CORS_ORIGIN) ALLOWED_ORIGINS.push(process.env.CORS_ORIGIN);
+app.use(cors({
+  origin(origin, cb) {
+    // Allow requests with no origin (mobile apps, curl, same-origin)
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    cb(null, false);
+  },
+  credentials: true,
+}));
+
+// ---- Body parser with size limit ----
+app.use(express.json({ limit: '16kb' }));
+
+// ---- Rate limiters ----
+// General API: 100 requests per minute per IP
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' },
+});
+
+// Auth endpoints (login/signup): 10 per minute per IP
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many auth attempts. Try again in a minute.' },
+});
+
+// Analytics tracking: 30 per minute per IP (page views / events)
+const analyticsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Rate limited.' },
+});
+
+// Puzzle submit: 20 per minute per IP
+const submitLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many submissions, please slow down.' },
+});
+
+// Apply general limiter to all API routes
+app.use('/api/', generalLimiter);
+// Tighter limits on sensitive routes
+app.use('/api/auth', authLimiter);
+app.use('/api/analytics/pageview', analyticsLimiter);
+app.use('/api/analytics/event', analyticsLimiter);
+app.use('/api/puzzle/submit', submitLimiter);
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));

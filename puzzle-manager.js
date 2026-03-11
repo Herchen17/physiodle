@@ -1,12 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Timezone offset: AEST = UTC+10. Puzzles roll over at midnight AEST.
-const TZ_OFFSET_HOURS = 10;
-
-// Launch AEST calendar date: March 4, 2026 (day 1)
-// Expressed as days-since-epoch for clean arithmetic
-const LAUNCH_AEST_DAY = Math.floor(Date.UTC(2026, 2, 4) / 86400000);
+// Launch date: March 4, 2026 (day 1) — this is a calendar date, timezone-independent.
+// Day N was released on calendar date 2026-03-04 + (N-1) days.
+const LAUNCH_YEAR = 2026;
+const LAUNCH_MONTH = 2; // 0-indexed: March
+const LAUNCH_DATE = 4;
 
 let puzzles = [];
 let conditionNames = [];
@@ -16,7 +15,6 @@ function loadPuzzles() {
   const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   puzzles = raw.puzzles || raw;
 
-  // Build autocomplete condition names from puzzles
   const nameSet = new Set();
   puzzles.forEach(p => {
     nameSet.add(p.answer);
@@ -27,15 +25,59 @@ function loadPuzzles() {
   console.log(`Loaded ${puzzles.length} puzzles, ${conditionNames.length} autocomplete conditions`);
 }
 
-function getCurrentDayNumber() {
-  // Server-authoritative: the server decides what day it is, based on AEST.
-  // No client timezone input. Tamper-proof.
-  const now = new Date();
-  // Current AEST calendar day as days-since-epoch
-  const nowAESTDay = Math.floor((now.getTime() + TZ_OFFSET_HOURS * 3600000) / 86400000);
-  const diff = nowAESTDay - LAUNCH_AEST_DAY;
-  if (diff < 0) return -1; // Before launch
+/**
+ * Get the current day number for a given IANA timezone.
+ * Uses the SERVER's UTC clock (tamper-proof) + the requested timezone
+ * to determine what calendar date it is right now in that timezone.
+ *
+ * @param {string} [tz] - IANA timezone (e.g. 'Australia/Sydney', 'America/New_York').
+ *                         Defaults to 'Australia/Sydney' (AEST/AEDT) if not provided or invalid.
+ * @returns {number} Day number (1 = launch day). -1 if before launch.
+ */
+function getDayNumberForTimezone(tz) {
+  const now = new Date(); // Server UTC clock — cannot be manipulated by client
+
+  let dateStr;
+  try {
+    // Use Intl to get the calendar date in the user's timezone from the SERVER's clock
+    // This is the key: server time + user timezone = tamper-proof local date
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz || 'Australia/Sydney',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    dateStr = formatter.format(now); // Returns 'YYYY-MM-DD' in en-CA locale
+  } catch (e) {
+    // Invalid timezone — fall back to AEST
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Australia/Sydney',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    dateStr = formatter.format(now);
+  }
+
+  // Parse the date string
+  const [y, m, d] = dateStr.split('-').map(Number);
+
+  // Calculate days since launch
+  // Both dates as days-since-epoch for clean arithmetic
+  const userDay = Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  const launchDay = Math.floor(Date.UTC(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DATE) / 86400000);
+  const diff = userDay - launchDay;
+
+  if (diff < 0) return -1;
   return diff + 1; // Day 1 = launch day
+}
+
+/**
+ * Backwards-compatible: get day number using the default timezone (AEST).
+ * Used by leaderboard calculations and admin features.
+ */
+function getCurrentDayNumber() {
+  return getDayNumberForTimezone('Australia/Sydney');
 }
 
 function getPuzzleForDay(dayNumber) {
@@ -44,15 +86,12 @@ function getPuzzleForDay(dayNumber) {
   return puzzles[idx];
 }
 
-function getTodaysPuzzle() {
-  const dayNum = getCurrentDayNumber();
+function getTodaysPuzzle(tz) {
+  const dayNum = getDayNumberForTimezone(tz);
   if (dayNum < 1) return null;
   return getPuzzleForDay(dayNum);
 }
 
-// Puzzle for client delivery (includes answer/aliases for client-side matching engine)
-// Note: This is a casual game — client-side matching is by design.
-// Security is enforced at the day level (can't access future puzzles), not answer level.
 function sanitizePuzzle(puzzle) {
   if (!puzzle) return null;
   return {
@@ -65,7 +104,6 @@ function sanitizePuzzle(puzzle) {
   };
 }
 
-// Full puzzle with answer (for after completion / past puzzles user completed)
 function fullPuzzle(puzzle) {
   if (!puzzle) return null;
   return {
@@ -93,6 +131,7 @@ function getRawPuzzle(dayNumber) {
 module.exports = {
   loadPuzzles,
   getCurrentDayNumber,
+  getDayNumberForTimezone,
   getPuzzleForDay,
   getTodaysPuzzle,
   sanitizePuzzle,

@@ -2361,12 +2361,15 @@
       }
     }
 
+    // Get user's IANA timezone from browser (uses server clock, not device clock)
+    const USER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Australia/Sydney';
+
     async function getTodaysPuzzle() {
-      return await apiCall('/puzzle/today');
+      return await apiCall('/puzzle/today?tz=' + encodeURIComponent(USER_TZ));
     }
 
     async function getPuzzle(dayNumber) {
-      return await apiCall(`/puzzle/${dayNumber}`);
+      return await apiCall(`/puzzle/${dayNumber}?tz=` + encodeURIComponent(USER_TZ));
     }
 
     async function getConditions() {
