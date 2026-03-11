@@ -14,7 +14,12 @@ function getFriendIds(userId) {
 function computeStreaks(userIds) {
   const pm = require('../puzzle-manager');
   const currentDay = pm.getCurrentDayNumber();
-  const onDayExpr = `DATE(gr.completed_at, '+10 hours') = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+  // Same timezone-aware on-day window as computeLeaderboard
+  const releaseDateExpr = `DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+  const onDayExpr = `(
+    gr.completed_at >= DATETIME(${releaseDateExpr}, '-14 hours')
+    AND gr.completed_at < DATETIME(${releaseDateExpr}, '+36 hours')
+  )`;
 
   const whereUser = userIds
     ? `AND gr.user_id IN (${userIds.map(() => '?').join(',')})`
@@ -72,10 +77,23 @@ function computeLeaderboard(userIds, dateFilter, currentUserId) {
 
   const limitClause = userIds ? '' : 'LIMIT 200';
 
-  // Only on-day completions count towards leaderboard points/ranking
-  // Puzzle day N was released on 2026-03-04 AEST (= 2026-03-03 14:00 UTC)
-  // Convert completed_at (stored in UTC) to AEST by adding 10 hours before comparing
-  const onDayExpr = `DATE(gr.completed_at, '+10 hours') = DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+  // Only on-day completions count towards leaderboard points/ranking.
+  // Day N's release date = 2026-03-04 + (N-1) days (calendar date).
+  //
+  // Because we serve timezone-aware puzzles, a user in e.g. UTC-5 may get day N
+  // while AEST has already moved to day N+1. Their completed_at (UTC) converted
+  // to AEST would show the wrong date, failing the old strict AEST-only check.
+  //
+  // Fix: allow a window from 14h before release-date midnight UTC to 36h after.
+  // This covers UTC+14 (earliest timezone to enter day N) through UTC-12
+  // (latest timezone to finish day N). In practice: ~50h window centered on
+  // the release date, which prevents playing old archive puzzles for points
+  // while accepting any real-world timezone.
+  const releaseDateExpr = `DATE('2026-03-04', '+' || (gr.day_number - 1) || ' days')`;
+  const onDayExpr = `(
+    gr.completed_at >= DATETIME(${releaseDateExpr}, '-14 hours')
+    AND gr.completed_at < DATETIME(${releaseDateExpr}, '+36 hours')
+  )`;
 
   const rows = db.prepare(`
     SELECT
