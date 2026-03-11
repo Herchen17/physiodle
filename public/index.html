@@ -168,6 +168,68 @@
       font-size: 0.875rem;
     }
 
+    /* ACCOUNT STATS */
+    .account-stat-card {
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.25rem;
+      text-align: center;
+    }
+    .account-stat-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #111827;
+      line-height: 1.2;
+    }
+    .account-stat-label {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-top: 0.15rem;
+    }
+    .account-perf-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+    }
+    .account-perf-label {
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
+    .account-perf-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .dist-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .dist-label {
+      width: 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .dist-bar {
+      height: 1.3rem;
+      border-radius: 0.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: white;
+      min-width: 1.6rem;
+      transition: width 0.3s ease;
+    }
+
     /* MAIN CONTAINER */
     .container {
       max-width: 750px;
@@ -1518,6 +1580,13 @@
     .toast.error {
       background: #dc2626;
     }
+
+    /* Mobile account stats tweaks */
+    @media (max-width: 480px) {
+      .account-stat-value { font-size: 1.15rem; }
+      .account-perf-label { font-size: 0.78rem; }
+      .account-perf-value { font-size: 0.85rem; }
+    }
   </style>
 </head>
 <body>
@@ -1812,29 +1881,82 @@
 
   <!-- ACCOUNT MODAL -->
   <div class="modal-overlay" id="accountModal">
-    <div class="modal">
+    <div class="modal" style="max-width: 440px;">
       <div class="modal-header">
-        <h2 class="modal-title">Account</h2>
+        <h2 class="modal-title">Your Profile</h2>
         <button class="modal-close" onclick="closeModal('accountModal')">×</button>
       </div>
-      <div class="modal-body">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div class="user-avatar" id="accountAvatar" style="width: 60px; height: 60px; font-size: 1.5rem; margin: 0 auto 1rem;"></div>
-          <div id="accountUsername" style="font-weight: 600; font-size: 1.25rem; margin-bottom: 0.5rem;"></div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <!-- User header -->
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="user-avatar" id="accountAvatar" style="width: 56px; height: 56px; font-size: 1.4rem; flex-shrink: 0;"></div>
+          <div>
+            <div id="accountUsername" style="font-weight: 700; font-size: 1.2rem;"></div>
+            <div id="accountJoined" style="font-size: 0.8rem; color: #9ca3af;"></div>
+          </div>
+          <div id="accountRankBadge" style="margin-left: auto; text-align: center; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 0.5rem; padding: 0.35rem 0.65rem;">
+            <div id="accountRank" style="font-size: 1.1rem; font-weight: 800; color: #0d9488;">#-</div>
+            <div style="font-size: 0.65rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.03em;">Rank</div>
+          </div>
         </div>
-        <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-          <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Statistics</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-              <div id="accountWinRate" style="font-size: 1.5rem; font-weight: 700; color: #0d9488;">0%</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Win Rate</div>
+
+        <!-- Top stats row -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+          <div class="account-stat-card">
+            <div class="account-stat-value" id="accountPlayed">0</div>
+            <div class="account-stat-label">Played</div>
+          </div>
+          <div class="account-stat-card">
+            <div class="account-stat-value" id="accountWon">0</div>
+            <div class="account-stat-label">Won</div>
+          </div>
+          <div class="account-stat-card">
+            <div class="account-stat-value" style="color: #0d9488;" id="accountWinRate">0%</div>
+            <div class="account-stat-label">Win Rate</div>
+          </div>
+          <div class="account-stat-card">
+            <div class="account-stat-value" style="color: #0d9488;" id="accountTotalPts">0</div>
+            <div class="account-stat-label">Points</div>
+          </div>
+        </div>
+
+        <!-- Performance section -->
+        <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.6rem;">Performance</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+            <div class="account-perf-row">
+              <span class="account-perf-label">Avg Score</span>
+              <span class="account-perf-value" id="accountAvgScore">-</span>
             </div>
-            <div>
-              <div id="accountAvgScore" style="font-size: 1.5rem; font-weight: 700; color: #0d9488;">0</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Avg Score</div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Best Score</span>
+              <span class="account-perf-value" id="accountBestScore">-</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Current Streak</span>
+              <span class="account-perf-value" id="accountCurrentStreak">0</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Best Streak</span>
+              <span class="account-perf-value" id="accountMaxStreak">0</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Perfect Games</span>
+              <span class="account-perf-value" id="accountPerfect">0</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Friends</span>
+              <span class="account-perf-value" id="accountFriends">0</span>
             </div>
           </div>
         </div>
+
+        <!-- Guess Distribution -->
+        <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.6rem;">Guess Distribution</div>
+          <div id="accountDistribution" style="display: flex; flex-direction: column; gap: 0.3rem;"></div>
+        </div>
+
         <button class="btn btn-danger btn-full" id="logoutBtn">Logout</button>
       </div>
     </div>
@@ -3478,10 +3600,50 @@
       try {
         const user = await getCurrentUser();
         if (user) {
+          const s = user.stats || {};
           document.getElementById('accountUsername').textContent = user.username;
           document.getElementById('accountAvatar').textContent = getFirstLetter(user.username);
-          document.getElementById('accountWinRate').textContent = `${user.stats?.winRate || 0}%`;
-          document.getElementById('accountAvgScore').textContent = user.stats?.avgScore || 0;
+
+          // Joined date
+          const joined = user.createdAt ? new Date(user.createdAt + 'Z') : null;
+          document.getElementById('accountJoined').textContent = joined
+            ? `Joined ${joined.toLocaleDateString('en-AU', { month: 'short', day: 'numeric', year: 'numeric' })}`
+            : '';
+
+          // Rank
+          document.getElementById('accountRank').textContent = s.leaderboardRank ? `#${s.leaderboardRank}` : '#-';
+
+          // Top stats
+          document.getElementById('accountPlayed').textContent = s.played || 0;
+          document.getElementById('accountWon').textContent = s.won || 0;
+          document.getElementById('accountWinRate').textContent = `${s.winRate || 0}%`;
+          document.getElementById('accountTotalPts').textContent = s.totalPoints || 0;
+
+          // Performance
+          document.getElementById('accountAvgScore').textContent = s.avgScore != null ? s.avgScore : '-';
+          document.getElementById('accountBestScore').textContent = s.bestScore != null ? `${s.bestScore}/5` : '-';
+          document.getElementById('accountCurrentStreak').textContent = s.currentStreak || 0;
+          document.getElementById('accountMaxStreak').textContent = s.maxStreak || 0;
+          document.getElementById('accountPerfect').textContent = s.perfectGames || 0;
+          document.getElementById('accountFriends').textContent = s.friendCount || 0;
+
+          // Guess distribution bar chart
+          const dist = s.distribution || {};
+          const maxVal = Math.max(1, ...Object.values(dist));
+          const distEl = document.getElementById('accountDistribution');
+          distEl.innerHTML = '';
+          const labels = [1, 2, 3, 4, 5, 'X'];
+          labels.forEach(label => {
+            const count = dist[label] || 0;
+            const pct = Math.max(8, (count / maxVal) * 100);
+            const isLoss = label === 'X';
+            const color = isLoss ? '#ef4444' : '#0d9488';
+            distEl.innerHTML += `
+              <div class="dist-row">
+                <span class="dist-label">${label}</span>
+                <div class="dist-bar" style="width: ${pct}%; background: ${color};">${count}</div>
+              </div>`;
+          });
         }
       } catch (e) {
         console.error('Failed to load account:', e);
