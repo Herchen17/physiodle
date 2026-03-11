@@ -2658,6 +2658,7 @@
         // Won — score = total guesses (lower is better: 1 = first try, 5 = last chance)
         const score = gameState.guesses.length + 1;
         gameState.isCompleted = true;
+        if (typeof trackEvent === 'function') trackEvent('game_complete', { won: true, score, dayNumber: gameState.currentDay, points: 6 - score });
 
         // Mark the current clue as correct (the one they were guessing on)
         gameState.clueStates[currentClueIndex] = 'correct';
@@ -2706,6 +2707,7 @@
           }
           renderClues();
           gameState.isCompleted = true;
+          if (typeof trackEvent === 'function') trackEvent('game_complete', { won: false, score: 0, dayNumber: gameState.currentDay, points: 0 });
 
           if (gameState.userToken) {
             try {
@@ -3065,6 +3067,7 @@
     }
 
     async function loadLeaderboardTab(period) {
+      if (typeof trackEvent === 'function') trackEvent('leaderboard_view', period);
       lbCurrentPeriod = period;
       const contentId = `leaderboard${period.charAt(0).toUpperCase() + period.slice(1)}`;
       const content = document.getElementById(contentId);
@@ -3867,6 +3870,50 @@
         console.log('Pending completion submit:', e.message);
       }
     }
+
+    // ============================================================================
+    // ANALYTICS TRACKING
+    // ============================================================================
+
+    // Generate or retrieve a persistent visitor ID
+    function getVisitorId() {
+      let vid = localStorage.getItem('physiodle_visitorId');
+      if (!vid) {
+        vid = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('physiodle_visitorId', vid);
+      }
+      return vid;
+    }
+
+    // Fire-and-forget analytics calls
+    function trackPageView() {
+      try {
+        fetch('/api/analytics/pageview', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(gameState.userToken && { 'Authorization': 'Bearer ' + gameState.userToken }),
+          },
+          body: JSON.stringify({ visitorId: getVisitorId(), path: '/' }),
+        });
+      } catch (e) { /* ignore */ }
+    }
+
+    function trackEvent(eventType, eventData) {
+      try {
+        fetch('/api/analytics/event', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(gameState.userToken && { 'Authorization': 'Bearer ' + gameState.userToken }),
+          },
+          body: JSON.stringify({ visitorId: getVisitorId(), eventType, eventData }),
+        });
+      } catch (e) { /* ignore */ }
+    }
+
+    // Track page view on load
+    trackPageView();
 
     // Initialize on load
     init();

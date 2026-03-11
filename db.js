@@ -70,6 +70,30 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_friend_requests_to ON friend_requests(to_user_id, status);
   CREATE INDEX IF NOT EXISTS idx_friend_requests_from ON friend_requests(from_user_id, status);
 
+  CREATE TABLE IF NOT EXISTS page_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    visitor_id TEXT NOT NULL,
+    user_id INTEGER,
+    path TEXT NOT NULL DEFAULT '/',
+    user_agent TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(created_at);
+  CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON page_views(visitor_id);
+
+  CREATE TABLE IF NOT EXISTS analytics_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL,
+    event_data TEXT,
+    user_id INTEGER,
+    visitor_id TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events(event_type);
+  CREATE INDEX IF NOT EXISTS idx_analytics_events_date ON analytics_events(created_at);
+
   CREATE TABLE IF NOT EXISTS feedback (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,

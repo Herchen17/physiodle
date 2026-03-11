@@ -19,6 +19,7 @@ app.use('/api/puzzle', require('./routes/puzzles'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/analytics', require('./routes/analytics'));
 
 // Feedback endpoint (simple, inline)
 const { optionalAuth } = require('./auth');
