@@ -137,7 +137,13 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 
 /* ── Match Tester ── */
 .match-tester { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-.match-input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.match-input-group { display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
+.match-autocomplete { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 8px 8px; max-height: 280px; overflow-y: auto; z-index: 50; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.match-autocomplete.show { display: block; }
+.match-ac-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.85rem; color: var(--text); border-bottom: 1px solid rgba(30,41,59,0.3); }
+.match-ac-item:last-child { border-bottom: none; }
+.match-ac-item:hover, .match-ac-item.selected { background: rgba(6,182,212,0.1); color: #fff; }
+.match-ac-item strong { color: var(--cyan); font-weight: 700; }
 .match-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); font-weight: 600; }
 .match-input { padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: #fff; font-size: 0.9rem; outline: none; }
 .match-input:focus { border-color: var(--blue); }
@@ -335,9 +341,10 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 
       <div class="match-result-card" style="margin-bottom:1rem">
         <div class="match-tester">
-          <div class="match-input-group">
+          <div class="match-input-group" id="guessInputGroup">
             <label class="match-label">Player's Guess</label>
-            <input class="match-input" id="matchGuess" placeholder="e.g. ACLR, frozen shoulder, slipped disc..." onkeydown="if(event.key==='Enter')runMatchTest()">
+            <input class="match-input" id="matchGuess" placeholder="Start typing a condition..." autocomplete="off">
+            <div class="match-autocomplete" id="guessAutocomplete"></div>
           </div>
           <div class="match-input-group">
             <label class="match-label">Puzzle Answer</label>
@@ -780,6 +787,7 @@ function fmtDate(d) { if (!d) return '\u2014'; return new Date(d).toLocaleDateSt
 
 let matchData = null;
 let currentDataTab = 'equiv';
+let allConditions = [];
 
 async function loadMatchData() {
   if (matchData) return;
@@ -790,6 +798,118 @@ async function loadMatchData() {
     renderDataBrowser();
     loadPuzzleAnswerDropdown();
   } catch (e) { console.error('Failed to load match data:', e); }
+  // Load condition names for autocomplete
+  if (allConditions.length === 0) {
+    try {
+      const r = await fetch('/api/puzzles/conditions');
+      const data = await r.json();
+      allConditions = data.conditions || [];
+      setupGuessAutocomplete();
+    } catch (e) { console.error('Failed to load conditions:', e); }
+  }
+}
+
+// ── Guess Autocomplete (mirrors game logic) ──
+function setupGuessAutocomplete() {
+  const input = document.getElementById('matchGuess');
+  const dropdown = document.getElementById('guessAutocomplete');
+  let selectedIndex = -1;
+
+  dropdown.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const item = e.target.closest('.match-ac-item');
+    if (item) {
+      input.value = item.getAttribute('data-value');
+      dropdown.classList.remove('show');
+      selectedIndex = -1;
+      input.focus();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    const value = input.value.trim().toLowerCase();
+    selectedIndex = -1;
+    if (!value || value.length < 2) { dropdown.classList.remove('show'); return; }
+
+    const searchWords = value.split(/\s+/).filter(w => w.length > 0);
+
+    const scored = allConditions
+      .map(c => {
+        const cl = c.toLowerCase();
+        const allMatch = searchWords.every(w => cl.includes(w));
+        if (!allMatch) return null;
+        let score = 0;
+        if (cl === value) score += 1000;
+        if (cl.startsWith(value)) score += 100;
+        searchWords.forEach(w => {
+          if (cl.startsWith(w) || cl.includes(' ' + w) || cl.includes('-' + w)) score += 20;
+        });
+        score += Math.max(0, 60 - c.length);
+        return { name: c, score };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12);
+
+    if (scored.length === 0) { dropdown.classList.remove('show'); return; }
+
+    dropdown.innerHTML = scored.map((m, i) => {
+      const orig = m.name;
+      const highlights = new Array(orig.length).fill(false);
+      searchWords.forEach(w => {
+        const regex = new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        let match;
+        while ((match = regex.exec(orig)) !== null) {
+          for (let j = match.index; j < match.index + match[0].length; j++) highlights[j] = true;
+        }
+      });
+      let display = '';
+      let inH = false;
+      for (let j = 0; j < orig.length; j++) {
+        if (highlights[j] && !inH) { display += '<strong>'; inH = true; }
+        if (!highlights[j] && inH) { display += '</strong>'; inH = false; }
+        display += orig[j];
+      }
+      if (inH) display += '</strong>';
+      return `<div class="match-ac-item${i===selectedIndex?' selected':''}" data-index="${i}" data-value="${m.name}">${display}</div>`;
+    }).join('');
+
+    dropdown.classList.add('show');
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (!dropdown.classList.contains('show')) {
+      if (e.key === 'Enter') { runMatchTest(); return; }
+      return;
+    }
+    const items = dropdown.querySelectorAll('.match-ac-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+      items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = Math.max(selectedIndex - 1, 0);
+      items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && items[selectedIndex]) {
+        input.value = items[selectedIndex].getAttribute('data-value');
+        dropdown.classList.remove('show');
+        selectedIndex = -1;
+      } else {
+        dropdown.classList.remove('show');
+        runMatchTest();
+      }
+    } else if (e.key === 'Escape') {
+      dropdown.classList.remove('show');
+      selectedIndex = -1;
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => { dropdown.classList.remove('show'); selectedIndex = -1; }, 200);
+  });
 }
 
 async function loadPuzzleAnswerDropdown() {
