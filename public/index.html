@@ -2297,6 +2297,45 @@
       });
     });
 
+    // ── Abbreviation map: auto-generated from all condition names ──
+    // Maps abbreviations to the full condition names they represent
+    // e.g. "aclr" → Set(["acl reconstruction", "post-acl reconstruction"])
+    const _abbrMap = {};
+    function _buildAbbrMap() {
+      const allTerms = new Set();
+      EQUIVALENCE_GROUPS.forEach(group => group.forEach(t => allTerms.add(t)));
+      Object.keys(PARENT_TERMS).forEach(p => {
+        allTerms.add(p);
+        PARENT_TERMS[p].forEach(c => allTerms.add(c));
+      });
+      // Also add all autocomplete conditions
+      if (gameState.allConditions) gameState.allConditions.forEach(c => allTerms.add(c));
+
+      allTerms.forEach(term => {
+        const words = term.replace(/[''()-]/g, ' ').split(/\s+/).filter(w => w.length > 0);
+        if (words.length < 2) return; // Only multi-word terms get abbreviations
+
+        // Method 1: First letter of each word → "ACL Reconstruction" → "ACLR"
+        const abbr1 = words.map(w => w[0]).join('').toLowerCase();
+        if (abbr1.length >= 2) {
+          if (!_abbrMap[abbr1]) _abbrMap[abbr1] = new Set();
+          _abbrMap[abbr1].add(term.toLowerCase());
+        }
+
+        // Method 2: If a word is already an acronym (all caps, 2+ chars), keep it whole
+        // e.g. "ACL Reconstruction" → "aclr" and "Post ACL Reconstruction" → "paclr"
+        const hasAcronym = words.some(w => w === w.toUpperCase() && w.length >= 2 && /^[A-Z]+$/.test(w));
+        if (hasAcronym) {
+          const abbr2 = words.map(w => (w === w.toUpperCase() && w.length >= 2 && /^[A-Z]+$/.test(w)) ? w : w[0]).join('').toLowerCase();
+          if (abbr2.length >= 2 && abbr2 !== abbr1) {
+            if (!_abbrMap[abbr2]) _abbrMap[abbr2] = new Set();
+            _abbrMap[abbr2].add(term.toLowerCase());
+          }
+        }
+      });
+    }
+    // Build on page load after conditions are fetched (called in loadTodaysPuzzle)
+
     const QUALIFIERS = /^(acute|chronic|bilateral|unilateral|left|right|mild|moderate|severe|primary|secondary|idiopathic|traumatic|non-traumatic|post-surgical|recurrent|degenerative|adolescent|juvenile|paediatric|pediatric|occupational|exercise-induced|sport-specific|congenital|acquired|partial|complete|high|low)\s+/gi;
 
     function normalise(str) {
@@ -2333,6 +2372,26 @@
             }
           }
         }
+      }
+
+      // LAYER: Abbreviation matching — "ACLR" matches "ACL Reconstruction"
+      const abbrMatches = _abbrMap[g];
+      if (abbrMatches) {
+        for (const valid of allValid) {
+          if (abbrMatches.has(valid)) return 'correct';
+          // Also check equivalence groups of the abbreviation target
+          const equivSet = _equivMap[valid];
+          if (equivSet) {
+            for (const eq of equivSet) {
+              if (abbrMatches.has(eq)) return 'correct';
+            }
+          }
+        }
+      }
+      // Reverse: guess is full name, answer is abbreviation
+      for (const valid of allValid) {
+        const revAbbrMatches = _abbrMap[valid];
+        if (revAbbrMatches && revAbbrMatches.has(g)) return 'correct';
       }
 
       const GENERIC_TERMS = new Set([
@@ -2737,14 +2796,29 @@
           return;
         }
 
-        // Highlight matching portions in results
+        // Highlight matching portions in results — uses character-level marking
+        // to avoid corrupting HTML tags when multiple search words overlap
         dropdown.innerHTML = scored
           .map((m, i) => {
-            let display = m.name;
+            const orig = m.name;
+            const highlights = new Array(orig.length).fill(false);
             searchWords.forEach(w => {
-              const regex = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-              display = display.replace(regex, '<strong>$1</strong>');
+              const regex = new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+              let match;
+              while ((match = regex.exec(orig)) !== null) {
+                for (let j = match.index; j < match.index + match[0].length; j++) {
+                  highlights[j] = true;
+                }
+              }
             });
+            let display = '';
+            let inH = false;
+            for (let j = 0; j < orig.length; j++) {
+              if (highlights[j] && !inH) { display += '<strong>'; inH = true; }
+              if (!highlights[j] && inH) { display += '</strong>'; inH = false; }
+              display += orig[j];
+            }
+            if (inH) display += '</strong>';
             return `<div class="autocomplete-item" data-index="${i}" data-value="${m.name}">${display}</div>`;
           })
           .join('');
@@ -3716,6 +3790,7 @@
       try {
         // Load conditions once
         gameState.allConditions = await getConditions();
+        _buildAbbrMap(); // Build abbreviation map for answer matching
 
         // Load today's puzzle
         const todayData = await getTodaysPuzzle();
