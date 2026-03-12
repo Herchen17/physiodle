@@ -135,6 +135,41 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 .puzzle-explanation { margin-top: 12px; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
 .puzzle-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.8rem; color: var(--amber); }
 
+/* ── Match Tester ── */
+.match-tester { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.match-input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.match-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); font-weight: 600; }
+.match-input { padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: #fff; font-size: 0.9rem; outline: none; }
+.match-input:focus { border-color: var(--blue); }
+.match-result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+.match-result-card.correct { border-color: var(--green); }
+.match-result-card.incorrect { border-color: var(--red); }
+.match-result-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.75rem; }
+.match-result-badge.correct { background: #065f4640; color: #4ade80; }
+.match-result-badge.incorrect { background: #991b1b40; color: #f87171; }
+.match-layer { font-size: 0.85rem; color: var(--text2); margin-bottom: 0.4rem; }
+.match-layer strong { color: var(--cyan); }
+.match-details { font-size: 0.8rem; color: var(--text3); line-height: 1.6; }
+.match-quick-tests { margin-top: 1rem; }
+.match-quick-btn { display: inline-block; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 0.75rem; margin: 2px; }
+.match-quick-btn:hover { border-color: var(--cyan); color: #fff; }
+.data-browser { margin-top: 1rem; }
+.data-browser-tabs { display: flex; gap: 4px; margin-bottom: 0.75rem; }
+.data-browser-tab { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 0.75rem; }
+.data-browser-tab.active { background: var(--cyan); color: #000; border-color: var(--cyan); }
+.data-browser-content { max-height: 500px; overflow-y: auto; }
+.equiv-group { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 4px; }
+.equiv-group-terms { font-size: 0.8rem; color: var(--text); }
+.equiv-group-terms span { background: var(--surface2); padding: 2px 6px; border-radius: 4px; margin: 1px; display: inline-block; font-size: 0.75rem; }
+.abbr-row { display: flex; justify-content: space-between; padding: 0.4rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.3); font-size: 0.8rem; }
+.abbr-key { color: var(--cyan); font-weight: 600; min-width: 80px; }
+.abbr-values { color: var(--text2); }
+.match-search-filter { margin-bottom: 0.75rem; }
+.match-search-filter input { width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: #fff; font-size: 0.85rem; outline: none; }
+.match-search-filter input:focus { border-color: var(--cyan); }
+.puzzle-answer-picker { margin-bottom: 0.5rem; }
+.puzzle-answer-picker select { padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: #fff; font-size: 0.85rem; outline: none; width: 100%; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .chart-grid, .col-2 { grid-template-columns: 1fr; }
@@ -172,6 +207,7 @@ tr:hover td { background: rgba(59,130,246,0.04); }
       <button class="nav-tab" data-panel="puzzles">Puzzle Vetting</button>
       <button class="nav-tab" data-panel="users">Users</button>
       <button class="nav-tab" data-panel="games">Game History</button>
+      <button class="nav-tab" data-panel="matcher">Match Tester</button>
     </div>
     <div class="nav-right">
       <span class="nav-time" id="clock"></span>
@@ -289,6 +325,68 @@ tr:hover td { background: rgba(59,130,246,0.04); }
         <div class="pagination" id="gamePagination"></div>
       </div>
     </div>
+
+    <!-- ═══ MATCH TESTER PANEL ═══ -->
+    <div id="panel-matcher" class="panel">
+      <div class="section-header">
+        <span class="section-title">Answer Match Tester</span>
+        <span style="font-size:0.75rem;color:var(--text3)">Test how the game evaluates guesses against answers</span>
+      </div>
+
+      <div class="match-result-card" style="margin-bottom:1rem">
+        <div class="match-tester">
+          <div class="match-input-group">
+            <label class="match-label">Player's Guess</label>
+            <input class="match-input" id="matchGuess" placeholder="e.g. ACLR, frozen shoulder, slipped disc..." onkeydown="if(event.key==='Enter')runMatchTest()">
+          </div>
+          <div class="match-input-group">
+            <label class="match-label">Puzzle Answer</label>
+            <div class="puzzle-answer-picker">
+              <select id="matchAnswerSelect" onchange="onAnswerSelectChange()">
+                <option value="">— Pick from puzzles or type below —</option>
+              </select>
+            </div>
+            <input class="match-input" id="matchAnswer" placeholder="e.g. ACL Reconstruction">
+            <input class="match-input" id="matchAliases" placeholder="Aliases (comma-separated, optional)" style="font-size:0.8rem">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:0.75rem">
+          <button class="btn" onclick="runMatchTest()">Test Match</button>
+          <button class="btn" style="background:var(--surface2);color:var(--text2)" onclick="clearMatchTest()">Clear</button>
+        </div>
+
+        <div class="match-quick-tests">
+          <span class="match-label" style="display:block;margin-bottom:4px">Quick Tests</span>
+          <button class="match-quick-btn" onclick="quickTest('ACLR','ACL Reconstruction')">ACLR → ACL Reconstruction</button>
+          <button class="match-quick-btn" onclick="quickTest('Frozen Shoulder','Adhesive Capsulitis')">Frozen Shoulder → Adhesive Capsulitis</button>
+          <button class="match-quick-btn" onclick="quickTest('Slipped Disc','Lumbar Disc Herniation')">Slipped Disc → Lumbar Disc Herniation</button>
+          <button class="match-quick-btn" onclick="quickTest('Tennis Elbow','Lateral Epicondylitis')">Tennis Elbow → Lateral Epicondylitis</button>
+          <button class="match-quick-btn" onclick="quickTest('CVA','Middle Cerebral Artery Stroke')">CVA → MCA Stroke</button>
+          <button class="match-quick-btn" onclick="quickTest('TKR','Total Knee Replacement Rehabilitation')">TKR → Total Knee Replacement Rehab</button>
+          <button class="match-quick-btn" onclick="quickTest('pain','Patellofemoral Pain Syndrome')">pain → PFPS (generic guard)</button>
+          <button class="match-quick-btn" onclick="quickTest('Acute ACL Tear','ACL Tear')">Acute ACL Tear → ACL Tear (qualifier strip)</button>
+        </div>
+      </div>
+
+      <div id="matchResultArea"></div>
+
+      <!-- Data Browser -->
+      <div class="data-browser">
+        <div class="section-header">
+          <span class="section-title">Matching Data Browser</span>
+          <span id="matchDataStats" style="font-size:0.75rem;color:var(--text3)"></span>
+        </div>
+        <div class="data-browser-tabs">
+          <button class="data-browser-tab active" onclick="showDataTab('equiv')">Equivalence Groups</button>
+          <button class="data-browser-tab" onclick="showDataTab('parents')">Parent Terms</button>
+          <button class="data-browser-tab" onclick="showDataTab('abbrevs')">Abbreviations</button>
+        </div>
+        <div class="match-search-filter">
+          <input id="dataFilterInput" placeholder="Filter..." oninput="filterDataBrowser()">
+        </div>
+        <div class="data-browser-content" id="dataBrowserContent"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -366,6 +464,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     if (tab.dataset.panel === 'games') loadGames(1);
     if (tab.dataset.panel === 'puzzles') loadPuzzles();
     if (tab.dataset.panel === 'overview') loadAnalytics();
+    if (tab.dataset.panel === 'matcher') loadMatchData();
   });
 });
 
@@ -674,6 +773,170 @@ function jumpToDate(dateStr) {
 // ── Helpers ──
 function esc(s) { const el = document.createElement('span'); el.textContent = s || ''; return el.innerHTML; }
 function fmtDate(d) { if (!d) return '\u2014'; return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }); }
+
+// ══════════════════════════════════════════════════════════════
+// MATCH TESTER
+// ══════════════════════════════════════════════════════════════
+
+let matchData = null;
+let currentDataTab = 'equiv';
+
+async function loadMatchData() {
+  if (matchData) return;
+  try {
+    matchData = await adminApi('/match-data');
+    document.getElementById('matchDataStats').textContent =
+      `${matchData.totalEquivGroups} equiv groups · ${matchData.totalParentTerms} parent terms · ${matchData.totalAbbreviations} abbreviations`;
+    renderDataBrowser();
+    loadPuzzleAnswerDropdown();
+  } catch (e) { console.error('Failed to load match data:', e); }
+}
+
+async function loadPuzzleAnswerDropdown() {
+  const sel = document.getElementById('matchAnswerSelect');
+  try {
+    const data = await adminApi('/puzzles?startDay=1&count=50');
+    // Load all puzzles for dropdown
+    const allPuzzles = [];
+    const batchSize = 50;
+    for (let start = 1; start <= data.totalPuzzles; start += batchSize) {
+      const batch = await adminApi(`/puzzles?startDay=${start}&count=${batchSize}`);
+      allPuzzles.push(...batch.puzzles);
+    }
+    // Sort by day number
+    allPuzzles.sort((a, b) => a.dayNumber - b.dayNumber);
+    // Add unique answers to dropdown
+    const seen = new Set();
+    allPuzzles.forEach(p => {
+      if (seen.has(p.answer)) return;
+      seen.add(p.answer);
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify({ answer: p.answer, aliases: p.aliases || [] });
+      const dayLabel = p.dayNumber <= state.currentDay ? `Day ${p.dayNumber} (played)` : `Day ${p.dayNumber}`;
+      opt.textContent = `${dayLabel}: ${p.answer} [${p.category}]`;
+      sel.appendChild(opt);
+    });
+  } catch (e) { console.error('Failed to load puzzle answers:', e); }
+}
+
+function onAnswerSelectChange() {
+  const sel = document.getElementById('matchAnswerSelect');
+  if (!sel.value) return;
+  const data = JSON.parse(sel.value);
+  document.getElementById('matchAnswer').value = data.answer;
+  document.getElementById('matchAliases').value = (data.aliases || []).join(', ');
+}
+
+async function runMatchTest() {
+  const guess = document.getElementById('matchGuess').value.trim();
+  const answer = document.getElementById('matchAnswer').value.trim();
+  const aliasStr = document.getElementById('matchAliases').value.trim();
+  if (!guess || !answer) return;
+
+  const aliases = aliasStr ? aliasStr.split(',').map(a => a.trim()).filter(Boolean) : [];
+
+  try {
+    const sep = '/match-test'.includes('?') ? '&' : '?';
+    const r = await fetch(`/api/admin/match-test?key=${encodeURIComponent(adminKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guess, answer, aliases }),
+    });
+    if (r.status === 403) { doLogout(); return; }
+    const result = await r.json();
+
+    const area = document.getElementById('matchResultArea');
+    const isCorrect = result.result === 'correct';
+    area.innerHTML = `
+      <div class="match-result-card ${isCorrect ? 'correct' : 'incorrect'}">
+        <span class="match-result-badge ${isCorrect ? 'correct' : 'incorrect'}">
+          ${isCorrect ? '&#10003; CORRECT' : '&#10007; INCORRECT'}
+        </span>
+        <div class="match-layer">
+          <strong>Guess:</strong> "${esc(guess)}" &nbsp;&rarr;&nbsp; <strong>Answer:</strong> "${esc(answer)}"
+          ${aliases.length ? `<br><strong>Aliases:</strong> ${aliases.map(a => esc(a)).join(', ')}` : ''}
+        </div>
+        <div class="match-layer" style="margin-top:0.5rem">
+          <strong>Match Layer:</strong> ${esc(result.matchLayer)}
+        </div>
+        <div class="match-details" style="margin-top:0.25rem">
+          ${esc(result.details)}
+        </div>
+      </div>
+    `;
+  } catch (e) { console.error('Match test failed:', e); }
+}
+
+function clearMatchTest() {
+  document.getElementById('matchGuess').value = '';
+  document.getElementById('matchAnswer').value = '';
+  document.getElementById('matchAliases').value = '';
+  document.getElementById('matchAnswerSelect').value = '';
+  document.getElementById('matchResultArea').innerHTML = '';
+}
+
+function quickTest(guess, answer) {
+  document.getElementById('matchGuess').value = guess;
+  document.getElementById('matchAnswer').value = answer;
+  document.getElementById('matchAliases').value = '';
+  document.getElementById('matchAnswerSelect').value = '';
+  runMatchTest();
+}
+
+function showDataTab(tab) {
+  currentDataTab = tab;
+  document.querySelectorAll('.data-browser-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.data-browser-tab[onclick="showDataTab('${tab}')"]`).classList.add('active');
+  document.getElementById('dataFilterInput').value = '';
+  renderDataBrowser();
+}
+
+function filterDataBrowser() { renderDataBrowser(); }
+
+function renderDataBrowser() {
+  if (!matchData) return;
+  const container = document.getElementById('dataBrowserContent');
+  const filter = (document.getElementById('dataFilterInput').value || '').toLowerCase();
+
+  if (currentDataTab === 'equiv') {
+    const groups = matchData.equivalenceGroups.filter(group =>
+      !filter || group.some(t => t.toLowerCase().includes(filter))
+    );
+    container.innerHTML = groups.map((group, i) =>
+      `<div class="equiv-group">
+        <span style="font-size:0.65rem;color:var(--text3);margin-right:6px">#${i+1}</span>
+        <span class="equiv-group-terms">${group.map(t => {
+          const hl = filter && t.toLowerCase().includes(filter);
+          return `<span style="${hl?'border:1px solid var(--cyan);':''}">${esc(t)}</span>`;
+        }).join(' ')}</span>
+      </div>`
+    ).join('');
+  } else if (currentDataTab === 'parents') {
+    const entries = Object.entries(matchData.parentTerms).filter(([parent, children]) =>
+      !filter || parent.toLowerCase().includes(filter) || children.some(c => c.includes(filter))
+    );
+    container.innerHTML = entries.map(([parent, children]) =>
+      `<div class="equiv-group">
+        <div style="font-size:0.85rem;font-weight:700;color:var(--cyan);margin-bottom:4px">${esc(parent)}</div>
+        <div class="equiv-group-terms">${children.map(c => `<span>${esc(c)}</span>`).join(' ')}</div>
+      </div>`
+    ).join('');
+  } else if (currentDataTab === 'abbrevs') {
+    const entries = Object.entries(matchData.abbreviationMap)
+      .filter(([abbr, terms]) =>
+        !filter || abbr.includes(filter) || terms.some(t => t.includes(filter))
+      )
+      .sort((a, b) => a[0].localeCompare(b[0]));
+    container.innerHTML = `<div class="table-card"><div class="table-scroll" style="max-height:450px">` +
+      entries.map(([abbr, terms]) =>
+        `<div class="abbr-row">
+          <span class="abbr-key">${esc(abbr.toUpperCase())}</span>
+          <span class="abbr-values">${terms.map(t => esc(t)).join(', ')}</span>
+        </div>`
+      ).join('') +
+      `</div></div>`;
+  }
+}
 </script>
 </body>
 </html>
