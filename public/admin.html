@@ -1,181 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Physiodle Admin</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafb; color: #1a1a2e; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physiodle Admin</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0e1a; --surface: #111827; --surface2: #1a2235; --border: #1e293b;
+  --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+  --blue: #3b82f6; --green: #22c55e; --red: #ef4444; --amber: #f59e0b;
+  --purple: #8b5cf6; --cyan: #06b6d4; --pink: #ec4899; --teal: #0d9488;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── Nav ── */
-    .admin-nav { background: #0d9488; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 24px; position: sticky; top: 0; z-index: 100; }
-    .admin-nav h1 { font-size: 20px; font-weight: 700; }
-    .admin-nav .tabs { display: flex; gap: 4px; }
-    .admin-nav .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; background: rgba(255,255,255,0.15); color: #fff; border: none; transition: background 0.2s; }
-    .admin-nav .tab:hover { background: rgba(255,255,255,0.25); }
-    .admin-nav .tab.active { background: #fff; color: #0d9488; }
-    .admin-nav .logout { margin-left: auto; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; background: rgba(255,255,255,0.15); color: #fff; border: none; }
+/* ── Nav ── */
+.nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
+.nav-left { display: flex; align-items: center; gap: 0.75rem; }
+.nav-logo { font-size: 1.5rem; }
+.nav-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+.nav-badge { background: var(--green); color: #000; font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 99px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.6} }
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab { padding: 0.4rem 0.85rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; background: rgba(255,255,255,0.08); color: var(--text2); border: none; transition: all 0.15s; }
+.nav-tab:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.nav-tab.active { background: var(--blue); color: #fff; }
+.nav-right { display: flex; align-items: center; gap: 0.75rem; }
+.nav-time { color: var(--text3); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.btn { background: var(--blue); color: #fff; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.15s; }
+.btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
 
-    /* ── Login ── */
-    .login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
-    .login-box { background: #fff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; max-width: 400px; width: 90%; }
-    .login-box h2 { color: #0d9488; margin-bottom: 8px; }
-    .login-box p { color: #666; font-size: 14px; margin-bottom: 24px; }
-    .login-box input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; margin-bottom: 16px; }
-    .login-box input:focus { outline: none; border-color: #0d9488; }
-    .login-box button { width: 100%; padding: 12px; background: #0d9488; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .login-box .error { color: #e53e3e; font-size: 13px; margin-top: 8px; }
+/* ── Login ── */
+#loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; width: 320px; text-align: center; }
+.login-box h2 { color: #fff; margin-bottom: 0.25rem; }
+.login-box p { color: var(--text3); font-size: 0.85rem; margin-bottom: 1.25rem; }
+.login-box input { width: 100%; padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: #fff; font-size: 0.9rem; margin-bottom: 0.75rem; outline: none; }
+.login-box input:focus { border-color: var(--blue); }
+.login-error { color: var(--red); font-size: 0.8rem; margin-top: 0.75rem; display: none; }
 
-    /* ── Panels ── */
-    .panel { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
-    .panel.active { display: block; }
+/* ── Layout ── */
+.container { max-width: 1400px; margin: 0 auto; padding: 1.25rem; }
+.panel { display: none; }
+.panel.active { display: block; }
 
-    /* ── Stats Cards ── */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .stat-card .value { font-size: 28px; font-weight: 700; color: #0d9488; }
+/* ── Stat Cards ── */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.15rem; position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.stat-card.blue::before { background: var(--blue); } .stat-card.green::before { background: var(--green); }
+.stat-card.amber::before { background: var(--amber); } .stat-card.purple::before { background: var(--purple); }
+.stat-card.cyan::before { background: var(--cyan); } .stat-card.red::before { background: var(--red); }
+.stat-card.pink::before { background: var(--pink); } .stat-card.teal::before { background: var(--teal); }
+.stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 0.35rem; }
+.stat-value { font-size: 1.75rem; font-weight: 800; color: #fff; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-sub { font-size: 0.75rem; color: var(--text3); margin-top: 0.3rem; }
+.stat-delta { font-size: 0.7rem; font-weight: 600; margin-top: 0.2rem; }
+.stat-delta.up { color: var(--green); } .stat-delta.down { color: var(--red); }
 
-    /* ── Tables ── */
-    .table-wrap { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 24px; }
-    .table-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
-    .table-header h3 { font-size: 16px; font-weight: 600; }
-    .table-scroll { max-height: 600px; overflow-y: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th { position: sticky; top: 0; background: #f8fafb; padding: 10px 16px; text-align: left; font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; border-bottom: 1px solid #eee; }
-    td { padding: 10px 16px; font-size: 14px; border-bottom: 1px solid #f5f5f5; }
-    tr:hover td { background: #f8fffe; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-    .badge-green { background: #d1fae5; color: #065f46; }
-    .badge-red { background: #fee2e2; color: #991b1b; }
-    .badge-yellow { background: #fef3c7; color: #92400e; }
-    .badge-blue { background: #dbeafe; color: #1e40af; }
+/* ── Charts ── */
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 0.75rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+.chart-wrap { position: relative; height: 220px; }
+.chart-wrap.tall { height: 280px; }
 
-    /* ── Pagination ── */
-    .pagination { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid #f0f0f0; justify-content: center; }
-    .pagination button { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; }
-    .pagination button:disabled { opacity: 0.4; cursor: default; }
-    .pagination button.active { background: #0d9488; color: #fff; border-color: #0d9488; }
-    .pagination .page-info { font-size: 13px; color: #888; }
+/* ── Tables ── */
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
+td { padding: 0.5rem 0.75rem; font-size: 0.85rem; border-bottom: 1px solid rgba(30,41,59,0.5); }
+tr:hover td { background: rgba(59,130,246,0.04); }
+.table-header { padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.table-header h3 { font-size: 0.85rem; font-weight: 600; color: #fff; }
+.table-header span { font-size: 0.75rem; color: var(--text3); }
+.table-scroll { max-height: 500px; overflow-y: auto; }
 
-    /* ── Puzzle Vetting ── */
-    .puzzle-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-    .puzzle-nav button { padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; }
-    .puzzle-nav button:hover { background: #f0fdfa; border-color: #0d9488; }
-    .puzzle-nav .day-input { padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; width: 100px; text-align: center; }
-    .puzzle-nav .day-input:focus { outline: none; border-color: #0d9488; }
-    .puzzle-nav .current-info { font-size: 13px; color: #888; }
+/* ── Rank badges ── */
+.rank { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 0.7rem; font-weight: 700; }
+.rank-1 { background: #b8860b33; color: #fbbf24; } .rank-2 { background: #6b728033; color: #d1d5db; }
+.rank-3 { background: #a0522d33; color: #d2956a; } .rank-n { background: var(--surface2); color: var(--text3); }
 
-    .puzzle-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 24px; margin-bottom: 16px; }
-    .puzzle-card .puzzle-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-    .puzzle-card .puzzle-title { font-size: 20px; font-weight: 700; color: #0d9488; }
-    .puzzle-card .puzzle-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-    .puzzle-card .clue { padding: 12px 16px; border-left: 3px solid #0d9488; background: #f8fffe; border-radius: 0 8px 8px 0; margin-bottom: 8px; }
-    .puzzle-card .clue-label { font-size: 12px; font-weight: 600; color: #0d9488; text-transform: uppercase; margin-bottom: 2px; }
-    .puzzle-card .clue-text { font-size: 14px; color: #333; line-height: 1.5; }
-    .puzzle-card .explanation { margin-top: 16px; padding: 12px 16px; background: #f0fdfa; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.5; }
-    .puzzle-card .aliases { margin-top: 8px; font-size: 13px; color: #888; }
+/* ── Mini bar ── */
+.mini-bar-bg { width: 100%; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.mini-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
 
-    .puzzle-pair-warning { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #92400e; }
-    .puzzle-pair-warning strong { color: #78350f; }
+/* ── Section header ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+.section-title { font-size: 0.85rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
 
-    /* ── Jump to date ── */
-    .jump-controls { display: flex; gap: 8px; align-items: center; }
-    .jump-controls input[type="date"] { padding: 6px 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
-    .jump-controls input[type="date"]:focus { outline: none; border-color: #0d9488; }
-  </style>
+/* ── Two columns ── */
+.col-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+
+/* ── Feedback ── */
+.feedback-item { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.5); }
+.feedback-item:last-child { border-bottom: none; }
+.feedback-meta { font-size: 0.7rem; color: var(--text3); }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+.badge-green { background: #065f4640; color: #4ade80; }
+.badge-red { background: #991b1b40; color: #f87171; }
+.badge-yellow { background: #92400e40; color: #fbbf24; }
+.badge-blue { background: #1e40af40; color: #60a5fa; }
+.badge-teal { background: #0d948840; color: #5eead4; }
+
+/* ── Pagination ── */
+.pagination { display: flex; align-items: center; gap: 6px; padding: 0.75rem 1rem; border-top: 1px solid var(--border); justify-content: center; }
+.pagination button { padding: 4px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 0.75rem; }
+.pagination button:disabled { opacity: 0.3; cursor: default; }
+.pagination button.pg-active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.pagination .page-info { font-size: 0.75rem; color: var(--text3); }
+
+/* ── Puzzle Vetting ── */
+.puzzle-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.puzzle-nav button { padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+.puzzle-nav button:hover { background: var(--surface); border-color: var(--teal); color: #fff; }
+.puzzle-nav .day-input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: #fff; font-size: 0.85rem; width: 80px; text-align: center; outline: none; }
+.puzzle-nav .day-input:focus { border-color: var(--teal); }
+.puzzle-nav input[type="date"] { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: #fff; font-size: 0.8rem; outline: none; }
+.puzzle-info { font-size: 0.75rem; color: var(--text3); }
+
+.puzzle-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 12px; }
+.puzzle-card.today { border-color: var(--teal); box-shadow: 0 0 12px rgba(13,148,136,0.15); }
+.puzzle-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.puzzle-title { font-size: 1.1rem; font-weight: 700; color: var(--teal); }
+.puzzle-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.puzzle-aliases { font-size: 0.8rem; color: var(--text3); margin-top: 2px; }
+.clue { padding: 10px 14px; border-left: 3px solid var(--teal); background: rgba(13,148,136,0.05); border-radius: 0 8px 8px 0; margin-bottom: 6px; }
+.clue-label { font-size: 0.7rem; font-weight: 600; color: var(--teal); text-transform: uppercase; margin-bottom: 2px; }
+.clue-text { font-size: 0.85rem; color: var(--text); line-height: 1.5; }
+.puzzle-explanation { margin-top: 12px; padding: 10px 14px; background: var(--surface2); border-radius: 8px; font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+.puzzle-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.8rem; color: var(--amber); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .chart-grid, .col-2 { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 1.4rem; }
+  .container { padding: 0.75rem; }
+  .nav-tabs { display: none; }
+}
+</style>
 </head>
 <body>
 
-<!-- ── Login Screen ── -->
-<div id="loginScreen" class="login-screen">
+<!-- Login -->
+<div id="loginScreen">
   <div class="login-box">
+    <div style="font-size:2.5rem;margin-bottom:0.5rem">&#129468;</div>
     <h2>Physiodle Admin</h2>
     <p>Enter your admin key to continue</p>
-    <input type="password" id="adminKeyInput" placeholder="Admin key..." autocomplete="off">
-    <button onclick="doLogin()">Login</button>
-    <div id="loginError" class="error" style="display:none"></div>
+    <input type="password" id="adminKeyInput" placeholder="Admin key..." onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" style="width:100%;padding:0.6rem" onclick="doLogin()">Unlock Dashboard</button>
+    <p id="loginError" class="login-error">Invalid admin key</p>
   </div>
 </div>
 
-<!-- ── Dashboard ── -->
+<!-- Dashboard -->
 <div id="dashboard" style="display:none">
-  <nav class="admin-nav">
-    <h1>🦴 Physiodle Admin</h1>
-    <div class="tabs">
-      <button class="tab active" data-panel="overview">Overview</button>
-      <button class="tab" data-panel="puzzles">Puzzle Vetting</button>
-      <button class="tab" data-panel="users">Users</button>
-      <button class="tab" data-panel="games">Game History</button>
+  <nav class="nav">
+    <div class="nav-left">
+      <span class="nav-logo">&#129468;</span>
+      <span class="nav-title">Physiodle Admin</span>
+      <span class="nav-badge">Live</span>
     </div>
-    <button class="logout" onclick="doLogout()">Logout</button>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-panel="overview">Overview</button>
+      <button class="nav-tab" data-panel="puzzles">Puzzle Vetting</button>
+      <button class="nav-tab" data-panel="users">Users</button>
+      <button class="nav-tab" data-panel="games">Game History</button>
+    </div>
+    <div class="nav-right">
+      <span class="nav-time" id="clock"></span>
+      <button class="btn" onclick="refreshAll()">Refresh</button>
+    </div>
   </nav>
 
-  <!-- ── Overview Panel ── -->
-  <div id="panel-overview" class="panel active">
-    <h2 style="margin-bottom:16px">Dashboard Overview</h2>
-    <div class="stats-row" id="statsRow"></div>
-  </div>
+  <div class="container">
+    <!-- ═══ OVERVIEW PANEL ═══ -->
+    <div id="panel-overview" class="panel active">
+      <div class="stats-row" id="kpiRow"></div>
 
-  <!-- ── Puzzle Vetting Panel ── -->
-  <div id="panel-puzzles" class="panel">
-    <h2 style="margin-bottom:16px">Puzzle Vetting</h2>
-    <div class="puzzle-nav">
-      <button onclick="puzzleNav(-10)">⟨⟨ -10</button>
-      <button onclick="puzzleNav(-1)">⟨ Prev</button>
-      <span>Day</span>
-      <input type="number" class="day-input" id="dayInput" min="1" value="1" onchange="jumpToDay(this.value)">
-      <button onclick="puzzleNav(1)">Next ⟩</button>
-      <button onclick="puzzleNav(10)">+10 ⟩⟩</button>
-      <span style="margin-left:8px">|</span>
-      <div class="jump-controls">
-        <span>Jump to date:</span>
+      <div class="chart-grid">
+        <div class="chart-card full">
+          <div class="chart-title">Daily Traffic & Games (30 Days)</div>
+          <div class="chart-wrap tall"><canvas id="trafficChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-title">Win / Loss</div>
+          <div class="chart-wrap"><canvas id="winLossChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Score Distribution (Winners)</div>
+          <div class="chart-wrap"><canvas id="scoreChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Hourly Activity Today (AEST)</div>
+          <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Device Split</div>
+          <div class="chart-wrap"><canvas id="deviceChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="col-2">
+        <div>
+          <div class="section-header"><span class="section-title">Top Players (by points)</span></div>
+          <div class="table-card" id="topPlayersTable"></div>
+        </div>
+        <div>
+          <div class="section-header"><span class="section-title">Most Active</span></div>
+          <div class="table-card" id="activeTable"></div>
+        </div>
+      </div>
+
+      <div class="col-2">
+        <div>
+          <div class="section-header"><span class="section-title">Recent Sign-ups</span></div>
+          <div class="table-card" id="signupsTable"></div>
+        </div>
+        <div>
+          <div class="section-header"><span class="section-title">Recent Feedback</span></div>
+          <div class="table-card" id="feedbackPanel"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-header"><span class="section-title">Leaderboard Tab Popularity</span></div>
+        <div class="stats-row" id="lbPop"></div>
+      </div>
+    </div>
+
+    <!-- ═══ PUZZLE VETTING PANEL ═══ -->
+    <div id="panel-puzzles" class="panel">
+      <div class="puzzle-nav">
+        <button onclick="puzzleNav(-10)">⟨⟨ -10</button>
+        <button onclick="puzzleNav(-1)">⟨ Prev</button>
+        <span style="color:var(--text3)">Day</span>
+        <input type="number" class="day-input" id="dayInput" min="1" value="1" onchange="jumpToDay(this.value)">
+        <button onclick="puzzleNav(1)">Next ⟩</button>
+        <button onclick="puzzleNav(10)">+10 ⟩⟩</button>
+        <span style="color:var(--text3);margin:0 4px">|</span>
+        <span style="color:var(--text3);font-size:0.8rem">Jump to date:</span>
         <input type="date" id="dateJump" onchange="jumpToDate(this.value)">
+        <button onclick="jumpToDay(state.currentDay)" style="background:var(--teal);color:#fff;border-color:var(--teal)">Today</button>
+        <span class="puzzle-info" id="puzzleDayInfo"></span>
       </div>
-      <button onclick="jumpToDay(state.currentDay)" style="background:#0d9488;color:#fff;border-color:#0d9488">Today</button>
-      <span class="current-info" id="puzzleDayInfo"></span>
+      <div id="puzzleContainer"></div>
     </div>
-    <div id="puzzleContainer"></div>
-  </div>
 
-  <!-- ── Users Panel ── -->
-  <div id="panel-users" class="panel">
-    <h2 style="margin-bottom:16px">Users</h2>
-    <div class="table-wrap">
-      <div class="table-header">
-        <h3>All Users</h3>
-        <span id="userTotal" style="font-size:13px;color:#888"></span>
+    <!-- ═══ USERS PANEL ═══ -->
+    <div id="panel-users" class="panel">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>All Users</h3>
+          <span id="userTotal"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Username</th><th>Joined</th><th>Games</th><th>Won</th><th>Win %</th><th>Points</th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="userPagination"></div>
       </div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr>
-            <th>ID</th><th>Username</th><th>Joined</th><th>Games</th><th>Won</th><th>Win %</th><th>Points</th>
-          </tr></thead>
-          <tbody id="userTableBody"></tbody>
-        </table>
-      </div>
-      <div class="pagination" id="userPagination"></div>
     </div>
-  </div>
 
-  <!-- ── Games Panel ── -->
-  <div id="panel-games" class="panel">
-    <h2 style="margin-bottom:16px">Game History</h2>
-    <div class="table-wrap">
-      <div class="table-header">
-        <h3>All Games</h3>
-        <span id="gameTotal" style="font-size:13px;color:#888"></span>
+    <!-- ═══ GAMES PANEL ═══ -->
+    <div id="panel-games" class="panel">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Game History</h3>
+          <span id="gameTotal"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Player</th><th>Day</th><th>Result</th><th>Score</th><th>Guesses</th><th>Completed</th></tr></thead>
+            <tbody id="gameTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="gamePagination"></div>
       </div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr>
-            <th>Player</th><th>Day #</th><th>Result</th><th>Score</th><th>Guesses</th><th>Completed</th>
-          </tr></thead>
-          <tbody id="gameTableBody"></tbody>
-        </table>
-      </div>
-      <div class="pagination" id="gamePagination"></div>
     </div>
   </div>
 </div>
@@ -183,26 +295,37 @@
 <script>
 // ── State ──
 let adminKey = sessionStorage.getItem('physiodle_admin_key') || '';
-const state = { currentDay: 1, viewDay: 1, totalPuzzles: 0, puzzleCache: {} };
+const state = { currentDay: 1, viewDay: 1, totalPuzzles: 0 };
+const charts = {};
 
-// ── API helper ──
-async function api(path) {
+// ── API helpers ──
+async function adminApi(path) {
   const sep = path.includes('?') ? '&' : '?';
-  const res = await fetch(`/api/admin${path}${sep}key=${encodeURIComponent(adminKey)}`);
-  if (res.status === 403) { doLogout(); throw new Error('Unauthorized'); }
-  return res.json();
+  const r = await fetch(`/api/admin${path}${sep}key=${encodeURIComponent(adminKey)}`);
+  if (r.status === 403) { doLogout(); throw new Error('Unauthorized'); }
+  return r.json();
+}
+async function analyticsApi() {
+  const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': adminKey } });
+  if (!r.ok) throw new Error('Analytics fetch failed');
+  return r.json();
 }
 
 // ── Login / Logout ──
 async function doLogin() {
   adminKey = document.getElementById('adminKeyInput').value.trim();
+  if (!adminKey) return;
   try {
-    await api('/stats');
+    await analyticsApi();
     sessionStorage.setItem('physiodle_admin_key', adminKey);
-    showDashboard();
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = '';
+    refreshAll();
+    setInterval(() => { if (document.getElementById('panel-overview').classList.contains('active')) loadAnalytics(); }, 30000);
   } catch {
-    document.getElementById('loginError').textContent = 'Invalid admin key';
     document.getElementById('loginError').style.display = 'block';
+    document.getElementById('adminKeyInput').value = '';
+    document.getElementById('adminKeyInput').focus();
   }
 }
 function doLogout() {
@@ -214,142 +337,299 @@ function doLogout() {
 
 // ── Init ──
 document.getElementById('adminKeyInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
 if (adminKey) {
-  api('/stats').then(() => showDashboard()).catch(() => {
-    document.getElementById('loginScreen').style.display = 'flex';
-  });
-} else {
-  document.getElementById('loginScreen').style.display = 'flex';
+  analyticsApi().then(() => {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = '';
+    refreshAll();
+    setInterval(() => { if (document.getElementById('panel-overview').classList.contains('active')) loadAnalytics(); }, 30000);
+  }).catch(() => { document.getElementById('loginScreen').style.display = 'flex'; });
 }
 
-async function showDashboard() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  loadOverview();
-  loadPuzzles();
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  const aest = new Date(now.getTime() + 10 * 3600000);
+  document.getElementById('clock').textContent = aest.toISOString().slice(0,16).replace('T',' ') + ' AEST';
 }
+setInterval(updateClock, 1000);
+updateClock();
 
 // ── Tab switching ──
-document.querySelectorAll('.admin-nav .tab').forEach(tab => {
+document.querySelectorAll('.nav-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.admin-nav .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
-
     if (tab.dataset.panel === 'users') loadUsers(1);
     if (tab.dataset.panel === 'games') loadGames(1);
     if (tab.dataset.panel === 'puzzles') loadPuzzles();
+    if (tab.dataset.panel === 'overview') loadAnalytics();
   });
 });
 
-// ── Overview ──
-async function loadOverview() {
-  const s = await api('/stats');
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card"><div class="label">Total Users</div><div class="value">${s.totalUsers}</div></div>
-    <div class="stat-card"><div class="label">Total Games</div><div class="value">${s.totalGamesPlayed}</div></div>
-    <div class="stat-card"><div class="label">Games Today</div><div class="value">${s.gamesToday}</div></div>
-    <div class="stat-card"><div class="label">Overall Win Rate</div><div class="value">${s.winRate}%</div></div>
-  `;
+async function refreshAll() { loadAnalytics(); }
+
+// ══════════════════════════════════════════════════════════════
+// OVERVIEW / ANALYTICS
+// ══════════════════════════════════════════════════════════════
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#1e293b';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+async function loadAnalytics() {
+  try {
+    const d = await analyticsApi();
+    renderKPIs(d);
+    renderTrafficChart(d);
+    renderWinLoss(d);
+    renderScoreDist(d);
+    renderHourly(d);
+    renderDevices(d);
+    renderTopPlayers(d.topPlayers);
+    renderMostActive(d.mostActive);
+    renderRecentSignups(d.recentSignups);
+    renderFeedback(d.feedback);
+    renderLbPop(d.leaderboardPopularity);
+  } catch (e) { console.error('Analytics load failed:', e); }
 }
 
-// ── Users ──
+function renderKPIs(d) {
+  const delta = (a, b) => { if (!b) return ''; const pct = Math.round(((a-b)/Math.max(b,1))*100); return `<div class="stat-delta ${pct>=0?'up':'down'}">${pct>=0?'+':''}${pct}% vs yesterday</div>`; };
+  const cards = [
+    { label: 'Visitors Today', value: d.uniqueVisitors.today, sub: `Total: ${d.uniqueVisitors.total}`, color: 'blue', extra: delta(d.uniqueVisitors.today, d.uniqueVisitors.yesterday) },
+    { label: 'Page Views Today', value: d.pageViews.today, sub: `Total: ${d.pageViews.total}`, color: 'cyan', extra: delta(d.pageViews.today, d.pageViews.yesterday) },
+    { label: 'Sign-ups', value: d.signups.total, sub: `Today: ${d.signups.today} | Week: ${d.signups.thisWeek}`, color: 'green' },
+    { label: 'Games Played', value: d.gamesPlayed.total, sub: `Today: ${d.gamesPlayed.today} | Week: ${d.gamesPlayed.thisWeek}`, color: 'purple' },
+    { label: 'Win Rate', value: d.winLoss.winRate + '%', sub: `${d.winLoss.wins}W / ${d.winLoss.losses}L`, color: 'amber' },
+    { label: 'Avg Score', value: d.averageScore, sub: 'Lower is better (1-5)', color: 'pink' },
+    { label: 'Conversion', value: d.conversionRate + '%', sub: 'Visitors \u2192 Sign-ups', color: 'teal' },
+    { label: 'Games / User', value: d.gamesPerUser, sub: `${d.social.totalFriendships} friendships`, color: 'cyan' },
+  ];
+  document.getElementById('kpiRow').innerHTML = cards.map(c =>
+    `<div class="stat-card ${c.color}"><div class="stat-label">${c.label}</div><div class="stat-value">${c.value}</div><div class="stat-sub">${c.sub}</div>${c.extra||''}</div>`
+  ).join('');
+}
+
+function renderTrafficChart(d) {
+  destroyChart('traffic');
+  const labels = d.dailyBreakdown.map(r => r.day.slice(5));
+  const signupMap = {}; (d.dailySignups || []).forEach(r => { signupMap[r.day] = r.count; });
+  const gameMap = {}; (d.dailyGames || []).forEach(r => { gameMap[r.day] = r.total; });
+
+  charts.traffic = new Chart(document.getElementById('trafficChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Page Views', data: d.dailyBreakdown.map(r => r.views), backgroundColor: '#3b82f640', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 4, order: 2 },
+        { label: 'Unique Visitors', data: d.dailyBreakdown.map(r => r.unique_visitors), type: 'line', borderColor: '#06b6d4', backgroundColor: '#06b6d420', pointRadius: 2, tension: 0.3, fill: true, order: 1 },
+        { label: 'Games', data: d.dailyBreakdown.map(r => gameMap[r.day] || 0), type: 'line', borderColor: '#8b5cf6', pointRadius: 2, tension: 0.3, borderDash: [4,2], order: 0 },
+        { label: 'Sign-ups', data: d.dailyBreakdown.map(r => signupMap[r.day] || 0), type: 'line', borderColor: '#22c55e', pointRadius: 2, tension: 0.3, borderDash: [2,2], order: 0 },
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
+  });
+}
+
+function renderWinLoss(d) {
+  destroyChart('winLoss');
+  charts.winLoss = new Chart(document.getElementById('winLossChart'), {
+    type: 'doughnut',
+    data: { labels: ['Wins', 'Losses'], datasets: [{ data: [d.winLoss.wins, d.winLoss.losses], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0, spacing: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+  });
+}
+
+function renderScoreDist(d) {
+  destroyChart('score');
+  const colors = ['#22c55e', '#4ade80', '#06b6d4', '#f59e0b', '#ef4444'];
+  const scoreLabels = ['1 (First try)', '2', '3', '4', '5 (Last chance)'];
+  const data = [0,0,0,0,0];
+  d.scoreDistribution.forEach(r => { if (r.score >= 1 && r.score <= 5) data[r.score-1] = r.count; });
+  charts.score = new Chart(document.getElementById('scoreChart'), {
+    type: 'bar',
+    data: { labels: scoreLabels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, grid: { color: '#1e293b' } }, y: { grid: { display: false } } } }
+  });
+}
+
+function renderHourly(d) {
+  destroyChart('hourly');
+  const data = new Array(24).fill(0);
+  (d.hourlyToday || []).forEach(r => { data[r.hour] = r.count; });
+  const currentHour = new Date(Date.now() + 10*3600000).getUTCHours();
+  charts.hourly = new Chart(document.getElementById('hourlyChart'), {
+    type: 'bar',
+    data: { labels: data.map((_,i) => i + ':00'), datasets: [{ data, backgroundColor: data.map((_,i) => i === currentHour ? '#3b82f6' : '#3b82f640'), borderRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } } } }
+  });
+}
+
+function renderDevices(d) {
+  destroyChart('device');
+  charts.device = new Chart(document.getElementById('deviceChart'), {
+    type: 'doughnut',
+    data: { labels: ['Mobile', 'Desktop'], datasets: [{ data: [d.devices.mobile, d.devices.desktop], backgroundColor: ['#8b5cf6', '#3b82f6'], borderWidth: 0, spacing: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+  });
+}
+
+function renderTopPlayers(rows) {
+  const el = document.getElementById('topPlayersTable');
+  if (!rows || !rows.length) { el.innerHTML = '<p style="padding:1rem;color:var(--text3)">No data yet</p>'; return; }
+  const maxPts = Math.max(...rows.map(r => r.total_points), 1);
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th>W</th><th>Avg</th><th></th></tr></thead><tbody>' +
+    rows.map((r, i) => {
+      const rc = i < 3 ? 'rank-' + (i+1) : 'rank-n';
+      return `<tr><td><span class="rank ${rc}">${i+1}</span></td><td style="font-weight:600">${esc(r.username)}</td><td style="color:#fbbf24;font-weight:700">${r.total_points}</td><td>${r.wins}/${r.games_played}</td><td>${r.avg_score||'-'}</td><td><div class="mini-bar-bg"><div class="mini-bar" style="width:${r.total_points/maxPts*100}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div></td></tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+function renderMostActive(rows) {
+  const el = document.getElementById('activeTable');
+  if (!rows || !rows.length) { el.innerHTML = '<p style="padding:1rem;color:var(--text3)">No data yet</p>'; return; }
+  const maxG = Math.max(...rows.map(r => r.games_played), 1);
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Player</th><th>Games</th><th>Wins</th><th>Win%</th><th></th></tr></thead><tbody>' +
+    rows.map((r, i) => {
+      const rc = i < 3 ? 'rank-' + (i+1) : 'rank-n';
+      const wr = r.games_played > 0 ? Math.round(r.wins/r.games_played*100) : 0;
+      return `<tr><td><span class="rank ${rc}">${i+1}</span></td><td style="font-weight:600">${esc(r.username)}</td><td>${r.games_played}</td><td>${r.wins}</td><td>${wr}%</td><td><div class="mini-bar-bg"><div class="mini-bar" style="width:${r.games_played/maxG*100}%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div></td></tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+function renderRecentSignups(rows) {
+  const el = document.getElementById('signupsTable');
+  if (!rows || !rows.length) { el.innerHTML = '<p style="padding:1rem;color:var(--text3)">No sign-ups yet</p>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Username</th><th>Joined</th></tr></thead><tbody>' +
+    rows.map(r => `<tr><td style="font-weight:600">${esc(r.username)}</td><td style="color:var(--text3)">${(r.created_at||'').replace('T',' ').slice(0,16)}</td></tr>`).join('') + '</tbody></table>';
+}
+
+function renderFeedback(fb) {
+  const el = document.getElementById('feedbackPanel');
+  if (!fb || !fb.recent || !fb.recent.length) { el.innerHTML = '<p style="padding:1rem;color:var(--text3)">No feedback yet</p>'; return; }
+  const emoji = { good: '\u{1F44D}', ok: '\u{1F44C}', bad: '\u{1F44E}' };
+  el.innerHTML = fb.recent.map(r =>
+    `<div class="feedback-item"><span style="font-weight:700">${emoji[r.rating]||r.rating}</span> <strong>${esc(r.username||'Anon')}</strong> <span class="feedback-meta">Day ${r.day_number} \u00b7 ${(r.created_at||'').slice(0,10)}</span>${r.comment ? `<div style="color:var(--text2);font-size:0.8rem;margin-top:0.2rem">${esc(r.comment)}</div>` : ''}</div>`
+  ).join('');
+}
+
+function renderLbPop(rows) {
+  const el = document.getElementById('lbPop');
+  if (!rows || !rows.length) { el.innerHTML = '<p style="color:var(--text3)">No data yet</p>'; return; }
+  const maxC = Math.max(...rows.map(r => r.count), 1);
+  const colors = ['blue','green','amber','purple','cyan','pink'];
+  el.innerHTML = rows.map((r, i) => {
+    const name = (r.event_data || '').replace(/"/g, '');
+    return `<div class="stat-card ${colors[i%6]}"><div class="stat-label">${esc(name)}</div><div class="stat-value">${r.count}</div><div style="margin-top:0.4rem"><div class="mini-bar-bg"><div class="mini-bar" style="width:${r.count/maxC*100}%;background:var(--${colors[i%6]})"></div></div></div></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════════════════════
+
 async function loadUsers(page) {
-  const data = await api(`/users?page=${page}&limit=50`);
+  const data = await adminApi(`/users?page=${page}&limit=50`);
   document.getElementById('userTotal').textContent = `${data.total} total users`;
   document.getElementById('userTableBody').innerHTML = data.users.map(u => `
     <tr>
-      <td>${u.id}</td>
-      <td><strong>${esc(u.username)}</strong></td>
-      <td>${fmtDate(u.createdAt)}</td>
+      <td style="color:var(--text3)">${u.id}</td>
+      <td style="font-weight:600">${esc(u.username)}</td>
+      <td style="color:var(--text3)">${fmtDate(u.createdAt)}</td>
       <td>${u.gamesPlayed}</td>
       <td>${u.gamesWon}</td>
       <td>${u.winRate}%</td>
-      <td>${u.totalPoints}</td>
+      <td style="color:#fbbf24;font-weight:600">${u.totalPoints}</td>
     </tr>
   `).join('');
   renderPagination('userPagination', data.page, data.totalPages, loadUsers);
 }
 
-// ── Games ──
+// ══════════════════════════════════════════════════════════════
+// GAME HISTORY
+// ══════════════════════════════════════════════════════════════
+
 async function loadGames(page) {
-  const data = await api(`/games?page=${page}&limit=50`);
+  const data = await adminApi(`/games?page=${page}&limit=50`);
   document.getElementById('gameTotal').textContent = `${data.total} total games`;
   document.getElementById('gameTableBody').innerHTML = data.games.map(g => `
     <tr>
-      <td><strong>${esc(g.username)}</strong></td>
+      <td style="font-weight:600">${esc(g.username)}</td>
       <td>Day ${g.dayNumber}</td>
       <td>${g.won ? '<span class="badge badge-green">Won</span>' : '<span class="badge badge-red">Lost</span>'}</td>
-      <td>${g.won ? g.score + '/5' : '—'}</td>
-      <td style="font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.guesses.map(x => typeof x === 'string' ? x : (x.text || x.guess || JSON.stringify(x))).join(', ')}</td>
-      <td>${fmtDate(g.completedAt)}</td>
+      <td>${g.won ? g.score + '/5' : '\u2014'}</td>
+      <td style="font-size:0.75rem;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text3)">${g.guesses.map(x => typeof x === 'string' ? x : (x.text || x.guess || '')).join(', ')}</td>
+      <td style="color:var(--text3)">${fmtDate(g.completedAt)}</td>
     </tr>
   `).join('');
   renderPagination('gamePagination', data.page, data.totalPages, loadGames);
 }
 
-// ── Pagination renderer ──
+// ══════════════════════════════════════════════════════════════
+// PAGINATION
+// ══════════════════════════════════════════════════════════════
+
 function renderPagination(containerId, currentPage, totalPages, loadFn) {
   const el = document.getElementById(containerId);
   if (totalPages <= 1) { el.innerHTML = ''; return; }
-  let html = `<button ${currentPage <= 1 ? 'disabled' : ''} onclick="void(0)">« Prev</button>`;
-  const start = Math.max(1, currentPage - 3);
-  const end = Math.min(totalPages, currentPage + 3);
-  for (let i = start; i <= end; i++) {
-    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="void(0)">${i}</button>`;
-  }
-  html += `<button ${currentPage >= totalPages ? 'disabled' : ''} onclick="void(0)">Next »</button>`;
+  let html = `<button ${currentPage<=1?'disabled':''}>« Prev</button>`;
+  const start = Math.max(1, currentPage - 3), end = Math.min(totalPages, currentPage + 3);
+  for (let i = start; i <= end; i++) html += `<button class="${i===currentPage?'pg-active':''}">${i}</button>`;
+  html += `<button ${currentPage>=totalPages?'disabled':''}>Next »</button>`;
   html += `<span class="page-info">${currentPage} / ${totalPages}</span>`;
   el.innerHTML = html;
   el.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
-      const text = btn.textContent.trim();
-      if (text === '« Prev' && currentPage > 1) loadFn(currentPage - 1);
-      else if (text === 'Next »' && currentPage < totalPages) loadFn(currentPage + 1);
-      else if (!isNaN(text)) loadFn(parseInt(text));
+      const t = btn.textContent.trim();
+      if (t === '« Prev' && currentPage > 1) loadFn(currentPage - 1);
+      else if (t === 'Next »' && currentPage < totalPages) loadFn(currentPage + 1);
+      else if (!isNaN(t)) loadFn(parseInt(t));
     });
   });
 }
 
-// ── Puzzle Vetting ──
+// ══════════════════════════════════════════════════════════════
+// PUZZLE VETTING
+// ══════════════════════════════════════════════════════════════
+
 async function loadPuzzles(startDay) {
-  const data = await api(`/puzzles?startDay=${startDay || ''}&count=10`);
+  const data = await adminApi(`/puzzles?startDay=${startDay||''}&count=10`);
   state.currentDay = data.currentDay;
   state.totalPuzzles = data.totalPuzzles;
-  if (!startDay) state.viewDay = data.currentDay;
-  else state.viewDay = data.startDay;
+  state.viewDay = startDay || data.currentDay;
 
   document.getElementById('dayInput').value = state.viewDay;
-  document.getElementById('puzzleDayInfo').textContent =
-    `Current day: ${state.currentDay} | Total puzzles: ${state.totalPuzzles}`;
+  document.getElementById('puzzleDayInfo').textContent = `Current day: ${state.currentDay} | Total puzzles: ${state.totalPuzzles}`;
 
-  const container = document.getElementById('puzzleContainer');
-
-  // Check for similar puzzles within 50 days
-  const similarWarnings = findSimilarNearby(data.puzzles, state.viewDay);
-
-  container.innerHTML = data.puzzles.map(p => {
-    const isPast = p.dayNumber < state.currentDay;
+  const warnings = findSimilarNearby(data.puzzles);
+  document.getElementById('puzzleContainer').innerHTML = data.puzzles.map(p => {
     const isToday = p.dayNumber === state.currentDay;
-    const isFuture = p.dayNumber > state.currentDay;
+    const isPast = p.dayNumber < state.currentDay;
     const dayLabel = isToday ? 'TODAY' : isPast ? 'Past' : `In ${p.dayNumber - state.currentDay} days`;
-    const warning = similarWarnings[p.dayNumber];
-
+    const warning = warnings[p.dayNumber];
     return `
-      ${warning ? `<div class="puzzle-pair-warning">⚠️ <strong>Similar puzzle nearby:</strong> ${warning}</div>` : ''}
-      <div class="puzzle-card" style="${isToday ? 'border:2px solid #0d9488' : ''}">
+      ${warning ? `<div class="puzzle-warning">\u26A0\uFE0F <strong>Similar puzzle nearby:</strong> ${esc(warning)}</div>` : ''}
+      <div class="puzzle-card${isToday ? ' today' : ''}">
         <div class="puzzle-header">
           <div>
             <div class="puzzle-title">${esc(p.answer)}</div>
-            <div class="aliases">${p.aliases.length ? 'Aliases: ' + p.aliases.map(esc).join(', ') : 'No aliases'}</div>
+            <div class="puzzle-aliases">${p.aliases.length ? 'Aliases: ' + p.aliases.map(esc).join(', ') : 'No aliases'}</div>
           </div>
           <div class="puzzle-meta">
-            <span class="badge ${isToday ? 'badge-green' : isPast ? 'badge-blue' : 'badge-yellow'}">Day ${p.dayNumber} — ${dayLabel}</span>
+            <span class="badge ${isToday ? 'badge-teal' : isPast ? 'badge-blue' : 'badge-yellow'}">Day ${p.dayNumber} \u2014 ${dayLabel}</span>
             <span class="badge badge-blue">${esc(p.category)}</span>
-            <span class="badge ${p.difficulty === 'hard' ? 'badge-red' : p.difficulty === 'easy' ? 'badge-green' : 'badge-yellow'}">${p.difficulty}</span>
-            <span style="font-size:12px;color:#888">${p.date}</span>
+            <span class="badge ${p.difficulty==='hard'?'badge-red':p.difficulty==='easy'?'badge-green':'badge-yellow'}">${p.difficulty}</span>
+            <span style="font-size:0.7rem;color:var(--text3)">${p.date}</span>
           </div>
         </div>
         ${p.clues.map((c, i) => `
@@ -358,59 +638,42 @@ async function loadPuzzles(startDay) {
             <div class="clue-text">${esc(c.text)}</div>
           </div>
         `).join('')}
-        <div class="explanation"><strong>Explanation:</strong> ${esc(p.explanation || 'None')}</div>
+        <div class="puzzle-explanation"><strong>Explanation:</strong> ${esc(p.explanation || 'None')}</div>
       </div>
     `;
   }).join('');
 }
 
-function findSimilarNearby(puzzles, viewDay) {
-  // We need a wider window to detect similarity. Cache what we have.
-  // For now, check within the loaded batch for same-category or same-answer-stem
+function findSimilarNearby(puzzles) {
   const warnings = {};
   for (let i = 0; i < puzzles.length; i++) {
     for (let j = i + 1; j < puzzles.length; j++) {
       const a = puzzles[i], b = puzzles[j];
       const dayGap = Math.abs(a.dayNumber - b.dayNumber);
       if (dayGap > 50) continue;
-
-      const aWords = a.answer.toLowerCase().split(/[\s\-]+/);
-      const bWords = b.answer.toLowerCase().split(/[\s\-]+/);
-      const shared = aWords.filter(w => bWords.includes(w) && w.length > 3);
-
+      const aW = a.answer.toLowerCase().split(/[\s\-]+/);
+      const bW = b.answer.toLowerCase().split(/[\s\-]+/);
+      const shared = aW.filter(w => bW.includes(w) && w.length > 3);
       if (a.category === b.category && shared.length >= 1) {
-        const msg = `"${a.answer}" (Day ${a.dayNumber}) and "${b.answer}" (Day ${b.dayNumber}) are both ${a.category} — only ${dayGap} days apart`;
-        warnings[a.dayNumber] = msg;
-        warnings[b.dayNumber] = msg;
+        const msg = `"${a.answer}" (Day ${a.dayNumber}) and "${b.answer}" (Day ${b.dayNumber}) — both ${a.category}, only ${dayGap} days apart`;
+        warnings[a.dayNumber] = msg; warnings[b.dayNumber] = msg;
       }
     }
   }
   return warnings;
 }
 
-function puzzleNav(delta) {
-  const newDay = Math.max(1, state.viewDay + delta);
-  state.viewDay = newDay;
-  loadPuzzles(newDay);
-}
-
-function jumpToDay(day) {
-  const d = Math.max(1, parseInt(day) || 1);
-  state.viewDay = d;
-  loadPuzzles(d);
-}
-
+function puzzleNav(delta) { jumpToDay(Math.max(1, state.viewDay + delta)); }
+function jumpToDay(day) { state.viewDay = Math.max(1, parseInt(day)||1); loadPuzzles(state.viewDay); }
 function jumpToDate(dateStr) {
   if (!dateStr) return;
-  const launch = new Date('2026-03-04');
-  const target = new Date(dateStr);
-  const diff = Math.floor((target - launch) / 86400000) + 1;
+  const diff = Math.floor((new Date(dateStr) - new Date('2026-03-04')) / 86400000) + 1;
   if (diff >= 1) jumpToDay(diff);
 }
 
 // ── Helpers ──
 function esc(s) { const el = document.createElement('span'); el.textContent = s || ''; return el.innerHTML; }
-function fmtDate(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function fmtDate(d) { if (!d) return '\u2014'; return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }); }
 </script>
 </body>
 </html>
