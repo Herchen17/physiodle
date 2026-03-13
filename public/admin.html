@@ -228,9 +228,21 @@ tr:hover td { background: rgba(59,130,246,0.04); }
       <div class="stats-row" id="kpiRow"></div>
 
       <div class="chart-grid">
-        <div class="chart-card full">
-          <div class="chart-title">Daily Traffic & Games (30 Days)</div>
-          <div class="chart-wrap tall"><canvas id="trafficChart"></canvas></div>
+        <div class="chart-card">
+          <div class="chart-title">Page Views (30 Days)</div>
+          <div class="chart-wrap"><canvas id="pageViewsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Unique Visitors (30 Days)</div>
+          <div class="chart-wrap"><canvas id="visitorsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Games Played (30 Days)</div>
+          <div class="chart-wrap"><canvas id="gamesChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Sign-ups (30 Days)</div>
+          <div class="chart-wrap"><canvas id="signupsChart"></canvas></div>
         </div>
       </div>
 
@@ -495,7 +507,7 @@ async function loadAnalytics() {
   try {
     const d = await analyticsApi();
     renderKPIs(d);
-    renderTrafficChart(d);
+    renderTrafficCharts(d);
     renderWinLoss(d);
     renderScoreDist(d);
     renderHourly(d);
@@ -525,54 +537,53 @@ function renderKPIs(d) {
   ).join('');
 }
 
-function renderTrafficChart(d) {
-  destroyChart('traffic');
-  const labels = d.dailyBreakdown.map(r => { const [m,dy] = r.day.slice(5).split('-'); return parseInt(dy) + '/' + parseInt(m); });
-  const signupMap = {}; (d.dailySignups || []).forEach(r => { signupMap[r.day] = r.count; });
-  const gameMap = {}; (d.dailyGames || []).forEach(r => { gameMap[r.day] = r.total; });
-
-  charts.traffic = new Chart(document.getElementById('trafficChart'), {
-    type: 'bar',
+function _chartLabels(d) { return d.dailyBreakdown.map(r => { const [m,dy] = r.day.slice(5).split('-'); return parseInt(dy) + '/' + parseInt(m); }); }
+const _ttip = { backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#e2e8f0', bodyColor: '#94a3b8', borderColor: '#334155', borderWidth: 1, padding: 10 };
+function _singleChart(canvasId, chartKey, labels, data, color, fillColor, type) {
+  destroyChart(chartKey);
+  const total = data.reduce((s, v) => s + v, 0);
+  const max = Math.max(...data);
+  const maxIdx = data.indexOf(max);
+  charts[chartKey] = new Chart(document.getElementById(canvasId), {
+    type: type || 'line',
     data: {
       labels,
-      datasets: [
-        { label: 'Page Views', data: d.dailyBreakdown.map(r => r.views), backgroundColor: 'rgba(59,130,246,0.25)', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 4, yAxisID: 'yTraffic', order: 3 },
-        { label: 'Unique Visitors', data: d.dailyBreakdown.map(r => r.unique_visitors), type: 'line', borderColor: '#06b6d4', backgroundColor: 'transparent', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5, tension: 0.3, fill: false, yAxisID: 'yTraffic', order: 2 },
-        { label: 'Games', data: d.dailyBreakdown.map(r => gameMap[r.day] || 0), type: 'line', borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.1)', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5, tension: 0.3, pointStyle: 'rectRot', fill: true, yAxisID: 'yActivity', order: 1 },
-        { label: 'Sign-ups', data: d.dailyBreakdown.map(r => signupMap[r.day] || 0), type: 'line', borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.08)', pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5, tension: 0.3, pointStyle: 'triangle', fill: true, yAxisID: 'yActivity', order: 0 },
-      ]
+      datasets: [{
+        data,
+        borderColor: color,
+        backgroundColor: type === 'bar' ? color + '40' : fillColor || (color + '15'),
+        borderWidth: type === 'bar' ? 1 : 2.5,
+        borderRadius: type === 'bar' ? 4 : 0,
+        pointRadius: type === 'bar' ? 0 : 3,
+        pointHoverRadius: type === 'bar' ? 0 : 5,
+        pointBackgroundColor: color,
+        tension: 0.35,
+        fill: type !== 'bar',
+      }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { usePointStyle: true, padding: 16 } },
-        tooltip: {
-          backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#e2e8f0', bodyColor: '#94a3b8',
-          borderColor: '#334155', borderWidth: 1, padding: 12, bodySpacing: 6,
-          callbacks: {
-            title: (items) => { const i = items[0].dataIndex; return d.dailyBreakdown[i] ? d.dailyBreakdown[i].day : items[0].label; },
-            label: (ctx) => '  ' + ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString()
-          }
-        }
+        legend: { display: false },
+        tooltip: { ..._ttip, callbacks: { label: (ctx) => ctx.parsed.y.toLocaleString() } },
       },
       scales: {
-        yTraffic: {
-          type: 'linear', position: 'left', beginAtZero: true,
-          grid: { color: '#1e293b' },
-          title: { display: true, text: 'Page Views / Visitors', color: '#64748b', font: { size: 10 } },
-          ticks: { color: '#64748b' }
-        },
-        yActivity: {
-          type: 'linear', position: 'right', beginAtZero: true,
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'Games / Sign-ups', color: '#64748b', font: { size: 10 } },
-          ticks: { color: '#64748b' }
-        },
-        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 8 } }
+        y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 5 } },
+        x: { grid: { display: false }, ticks: { color: '#475569', maxRotation: 0, autoSkipPadding: 8 } }
       }
     }
   });
+}
+
+function renderTrafficCharts(d) {
+  const labels = _chartLabels(d);
+  const signupMap = {}; (d.dailySignups || []).forEach(r => { signupMap[r.day] = r.count; });
+  const gameMap = {}; (d.dailyGames || []).forEach(r => { gameMap[r.day] = r.total; });
+
+  _singleChart('pageViewsChart', 'pageViews', labels, d.dailyBreakdown.map(r => r.views), '#3b82f6', null, 'bar');
+  _singleChart('visitorsChart', 'visitors', labels, d.dailyBreakdown.map(r => r.unique_visitors), '#06b6d4');
+  _singleChart('gamesChart', 'games', labels, d.dailyBreakdown.map(r => gameMap[r.day] || 0), '#a78bfa');
+  _singleChart('signupsChart', 'signups', labels, d.dailyBreakdown.map(r => signupMap[r.day] || 0), '#4ade80');
 }
 
 function renderWinLoss(d) {
