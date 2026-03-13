@@ -137,7 +137,8 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 
 /* ── Match Tester ── */
 .match-tester { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-.match-input-group { display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
+.match-input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.match-input-wrap { position: relative; }
 .match-autocomplete { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 8px 8px; max-height: 280px; overflow-y: auto; z-index: 50; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .match-autocomplete.show { display: block; }
 .match-ac-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.85rem; color: var(--text); border-bottom: 1px solid rgba(30,41,59,0.3); }
@@ -343,8 +344,10 @@ tr:hover td { background: rgba(59,130,246,0.04); }
         <div class="match-tester">
           <div class="match-input-group" id="guessInputGroup">
             <label class="match-label">Player's Guess</label>
-            <input class="match-input" id="matchGuess" placeholder="Start typing a condition..." autocomplete="off">
-            <div class="match-autocomplete" id="guessAutocomplete"></div>
+            <div class="match-input-wrap">
+              <input class="match-input" id="matchGuess" placeholder="Start typing a condition..." autocomplete="off" style="width:100%">
+              <div class="match-autocomplete" id="guessAutocomplete"></div>
+            </div>
           </div>
           <div class="match-input-group">
             <label class="match-label">Puzzle Answer</label>
@@ -789,22 +792,28 @@ let matchData = null;
 let currentDataTab = 'equiv';
 let allConditions = [];
 
+let matchAutocompleteReady = false;
+
 async function loadMatchData() {
-  if (matchData) return;
-  try {
-    matchData = await adminApi('/match-data');
-    document.getElementById('matchDataStats').textContent =
-      `${matchData.totalEquivGroups} equiv groups · ${matchData.totalParentTerms} parent terms · ${matchData.totalAbbreviations} abbreviations`;
-    renderDataBrowser();
-    loadPuzzleAnswerDropdown();
-  } catch (e) { console.error('Failed to load match data:', e); }
-  // Load condition names for autocomplete
-  if (allConditions.length === 0) {
+  // Load match data (equiv groups, parent terms, abbreviations)
+  if (!matchData) {
+    try {
+      matchData = await adminApi('/match-data');
+      document.getElementById('matchDataStats').textContent =
+        `${matchData.totalEquivGroups} equiv groups · ${matchData.totalParentTerms} parent terms · ${matchData.totalAbbreviations} abbreviations`;
+      renderDataBrowser();
+      loadPuzzleAnswerDropdown();
+    } catch (e) { console.error('Failed to load match data:', e); }
+  }
+  // Load condition names for autocomplete (separate from matchData guard)
+  if (!matchAutocompleteReady) {
     try {
       const r = await fetch('/api/puzzles/conditions');
       const data = await r.json();
       allConditions = data.conditions || [];
+      console.log('Loaded', allConditions.length, 'conditions for autocomplete');
       setupGuessAutocomplete();
+      matchAutocompleteReady = true;
     } catch (e) { console.error('Failed to load conditions:', e); }
   }
 }
