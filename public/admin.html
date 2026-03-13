@@ -256,12 +256,29 @@ tr:hover td { background: rgba(59,130,246,0.04); }
           <div class="chart-wrap"><canvas id="scoreChart"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Hourly Activity Today (AEST)</div>
+          <div class="chart-title">Device Split</div>
+          <div class="chart-wrap"><canvas id="deviceChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Hourly Breakdown Section -->
+      <div class="section-header" style="margin-bottom:0.6rem"><span class="section-title">Hourly Breakdown Today (AEST)</span></div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-title">Page Views by Hour</div>
           <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Device Split</div>
-          <div class="chart-wrap"><canvas id="deviceChart"></canvas></div>
+          <div class="chart-title">Unique Visitors by Hour</div>
+          <div class="chart-wrap"><canvas id="hourlyVisitorsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Games Played by Hour</div>
+          <div class="chart-wrap"><canvas id="hourlyGamesChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Sign-ups by Hour</div>
+          <div class="chart-wrap"><canvas id="hourlySignupsChart"></canvas></div>
         </div>
       </div>
 
@@ -510,7 +527,7 @@ async function loadAnalytics() {
     renderTrafficCharts(d);
     renderWinLoss(d);
     renderScoreDist(d);
-    renderHourly(d);
+    renderHourlyAll(d);
     renderDevices(d);
     renderTopPlayers(d.topPlayers);
     renderMostActive(d.mostActive);
@@ -609,17 +626,23 @@ function renderScoreDist(d) {
   });
 }
 
-function renderHourly(d) {
-  destroyChart('hourly');
+function _hourlyBar(canvasId, chartKey, hourlyData, color) {
+  destroyChart(chartKey);
   const data = new Array(24).fill(0);
-  (d.hourlyToday || []).forEach(r => { data[r.hour] = r.count; });
+  (hourlyData || []).forEach(r => { data[r.hour] = r.count; });
   const currentHour = new Date(Date.now() + 10*3600000).getUTCHours();
-  charts.hourly = new Chart(document.getElementById('hourlyChart'), {
+  charts[chartKey] = new Chart(document.getElementById(canvasId), {
     type: 'bar',
-    data: { labels: data.map((_,i) => i + ':00'), datasets: [{ data, backgroundColor: data.map((_,i) => i === currentHour ? '#3b82f6' : '#3b82f640'), borderRadius: 3 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } } } }
+    data: { labels: data.map((_,i) => i + ':00'), datasets: [{ data, backgroundColor: data.map((_,i) => i === currentHour ? color : color + '40'), borderRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ..._ttip, callbacks: { label: ctx => ctx.parsed.y.toLocaleString() } } },
+      scales: { y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { maxTicksLimit: 5 } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } } } }
   });
+}
+function renderHourlyAll(d) {
+  _hourlyBar('hourlyChart', 'hourly', d.hourlyToday, '#3b82f6');
+  _hourlyBar('hourlyVisitorsChart', 'hourlyVisitors', d.hourlyVisitors, '#06b6d4');
+  _hourlyBar('hourlyGamesChart', 'hourlyGames', d.hourlyGames, '#8b5cf6');
+  _hourlyBar('hourlySignupsChart', 'hourlySignups', d.hourlySignups, '#22c55e');
 }
 
 function renderDevices(d) {
