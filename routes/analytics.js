@@ -495,6 +495,10 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+function toAEST(d) { return new Date(new Date(d).getTime() + 10 * 3600000); }
+function fmtDate(d) { if (!d) return '—'; const a = toAEST(d); return a.getUTCDate() + '/' + (a.getUTCMonth()+1) + '/' + a.getUTCFullYear(); }
+function fmtDateTime(d) { if (!d) return '—'; const a = toAEST(d); return a.toISOString().slice(0,16).replace('T',' ') + ' AEST'; }
+
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.borderColor = '#1e293b';
 Chart.defaults.font.family = "'Inter', sans-serif";
@@ -651,7 +655,7 @@ function renderMostActive(rows) {
 function renderRecentSignups(rows) {
   if (!rows || !rows.length) { document.getElementById('signupsTable').innerHTML = '<p style="padding:1rem;color:#64748b">No sign-ups yet</p>'; return; }
   document.getElementById('signupsTable').innerHTML = '<table><thead><tr><th>Username</th><th>Joined</th></tr></thead><tbody>' +
-    rows.map(r => '<tr><td style="font-weight:600">' + r.username + '</td><td style="color:#64748b">' + r.created_at.replace('T',' ').slice(0,16) + '</td></tr>').join('') + '</tbody></table>';
+    rows.map(r => '<tr><td style="font-weight:600">' + r.username + '</td><td style="color:#64748b">' + fmtDateTime(r.created_at) + '</td></tr>').join('') + '</tbody></table>';
 }
 
 function renderFeedback(fb) {
@@ -659,7 +663,7 @@ function renderFeedback(fb) {
   if (!fb || !fb.recent || !fb.recent.length) { el.innerHTML = '<p style="padding:1rem;color:#64748b">No feedback yet</p>'; return; }
   const ratingEmoji = { good: '\\u{1F44D}', ok: '\\u{1F44C}', bad: '\\u{1F44E}' };
   el.innerHTML = fb.recent.map(r =>
-    '<div class="feedback-item"><span class="feedback-rating">' + (ratingEmoji[r.rating] || r.rating) + '</span> <strong>' + (r.username || 'Anon') + '</strong> <span class="feedback-meta">Day ' + r.day_number + ' &middot; ' + (r.created_at||'').slice(0,10) + '</span>' + (r.comment ? '<div style="color:#94a3b8;font-size:0.8rem;margin-top:0.2rem">' + r.comment + '</div>' : '') + '</div>'
+    '<div class="feedback-item"><span class="feedback-rating">' + (ratingEmoji[r.rating] || r.rating) + '</span> <strong>' + (r.username || 'Anon') + '</strong> <span class="feedback-meta">Day ' + r.day_number + ' &middot; ' + fmtDate(r.created_at) + '</span>' + (r.comment ? '<div style="color:#94a3b8;font-size:0.8rem;margin-top:0.2rem">' + r.comment + '</div>' : '') + '</div>'
   ).join('');
 }
 
