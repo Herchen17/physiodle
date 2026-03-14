@@ -46,9 +46,10 @@ function aestDaysAgo(n) {
   return utc.toISOString().replace('T', ' ').replace(/\.\d+Z$/, '');
 }
 
+const ADMIN_KEY = process.env.ADMIN_KEY || 'physiodle-admin-2026';
 function requireAdmin(req, res, next) {
   const key = req.headers['x-admin-key'];
-  if (!key || key !== process.env.ADMIN_KEY) {
+  if (!key || key !== ADMIN_KEY) {
     return res.status(401).json({ error: 'Invalid admin key' });
   }
   next();
