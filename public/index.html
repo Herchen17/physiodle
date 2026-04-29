@@ -6,8 +6,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d9488">
+  <meta name="google-site-verification" content="li8nJ4H-TM7gosC26buIA8-HqlAwNcMB1Z04yY9B3EM" />
   <title>Physiodle - Physiotherapy Puzzle Game</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦴</text></svg>">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
@@ -1587,6 +1593,30 @@
       .account-perf-label { font-size: 0.78rem; }
       .account-perf-value { font-size: 0.85rem; }
     }
+
+    /* Sibling cross-promo banner */
+    .sibling-banner {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.6rem; padding: 0.45rem 1rem;
+      background: #f3ebff; border-bottom: 1px solid #ddd0f5;
+      font-size: 0.82rem; color: #1f2937; flex-wrap: wrap;
+    }
+    .sibling-banner .sibling-icon { font-size: 1.05rem; line-height: 1; }
+    .sibling-banner a.sibling-cta {
+      color: #7c3aed; font-weight: 700; text-decoration: none;
+      background: white; padding: 0.2rem 0.65rem; border-radius: 999px;
+      border: 1.5px solid #7c3aed; transition: background 0.15s, color 0.15s;
+    }
+    .sibling-banner a.sibling-cta:hover { background: #7c3aed; color: white; }
+    .sibling-banner .sibling-dismiss {
+      background: transparent; border: none; color: #6b7280;
+      font-size: 1.15rem; cursor: pointer; padding: 0 0.25rem; line-height: 1;
+    }
+    .sibling-banner .sibling-dismiss:hover { color: #1f2937; }
+    @media (max-width: 480px) {
+      .sibling-banner { font-size: 0.72rem; padding: 0.4rem 0.6rem; gap: 0.4rem; }
+      .sibling-banner a.sibling-cta { padding: 0.15rem 0.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -1606,6 +1636,30 @@
       </div>
     </div>
   </header>
+
+  <!-- SIBLING CROSS-PROMO -->
+  <div class="sibling-banner" id="siblingBanner">
+    <span class="sibling-icon">&#128138;</span>
+    <span>New: Try <strong>Pharmodle</strong> &mdash; daily drug identification puzzle. Same login works on both.</span>
+    <a class="sibling-cta" href="https://pharmodle.up.railway.app" target="_blank" rel="noopener">Open Pharmodle</a>
+    <button class="sibling-dismiss" id="siblingDismissBtn" aria-label="Dismiss">&times;</button>
+  </div>
+  <script>
+    (function() {
+      try {
+        var b = document.getElementById('siblingBanner');
+        if (!b) return;
+        if (localStorage.getItem('physiodle_sibling_dismissed') === '1') {
+          b.style.display = 'none';
+        }
+        var btn = document.getElementById('siblingDismissBtn');
+        if (btn) btn.addEventListener('click', function() {
+          b.style.display = 'none';
+          try { localStorage.setItem('physiodle_sibling_dismissed', '1'); } catch(e) {}
+        });
+      } catch(e) {}
+    })();
+  </script>
 
   <!-- MAIN CONTENT -->
   <div class="page active" id="gamePage">
