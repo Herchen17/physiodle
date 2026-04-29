@@ -25,6 +25,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL COLLATE NOCASE,
     password_hash TEXT NOT NULL,
+    email TEXT COLLATE NOCASE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -104,5 +105,24 @@ db.exec(`
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
   );
 `);
+
+// ==================== MIGRATIONS ====================
+// CREATE TABLE IF NOT EXISTS skips existing tables, so schema changes to
+// pre-existing tables need explicit ALTER TABLE calls. Each migration must
+// be idempotent (check before altering).
+
+function columnExists(table, column) {
+  const rows = db.prepare(`PRAGMA table_info(${table})`).all();
+  return rows.some(r => r.name === column);
+}
+
+// 2026-04-29: add email column to users (parity with Pharmodle's
+// email-as-identity branch). Existing users keep username-only login;
+// new signups capture email; cross-app login works by either.
+if (!columnExists('users', 'email')) {
+  console.log('[migration] adding users.email column');
+  db.exec('ALTER TABLE users ADD COLUMN email TEXT COLLATE NOCASE');
+}
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL');
 
 module.exports = db;
