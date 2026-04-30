@@ -39,8 +39,8 @@ const pm = require('../puzzle-manager');
 
 // Game slug — defaults to the directory name. Override with GAME_SLUG env
 // var in production (Railway). The factory stamper sets this automatically.
-const GAME_SLUG = process.env.GAME_SLUG ||
-  require('path').basename(require('path').resolve(__dirname, '..'));
+const GAME_SLUG = (process.env.GAME_SLUG ||
+  require('path').basename(require('path').resolve(__dirname, '..'))).toLowerCase();
 
 // Admin key env var name: <SLUG>_ADMIN_KEY (e.g. PHYSIODLE_ADMIN_KEY).
 // Same convention used by routes/analytics.js admin endpoints.
