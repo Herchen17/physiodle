@@ -183,11 +183,12 @@ router.get('/dashboard', requireAdmin, (req, res) => {
   const feedback = safeGet(() => db.prepare(`
     SELECT rating, COUNT(*) as count FROM feedback GROUP BY rating ORDER BY count DESC
   `).all(), []);
+  const feedbackLimit = Math.min(Math.max(parseInt(req.query.feedbackLimit, 10) || 10, 1), 1000);
   const recentFeedback = safeGet(() => db.prepare(`
     SELECT f.rating, f.comment, f.day_number, f.created_at, u.username
     FROM feedback f LEFT JOIN users u ON f.user_id = u.id
-    ORDER BY f.created_at DESC LIMIT 10
-  `).all(), []);
+    ORDER BY f.created_at DESC LIMIT ?
+  `).all(feedbackLimit), []);
 
   // --- Hourly activity (today, AEST) ---
   const hourlyToday = safeGet(() => db.prepare(`
