@@ -4251,9 +4251,10 @@
         const { day } = getShareData();
         const file = new File([blob], `${SHARE_CONFIG.brand.toLowerCase()}-day-${day}.png`, { type: 'image/png' });
         const text = generateShareText();
+        // No title — host apps prepend it as a separate line above the text.
         const data = navigator.canShare && navigator.canShare({ files: [file] })
-          ? { files: [file], text, title: `${SHARE_CONFIG.brand} Day ${day}` }
-          : { text, title: `${SHARE_CONFIG.brand} Day ${day}`, url: SHARE_CONFIG.url };
+          ? { files: [file], text }
+          : { text, url: SHARE_CONFIG.url };
         await navigator.share(data);
       } catch (e) {
         if (e.name !== 'AbortError') showToast('Share failed', 'error');
