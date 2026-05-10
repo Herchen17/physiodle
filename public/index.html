@@ -1741,6 +1741,9 @@
           <div class="answer-summary-explanation-label">Clinical Insight</div>
           <div id="answerSummaryExplanationText"></div>
         </div>
+        <div style="margin-top: 1.25rem; text-align: center;">
+          <button class="btn btn-primary" id="persistentShareBtn" style="font-size: 0.95rem; padding: 0.6rem 1.4rem;">Share Your Result</button>
+        </div>
       </div>
 
       <!-- CLUES -->
@@ -4190,6 +4193,7 @@
     });
 
     document.getElementById('shareBtn').addEventListener('click', openShareModal);
+    document.getElementById('persistentShareBtn').addEventListener('click', openShareModal);
 
     document.getElementById('shareCloseBtn').addEventListener('click', () => {
       document.getElementById('shareOverlay').classList.remove('show');
