@@ -2493,7 +2493,7 @@
         },
         {
           "label": "History",
-          "text": "Symptoms unresponsive to 18 months of physiotherapy, injections, and anti-inflammatories. Imaging 2 years ago showed advanced joint space narrowing. Surgical intervention performed 6 weeks ago for end-stage joint disease. Medical history: polyarticular osteoarthritis, controlled hypertension. No prior shoulder procedures."
+          "text": "Symptoms unresponsive to 18 months of physiotherapy, injections, and anti-inflammatories. Imaging 2 years ago showed advanced joint space narrowing. Surgical intervention performed 6 weeks ago for end-stage joint disease. Medical history: polyarticular osteoarthritis, controlled hypertension. No earlier shoulder surgeries before the recent intervention."
         },
         {
           "label": "Examination",
@@ -2508,9 +2508,9 @@
       "id": 69
     },
     {
-      "answer": "Knee Arthroscopy Rehabilitation",
+      "answer": "Post-Knee Arthroscopy",
       "aliases": [
-        "Post-Knee Arthroscopy",
+        "Knee Arthroscopy Rehabilitation",
         "Knee Arthroscopy",
         "Arthroscopy"
       ],
@@ -2546,7 +2546,11 @@
     {
       "answer": "Jersey Finger",
       "aliases": [
-        "FDP Avulsion"
+        "FDP Avulsion",
+        "Flexor Digitorum Rupture",
+        "Flexor Digitorum Profundus Rupture",
+        "FDP Rupture",
+        "Flexor Digitorum Profundus Tendon Rupture"
       ],
       "category": "Wrist & Hand",
       "domain": "Musculoskeletal - Upper Limb",
