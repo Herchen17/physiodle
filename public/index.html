@@ -2590,6 +2590,20 @@
         }
       }
 
+      // --- TIER 2: Acceptable alternatives (per-puzzle "partial credit" matches) ---
+      // For diagnoses that ARE clinically related but not synonymous with the
+      // canonical answer (e.g. Carpal Tunnel Syndrome ↦ Work-Related Upper Limb
+      // Disorder). The matcher reports 'acceptable' so the game can award credit
+      // without claiming the user's guess was the exact canonical answer.
+      const acceptableAlts = (puzzle.acceptable_alternatives || []).map(a => a.toLowerCase());
+      if (acceptableAlts.length > 0) {
+        if (acceptableAlts.includes(g) || acceptableAlts.includes(gNorm)) return 'acceptable';
+        for (const alt of acceptableAlts) {
+          const equivSet = _equivMap[alt];
+          if (equivSet && (equivSet.has(g) || equivSet.has(gNorm))) return 'acceptable';
+        }
+      }
+
       return 'incorrect';
     }
 

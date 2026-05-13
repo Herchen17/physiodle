@@ -156,7 +156,11 @@
       "answer": "Overtraining Syndrome",
       "aliases": [
         "Relative Energy Deficiency in Sport",
-        "RED-S"
+        "RED-S",
+        "Female Athlete Triad",
+        "Female Athletic Triad",
+        "Triad Syndrome",
+        "Female Triad Syndrome"
       ],
       "category": "Systemic",
       "domain": "Sports & Exercise",
@@ -1677,7 +1681,10 @@
       "answer": "Degenerative Disc Disease",
       "aliases": [
         "Disc Degeneration",
-        "DDD"
+        "DDD",
+        "Lumbar DDD",
+        "Lumbar Degenerative Disc Disease",
+        "Lumbar Disc Degeneration"
       ],
       "category": "Spine",
       "domain": "Musculoskeletal - Spine",
@@ -2075,7 +2082,12 @@
       ],
       "explanation": "Work-related upper limb disorder (WRULD) encompasses cumulative trauma conditions arising from prolonged, repetitive occupational activities — in this case, eight hours daily of keyboard work without adequate ergonomic support. The median nerve compression at the carpal tunnel reflects tenosynovial irritation and swelling from sustained wrist flexion and repetitive gripping, manifesting as progressive wrist and forearm pain that worsens through the workday before improving with rest and activity the following morning. The constellation of positive Phalen's and Tinel's signs, reduced grip strength, intrinsic muscle atrophy, and slowed nerve conduction across the wrist confirms carpal tunnel syndrome as the underlying mechanism — a hallmark of WRULD. Prevention hinges on ergonomic modification, work pacing, and early intervention; once established, these conditions respond best to activity modification combined with structured rehabilitation to restore neuromuscular control.",
       "id": 57,
-      "condition": "Work-Related Upper Limb Disorder"
+      "condition": "Work-Related Upper Limb Disorder",
+      "acceptable_alternatives": [
+        "Carpal Tunnel Syndrome",
+        "Occupational Carpal Tunnel Syndrome",
+        "Repetitive Strain Injury"
+      ]
     },
     {
       "answer": "Marfan Syndrome",
