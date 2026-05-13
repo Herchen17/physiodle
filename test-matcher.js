@@ -180,6 +180,39 @@ t('feedback-regress', '[Phase C] "Carpal Tunnel Syndrome" should be ACCEPTABLE f
 t('feedback-regress', '[Phase C guard] "Female Athlete Triad" should NOT match a Plantar Fasciitis puzzle',
   stubPuzzle('Plantar Fasciitis'), 'Female Athlete Triad', INCORRECT, 'C');
 
+// --- fuzzy tier (Phase C — the FAI typo case the user reported) ---
+
+t('fuzzy-positive', '"Femoracetabular Impingement" (missing o) ↦ FAI',
+  stubPuzzle('Femoroacetabular Impingement'), 'Femoracetabular Impingement', CORRECT);
+
+t('fuzzy-positive', '"Femoroacetabular Impingment" (missing e) ↦ FAI',
+  stubPuzzle('Femoroacetabular Impingement'), 'Femoroacetabular Impingment', CORRECT);
+
+t('fuzzy-positive', '"femoracetabular impingment" (2 typos) ↦ FAI',
+  stubPuzzle('Femoroacetabular Impingement'), 'femoracetabular impingment', CORRECT);
+
+t('fuzzy-positive', 'fuzzy via equivalence: "iliotibal band syndrome" (missing i) ↦ ITB Syndrome',
+  stubPuzzle('Iliotibial Band Syndrome'), 'iliotibal band syndrome', CORRECT);
+
+t('fuzzy-positive', '"adhesive capsulits" (missing i) ↦ Adhesive Capsulitis',
+  stubPuzzle('Adhesive Capsulitis'), 'adhesive capsulits', CORRECT);
+
+// Critical negative guards — short-token diagnoses with one letter different
+t('fuzzy-negative', 'MCL Tear must NOT match ACL Tear (short tokens, one-letter different)',
+  stubPuzzle('ACL Tear'), 'MCL Tear', INCORRECT);
+
+t('fuzzy-negative', 'PCL Tear must NOT match MCL Tear',
+  stubPuzzle('MCL Tear'), 'PCL Tear', INCORRECT);
+
+t('fuzzy-negative', 'Talus Fracture must NOT match Calcaneal Fracture (different bone)',
+  stubPuzzle('Calcaneal Fracture'), 'Talus Fracture', INCORRECT);
+
+t('fuzzy-negative', '"Cervical Radiculopathy" must NOT match a Lumbar Radiculopathy puzzle',
+  stubPuzzle('Lumbar Radiculopathy'), 'Cervical Radiculopathy', INCORRECT);
+
+t('fuzzy-negative', 'completely unrelated condition with no overlap',
+  stubPuzzle('Plantar Fasciitis'), 'Atrial Fibrillation', INCORRECT);
+
 // === RUNNER ================================================================
 
 const ANSI = process.stdout.isTTY
