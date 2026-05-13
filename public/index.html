@@ -2487,7 +2487,7 @@
     }
     // Build on page load after conditions are fetched (called in loadTodaysPuzzle)
 
-    const QUALIFIERS = /^(acute|chronic|bilateral|unilateral|left|right|mild|moderate|severe|primary|secondary|idiopathic|traumatic|non-traumatic|post-surgical|recurrent|degenerative|adolescent|juvenile|paediatric|pediatric|occupational|exercise-induced|sport-specific|congenital|acquired|partial|complete|high|low)\s+/gi;
+    const QUALIFIERS = /^(acute|chronic|bilateral|unilateral|left|right|mild|moderate|severe|primary|secondary|idiopathic|traumatic|non[ -]traumatic|post[ -]surgical|recurrent|degenerative|adolescent|juvenile|paediatric|pediatric|occupational|exercise[ -]induced|sport[ -]specific|congenital|acquired|partial|complete|high|low)\s+/gi;
 
     function normalise(str) {
       let s = str.toLowerCase().trim();
@@ -2496,6 +2496,11 @@
         prev = s;
         s = s.replace(QUALIFIERS, '').trim();
       }
+      // Fold remaining hyphens to spaces so e.g. "Post-ACL Reconstruction" and
+      // "Post ACL Reconstruction" normalise to the same string. Done after the
+      // qualifier strip so the hyphenated qualifier terms (post-surgical, etc.)
+      // still match the regex on the way in.
+      s = s.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
       return s;
     }
 
