@@ -213,6 +213,24 @@ t('fuzzy-negative', '"Cervical Radiculopathy" must NOT match a Lumbar Radiculopa
 t('fuzzy-negative', 'completely unrelated condition with no overlap',
   stubPuzzle('Plantar Fasciitis'), 'Atrial Fibrillation', INCORRECT);
 
+// --- bidirectional anatomical abbreviation expansion (Phase F) ---
+
+t('abbrev-positive', '"Medial Collateral Ligament" ↦ MCL Sprain (full form to abbrev family)',
+  stubPuzzle('Medial Collateral Ligament Sprain'), 'Medial Collateral Ligament', CORRECT);
+
+t('abbrev-positive', '"MCL" ↦ Medial Collateral Ligament Sprain (abbrev to full form)',
+  stubPuzzle('Medial Collateral Ligament Sprain'), 'MCL', CORRECT);
+
+t('abbrev-positive', '"Anterior Cruciate Ligament" ↦ ACL Tear',
+  stubPuzzle('Anterior Cruciate Ligament Tear'), 'Anterior Cruciate Ligament', CORRECT);
+
+t('abbrev-positive', '"Iliotibial Band" ↦ ITB Syndrome',
+  stubPuzzle('Iliotibial Band Syndrome'), 'Iliotibial Band', CORRECT);
+
+// Guard: an abbreviation must NOT match a different ligament family
+t('abbrev-negative', '"Medial Collateral Ligament" must NOT match an ACL puzzle',
+  stubPuzzle('Anterior Cruciate Ligament Tear'), 'Medial Collateral Ligament', INCORRECT);
+
 // === RUNNER ================================================================
 
 const ANSI = process.stdout.isTTY

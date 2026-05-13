@@ -2412,6 +2412,54 @@
       ["Stress Fracture", "Stress Reaction", "Fatigue Fracture"],
     ];
 
+    // Unambiguous anatomical/diagnosis abbreviation pairs. Each entry creates
+    // a synthetic equivalence so typing the abbreviation OR the full anatomical
+    // name matches the SAME diagnosis label (e.g. "MCL Tear" / "Medial Collateral
+    // Ligament Tear"). Only entries with a SINGLE unambiguous full form belong
+    // here — ambiguous abbreviations like "AS" (Ankylosing Spondylitis / Aortic
+    // Stenosis) are deliberately omitted; those must rely on the full form being
+    // explicitly listed in EQUIVALENCE_GROUPS or per-puzzle aliases.
+    const ANATOMICAL_ABBREVS = {
+      'ACL': 'Anterior Cruciate Ligament',
+      'PCL': 'Posterior Cruciate Ligament',
+      'MCL': 'Medial Collateral Ligament',
+      'LCL': 'Lateral Collateral Ligament',
+      'CTS': 'Carpal Tunnel Syndrome',
+      'TOS': 'Thoracic Outlet Syndrome',
+      'TFCC': 'Triangular Fibrocartilage Complex',
+      'DDD': 'Degenerative Disc Disease',
+      'ITB': 'Iliotibial Band',
+      'FAI': 'Femoroacetabular Impingement',
+      'PFPS': 'Patellofemoral Pain Syndrome',
+      'MTSS': 'Medial Tibial Stress Syndrome',
+      'GTPS': 'Greater Trochanteric Pain Syndrome',
+      'NOF': 'Neck of Femur',
+      'LHB': 'Long Head of Biceps',
+      'RTC': 'Rotator Cuff',
+      'OCD': 'Osteochondritis Dissecans',
+      'PHN': 'Postherpetic Neuralgia',
+      'CRPS': 'Complex Regional Pain Syndrome',
+      'mTBI': 'Mild Traumatic Brain Injury',
+      'SCI': 'Spinal Cord Injury',
+      'TBI': 'Traumatic Brain Injury',
+    };
+
+    // For every equivalence group that contains an anatomical abbreviation,
+    // also add the full-form alone (without the diagnosis suffix). E.g. if a
+    // group has "MCL Sprain", "MCL", we ensure "Medial Collateral Ligament"
+    // is also a member, so typing the full anatomical name without a suffix
+    // matches any sibling diagnosis in the same group.
+    EQUIVALENCE_GROUPS.forEach(group => {
+      const lower = group.map(t => t.toLowerCase());
+      for (const [abbr, full] of Object.entries(ANATOMICAL_ABBREVS)) {
+        if (lower.includes(abbr.toLowerCase())) {
+          if (!lower.includes(full.toLowerCase())) {
+            group.push(full);
+          }
+        }
+      }
+    });
+
     // Parent terms: guessing the parent is accepted for ANY child answer
     const PARENT_TERMS = {
       "stroke": ["middle cerebral artery stroke", "mca stroke", "mca infarct", "anterior cerebral artery stroke", "aca stroke", "aca infarct", "posterior cerebral artery stroke", "pca stroke", "pca infarct", "brainstem stroke", "pontine stroke", "medullary stroke", "cerebellar stroke", "cerebellar infarct"],
