@@ -120,6 +120,19 @@
       white-space: nowrap;
     }
 
+    /* PUZZLE PROMPT */
+    .puzzle-prompt {
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0d9488;
+      padding: 8px 16px;
+      margin-bottom: 8px;
+      background: #f0fdfa;
+      border-radius: 8px;
+      border: 1px solid #ccfbf1;
+    }
+
     .day-indicator {
       font-size: 0.8rem;
       color: #6b7280;
@@ -1747,6 +1760,9 @@
           <button class="btn btn-primary" id="persistentShareBtn" style="font-size: 0.95rem; padding: 0.6rem 1.4rem;">Share Your Result</button>
         </div>
       </div>
+
+      <!-- PUZZLE PROMPT -->
+      <div id="puzzlePrompt" class="puzzle-prompt">What's the physio diagnosis?</div>
 
       <!-- CLUES -->
       <div id="cluesContainer"></div>
