@@ -8,47 +8,57 @@ const USERNAME_REGEX = /^[a-zA-Z0-9._-]{2,20}$/;
 // Pragmatic email regex — not RFC-strict, but catches 99% of real-world emails.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ---- Cross-registration with sibling app (Pharmodle) ----
-const SIBLING_URL = process.env.SIBLING_APP_URL || '';
+// ---- Cross-registration with sibling apps ----
+// Supports a comma-separated list of sibling URLs (SIBLING_APP_URLS) so signup
+// fan-out and login fall-back can hit every -dle in the family. Falls back to
+// the singular SIBLING_APP_URL for backward compatibility.
+const SIBLING_URLS = (process.env.SIBLING_APP_URLS || process.env.SIBLING_APP_URL || '')
+  .split(',')
+  .map(s => s.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 const SIBLING_SECRET = process.env.SIBLING_SECRET || '';
 
-// Fire-and-forget: create account on sibling app
+// Fire-and-forget: broadcast signup to every sibling in parallel.
 async function crossRegister({ username, email, passwordHash }) {
-  if (!SIBLING_URL || !SIBLING_SECRET) return;
-  try {
-    const resp = await fetch(`${SIBLING_URL}/api/auth/cross-register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-sibling-secret': SIBLING_SECRET },
-      body: JSON.stringify({ username, email, password_hash: passwordHash }),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!resp.ok) {
-      const body = await resp.text();
-      console.log(`Cross-register to sibling (${username}): ${resp.status} ${body}`);
+  if (SIBLING_URLS.length === 0 || !SIBLING_SECRET) return;
+  await Promise.allSettled(SIBLING_URLS.map(async (url) => {
+    try {
+      const resp = await fetch(`${url}/api/auth/cross-register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-sibling-secret': SIBLING_SECRET },
+        body: JSON.stringify({ username, email, password_hash: passwordHash }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!resp.ok) {
+        const body = await resp.text();
+        console.log(`Cross-register to ${url} (${username}): ${resp.status} ${body.slice(0,120)}`);
+      }
+    } catch (err) {
+      console.log(`Cross-register to ${url} failed:`, err.message);
     }
-  } catch (err) {
-    console.log(`Cross-register failed:`, err.message);
-  }
+  }));
 }
 
-// Verify credentials against sibling app — identifier can be email or username.
+// Ask each sibling in parallel; return the first one that knows this user.
+// identifier can be email or username.
 async function verifySibling(identifier) {
-  if (!SIBLING_URL || !SIBLING_SECRET) return null;
-  try {
-    const resp = await fetch(`${SIBLING_URL}/api/auth/cross-verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-sibling-secret': SIBLING_SECRET },
-      body: JSON.stringify({ identifier }),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      return data; // { username, email, password_hash }
+  if (SIBLING_URLS.length === 0 || !SIBLING_SECRET) return null;
+  const attempts = SIBLING_URLS.map(async (url) => {
+    try {
+      const resp = await fetch(`${url}/api/auth/cross-verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-sibling-secret': SIBLING_SECRET },
+        body: JSON.stringify({ identifier }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (err) {
+      return null;
     }
-  } catch (err) {
-    console.log(`Cross-verify failed:`, err.message);
-  }
-  return null;
+  });
+  const results = await Promise.all(attempts);
+  return results.find(r => r && r.username && r.password_hash) || null;
 }
 
 function looksLikeEmail(s) {
