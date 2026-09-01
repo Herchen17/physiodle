@@ -181,11 +181,12 @@ router.get('/dashboard', requireAdmin, (req, res) => {
 
   // --- Feedback ---
   const feedback = safeGet(() => db.prepare(`
-    SELECT rating, COUNT(*) as count FROM feedback GROUP BY rating ORDER BY count DESC
+    SELECT IFNULL(category, rating) as rating, COUNT(*) as count FROM feedback GROUP BY IFNULL(category, rating) ORDER BY count DESC
   `).all(), []);
   const feedbackLimit = Math.min(Math.max(parseInt(req.query.feedbackLimit, 10) || 10, 1), 1000);
   const recentFeedback = safeGet(() => db.prepare(`
-    SELECT f.rating, f.comment, f.day_number, f.created_at, u.username
+    SELECT f.rating, f.comment, f.day_number, f.created_at, u.username,
+           f.category, f.scope, f.issue_type, f.guess, f.platform
     FROM feedback f LEFT JOIN users u ON f.user_id = u.id
     ORDER BY f.created_at DESC LIMIT ?
   `).all(feedbackLimit), []);
@@ -697,12 +698,23 @@ function renderRecentSignups(rows) {
     rows.map(r => '<tr><td style="font-weight:600">' + r.username + '</td><td style="color:#64748b">' + fmtDateTime(r.created_at) + '</td></tr>').join('') + '</tbody></table>';
 }
 
+function feedbackTags(r) {
+  const tags = [];
+  if (r.category) tags.push(r.category.replace(/_/g, ' '));
+  if (r.scope) tags.push(r.scope.startsWith('clue:') ? 'clue ' + (parseInt(r.scope.slice(5), 10) + 1) : r.scope);
+  if (r.issue_type) tags.push(r.issue_type.replace(/_/g, ' '));
+  if (r.guess) tags.push('guess: ' + r.guess);
+  if (r.platform) tags.push(r.platform);
+  if (!tags.length) return '';
+  return '<div style="margin-top:0.2rem">' + tags.map(t => '<span style="display:inline-block;font-size:0.65rem;padding:0.05rem 0.4rem;margin-right:0.25rem;border-radius:999px;background:rgba(20,184,166,0.15);color:#5eead4">' + t + '</span>').join('') + '</div>';
+}
+
 function renderFeedback(fb) {
   const el = document.getElementById('feedbackPanel');
   if (!fb || !fb.recent || !fb.recent.length) { el.innerHTML = '<p style="padding:1rem;color:#64748b">No feedback yet</p>'; return; }
   const ratingEmoji = { good: '\\u{1F44D}', ok: '\\u{1F44C}', bad: '\\u{1F44E}' };
   el.innerHTML = fb.recent.map(r =>
-    '<div class="feedback-item"><span class="feedback-rating">' + (ratingEmoji[r.rating] || r.rating) + '</span> <strong>' + (r.username || 'Anon') + '</strong> <span class="feedback-meta">Day ' + r.day_number + ' &middot; ' + fmtDate(r.created_at) + '</span>' + (r.comment ? '<div style="color:#94a3b8;font-size:0.8rem;margin-top:0.2rem">' + r.comment + '</div>' : '') + '</div>'
+    '<div class="feedback-item"><span class="feedback-rating">' + (ratingEmoji[r.rating] || r.rating) + '</span> <strong>' + (r.username || 'Anon') + '</strong> <span class="feedback-meta">Day ' + r.day_number + ' &middot; ' + fmtDate(r.created_at) + '</span>' + feedbackTags(r) + (r.comment ? '<div style="color:#94a3b8;font-size:0.8rem;margin-top:0.2rem">' + r.comment + '</div>' : '') + '</div>'
   ).join('');
 }
 

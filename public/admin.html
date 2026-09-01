@@ -684,12 +684,23 @@ function renderRecentSignups(rows) {
     rows.map(r => `<tr><td style="font-weight:600">${esc(r.username)}</td><td style="color:var(--text3)">${fmtDateTime(r.created_at)}</td></tr>`).join('') + '</tbody></table>';
 }
 
+function feedbackTags(r) {
+  const tags = [];
+  if (r.category) tags.push(r.category.replace(/_/g, ' '));
+  if (r.scope) tags.push(r.scope.startsWith('clue:') ? 'clue ' + (parseInt(r.scope.slice(5), 10) + 1) : r.scope);
+  if (r.issue_type) tags.push(r.issue_type.replace(/_/g, ' '));
+  if (r.guess) tags.push('guess: ' + r.guess);
+  if (r.platform) tags.push(r.platform);
+  if (!tags.length) return '';
+  return `<div style="margin-top:0.2rem">${tags.map(t => `<span style="display:inline-block;font-size:0.65rem;padding:0.05rem 0.4rem;margin-right:0.25rem;border-radius:999px;background:rgba(20,184,166,0.15);color:#5eead4">${esc(t)}</span>`).join('')}</div>`;
+}
+
 function renderFeedback(fb) {
   const el = document.getElementById('feedbackPanel');
   if (!fb || !fb.recent || !fb.recent.length) { el.innerHTML = '<p style="padding:1rem;color:var(--text3)">No feedback yet</p>'; return; }
   const emoji = { good: '\u{1F44D}', ok: '\u{1F44C}', bad: '\u{1F44E}' };
   el.innerHTML = fb.recent.map(r =>
-    `<div class="feedback-item"><span style="font-weight:700">${emoji[r.rating]||r.rating}</span> <strong>${esc(r.username||'Anon')}</strong> <span class="feedback-meta">Day ${r.day_number} \u00b7 ${fmtDate(r.created_at)}</span>${r.comment ? `<div style="color:var(--text2);font-size:0.8rem;margin-top:0.2rem">${esc(r.comment)}</div>` : ''}</div>`
+    `<div class="feedback-item"><span style="font-weight:700">${emoji[r.rating]||r.rating}</span> <strong>${esc(r.username||'Anon')}</strong> <span class="feedback-meta">Day ${r.day_number} \u00b7 ${fmtDate(r.created_at)}</span>${feedbackTags(r)}${r.comment ? `<div style="color:var(--text2);font-size:0.8rem;margin-top:0.2rem">${esc(r.comment)}</div>` : ''}</div>`
   ).join('');
 }
 

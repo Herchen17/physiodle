@@ -95,14 +95,88 @@ app.use('/api/admin', require('./routes/admin-user-stats'));
 // Feedback endpoint (simple, inline)
 const { optionalAuth } = require('./auth');
 const db = require('./db');
+const FEEDBACK_CATEGORIES = ['puzzle_error', 'answer_matching', 'suggestion', 'site_bug', 'praise', 'other'];
+const FEEDBACK_ISSUE_TYPES = ['inaccurate', 'ambiguous', 'spoiler', 'too_easy', 'too_hard', 'not_a_diagnosis', 'other'];
+const FEEDBACK_PLATFORMS = ['ios', 'android', 'desktop', 'other'];
+const FEEDBACK_SCOPE_RE = /^(whole|answer|explanation|clue:[0-4])$/;
+
 app.post('/api/feedback', optionalAuth, (req, res) => {
-  const { dayNumber, rating, comment } = req.body;
+  const { dayNumber, rating, comment, category, scope, issueType, guess, platform } = req.body;
   if (!dayNumber || !rating) return res.status(400).json({ error: 'dayNumber and rating required' });
   const validRatings = ['love', 'good', 'ok', 'hard', 'easy', 'comment'];
   if (!validRatings.includes(rating)) return res.status(400).json({ error: 'Invalid rating' });
+
+  const clean = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '') || null;
+  const cat = clean(category, 32);
+  const sc = clean(scope, 16);
+  const it = clean(issueType, 32);
+  const pl = clean(platform, 16);
+  if (cat && !FEEDBACK_CATEGORIES.includes(cat)) return res.status(400).json({ error: 'Invalid category' });
+  if (sc && !FEEDBACK_SCOPE_RE.test(sc)) return res.status(400).json({ error: 'Invalid scope' });
+  if (it && !FEEDBACK_ISSUE_TYPES.includes(it)) return res.status(400).json({ error: 'Invalid issueType' });
+  if (pl && !FEEDBACK_PLATFORMS.includes(pl)) return res.status(400).json({ error: 'Invalid platform' });
+  const text = clean(comment, 500);
+  const g = clean(guess, 120);
+  // A tagged report is useful even without prose; an untagged one is not.
+  if (!text && !cat) return res.status(400).json({ error: 'comment or category required' });
+
   const userId = req.user ? req.user.userId : null;
-  db.prepare('INSERT INTO feedback (user_id, day_number, rating, comment) VALUES (?, ?, ?, ?)').run(userId, dayNumber, rating, (comment || '').slice(0, 500) || null);
+
+  // Double-tap guard: identical submission for the same day within 2 minutes
+  // (seen in production — two identical comments 1 second apart).
+  const dup = db.prepare(`
+    SELECT id FROM feedback
+    WHERE day_number = ? AND IFNULL(user_id, -1) = IFNULL(?, -1)
+      AND IFNULL(comment, '') = IFNULL(?, '') AND IFNULL(category, '') = IFNULL(?, '')
+      AND created_at >= DATETIME('now', '-2 minutes')
+    LIMIT 1
+  `).get(dayNumber, userId, text, cat);
+  if (dup) return res.json({ success: true, deduped: true });
+
+  db.prepare(`
+    INSERT INTO feedback (user_id, day_number, rating, comment, category, scope, issue_type, guess, platform)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(userId, dayNumber, rating, text, cat, sc, it, g, pl);
   res.json({ success: true });
+});
+
+// Daily reminder as a calendar subscription file. Served from the server (not a
+// blob: URL) because iOS Safari only offers "Add to Calendar" for real .ics
+// responses. Floating local time (no Z) so it fires at the same wall-clock
+// hour wherever the player is.
+app.get('/reminder.ics', (req, res) => {
+  const hour = Math.min(Math.max(parseInt(req.query.hour, 10) || 8, 0), 23);
+  const pad = (n) => String(n).padStart(2, '0');
+  const start = new Date();
+  start.setDate(start.getDate() + 1);
+  const dtstart = `${start.getFullYear()}${pad(start.getMonth() + 1)}${pad(start.getDate())}T${pad(hour)}0000`;
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Physiodle//Daily reminder//EN',
+    'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:physiodle-daily-${hour}@physiodle.up.railway.app`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${dtstart}`,
+    'DURATION:PT10M',
+    'RRULE:FREQ=DAILY',
+    'SUMMARY:Physiodle — today\'s puzzle',
+    'DESCRIPTION:Five clues\, five guesses\, one diagnosis. https://physiodle.up.railway.app',
+    'URL:https://physiodle.up.railway.app',
+    'BEGIN:VALARM',
+    'TRIGGER:PT0M',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Physiodle',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR',
+    '',
+  ].join('\r\n');
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="physiodle-daily-reminder.ics"');
+  res.send(ics);
 });
 
 // Health check

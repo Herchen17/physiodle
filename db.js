@@ -125,4 +125,15 @@ if (!columnExists('users', 'email')) {
 }
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL');
 
+// 2026-09-02: structured feedback. Free-text comments were the only signal;
+// players now also tag WHAT the feedback is about (category), WHERE in the
+// puzzle (scope), WHAT KIND of problem (issue_type) and, for answer-matching
+// complaints, WHICH guess should have been accepted (guess).
+for (const col of ['category', 'scope', 'issue_type', 'guess', 'platform']) {
+  if (!columnExists('feedback', col)) {
+    console.log(`[migration] adding feedback.${col} column`);
+    db.exec(`ALTER TABLE feedback ADD COLUMN ${col} TEXT`);
+  }
+}
+
 module.exports = db;

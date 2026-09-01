@@ -6,6 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d9488">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.webmanifest">
   <meta name="google-site-verification" content="li8nJ4H-TM7gosC26buIA8-HqlAwNcMB1Z04yY9B3EM" />
   <title>Physiodle - Physiotherapy Puzzle Game</title>
   <meta name="description" content="Physiodle is a daily physiotherapy case puzzle. Five clues, five guesses, one diagnosis a day. Free to play, used by physio students worldwide.">
@@ -89,6 +91,10 @@
       background: white;
       border-bottom: 2px solid #d1fae5;
       padding: 0.5rem max(1rem, env(safe-area-inset-left)) 0.5rem max(1rem, env(safe-area-inset-right));
+      /* When added to the iOS home screen the status bar is translucent and the
+         Dynamic Island / notch overlaps the top of the page. Push the header
+         (and its buttons) below it. */
+      padding-top: max(0.5rem, env(safe-area-inset-top));
       position: sticky;
       top: 0;
       z-index: 100;
@@ -646,6 +652,7 @@
       align-items: center;
       justify-content: center;
       padding: 1rem;
+      padding-top: max(1rem, env(safe-area-inset-top));
     }
 
     .result-overlay.show {
@@ -1679,6 +1686,73 @@
       .sibling-popout-cta { padding: 0.22rem 0.6rem; font-size: 0.66rem; }
       .sibling-popout-dismiss { top: -7px; right: -7px; width: 20px; height: 20px; font-size: 0.8rem; }
     }
+    /* ---------------- Structured feedback ---------------- */
+    .feedback-section { margin-top: 2rem; text-align: center; }
+    .feedback-form {
+      margin: 0.75rem auto 0;
+      max-width: 520px;
+      text-align: left;
+      background: white;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.9rem 1rem 1rem;
+    }
+    .fb-step { margin-bottom: 0.8rem; }
+    .fb-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      color: #6b7280; margin-bottom: 0.4rem;
+    }
+    .fb-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .fb-chip {
+      font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500;
+      padding: 0.35rem 0.7rem; border-radius: 999px; cursor: pointer;
+      background: #f9fafb; color: #374151; border: 1.5px solid #e5e7eb;
+      transition: all 0.15s; line-height: 1.2; max-width: 100%; text-align: left;
+    }
+    .fb-chip:hover { border-color: #0d9488; color: #0d9488; }
+    .fb-chip.selected { background: #0d9488; border-color: #0d9488; color: white; }
+    .fb-textarea {
+      width: 100%; padding: 0.55rem; border: 1.5px solid #e5e7eb; border-radius: 0.375rem;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; resize: vertical;
+      min-height: 64px; max-height: 160px; background: white;
+    }
+    .fb-textarea:focus { outline: none; border-color: #0d9488; }
+    .fb-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+    .fb-error { font-size: 0.75rem; color: #dc2626; margin-top: 0.35rem; display: none; }
+    .fb-footer-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .fb-footer-links .btn-link { font-size: 0.75rem; color: #9ca3af; }
+
+    /* ---------------- Install guide ---------------- */
+    .install-steps { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+    .install-steps li {
+      display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; color: #374151;
+      padding: 0.45rem 0; border-bottom: 1px solid #f3f4f6; line-height: 1.45;
+    }
+    .install-steps li:last-child { border-bottom: none; }
+    .install-num {
+      flex: 0 0 1.4rem; height: 1.4rem; border-radius: 50%; background: #0d9488; color: white;
+      font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .install-kbd {
+      display: inline-block; padding: 0 0.35rem; border: 1px solid #d1d5db; border-bottom-width: 2px;
+      border-radius: 0.25rem; font-size: 0.75rem; background: #f9fafb; white-space: nowrap;
+    }
+    .install-section { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid #e5e7eb; }
+    .install-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin-bottom: 0.4rem; }
+    .install-note { font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
+    .install-platform-tabs { display: flex; gap: 0.35rem; margin-bottom: 0.25rem; }
+    .install-platform-tab {
+      font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.65rem;
+      border-radius: 999px; border: 1.5px solid #e5e7eb; background: #f9fafb; color: #374151; cursor: pointer;
+    }
+    .install-platform-tab.active { background: #0d9488; border-color: #0d9488; color: white; }
+    .reminder-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.4rem; }
+    .reminder-row select {
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; padding: 0.4rem 0.5rem;
+      border: 1.5px solid #e5e7eb; border-radius: 0.375rem; background: white;
+    }
+    .lb-community { font-size: 0.72rem; color: #6b7280; margin-top: 0.15rem; }
+    .lb-community strong { color: #0d9488; }
   </style>
 </head>
 <body>
@@ -1763,21 +1837,63 @@
         </div>
         <div style="margin-top: 1.25rem; text-align: center;">
           <button class="btn btn-primary" id="persistentShareBtn" style="font-size: 0.95rem; padding: 0.6rem 1.4rem;">Share Your Result</button>
+          <div style="margin-top: 0.6rem;">
+            <button class="btn-link" id="reportPuzzleBtn" style="font-size: 0.75rem; color: #6b7280;">Something wrong with this puzzle?</button>
+          </div>
         </div>
       </div>
 
       <!-- CLUES -->
       <div id="cluesContainer"></div>
 
-      <!-- FEEDBACK FOOTER -->
-      <div style="margin-top: 2rem; text-align: center;" id="feedbackSection">
-        <button class="btn-link" id="feedbackToggle" style="font-size: 0.75rem; color: #9ca3af;">Leave feedback</button>
-        <div id="feedbackForm" style="display:none; margin-top: 0.5rem;">
-          <textarea id="feedbackText" placeholder="What do you think of Physiodle? Suggestions, bugs, anything..." style="width: 100%; padding: 0.5rem; border: 1.5px solid #e5e7eb; border-radius: 0.375rem; font-family: 'Inter', sans-serif; font-size: 0.8rem; resize: vertical; min-height: 60px; max-height: 120px; background: white;"></textarea>
-          <button class="btn btn-primary btn-small" id="feedbackSubmitBtn" style="margin-top: 0.35rem; font-size: 0.75rem;">Send</button>
+      <!-- FEEDBACK FOOTER (structured) -->
+      <div class="feedback-section" id="feedbackSection">
+        <div class="fb-footer-links">
+          <button class="btn-link" id="feedbackToggle">Leave feedback</button>
+          <button class="btn-link" id="installLinkBtn">Add to home screen</button>
+        </div>
+        <div id="feedbackForm" class="feedback-form" style="display:none;">
+          <div class="fb-step" id="fbStepCategory">
+            <div class="fb-label">What's this about?</div>
+            <div class="fb-chips" data-group="category">
+              <button type="button" class="fb-chip" data-value="puzzle_error">Problem with today's puzzle</button>
+              <button type="button" class="fb-chip" data-value="answer_matching">My guess should have counted</button>
+              <button type="button" class="fb-chip" data-value="suggestion">Suggestion or idea</button>
+              <button type="button" class="fb-chip" data-value="site_bug">Something's broken</button>
+              <button type="button" class="fb-chip" data-value="praise">Just saying thanks</button>
+            </div>
+          </div>
+          <div class="fb-step" id="fbStepScope" style="display:none;">
+            <div class="fb-label">Where is the problem?</div>
+            <div class="fb-chips" data-group="scope" id="fbScopeChips"></div>
+          </div>
+          <div class="fb-step" id="fbStepType" style="display:none;">
+            <div class="fb-label">What kind of problem?</div>
+            <div class="fb-chips" data-group="issueType">
+              <button type="button" class="fb-chip" data-value="inaccurate">Clinically inaccurate</button>
+              <button type="button" class="fb-chip" data-value="ambiguous">Ambiguous, fits several diagnoses</button>
+              <button type="button" class="fb-chip" data-value="spoiler">Gives the answer away</button>
+              <button type="button" class="fb-chip" data-value="not_a_diagnosis">Answer isn't a diagnosis</button>
+              <button type="button" class="fb-chip" data-value="too_easy">Too easy</button>
+              <button type="button" class="fb-chip" data-value="too_hard">Too hard, not enough to go on</button>
+              <button type="button" class="fb-chip" data-value="other">Other</button>
+            </div>
+          </div>
+          <div class="fb-step" id="fbStepGuess" style="display:none;">
+            <div class="fb-label">Which guess should have been accepted?</div>
+            <div class="fb-chips" data-group="guess" id="fbGuessChips"></div>
+          </div>
+          <div class="fb-step" id="fbStepText" style="display:none;">
+            <textarea id="feedbackText" class="fb-textarea" placeholder="Tell us more (optional)"></textarea>
+            <div class="fb-error" id="fbError"></div>
+            <div class="fb-actions">
+              <button class="btn btn-primary btn-small" id="feedbackSubmitBtn">Send</button>
+              <button class="btn-link" id="feedbackCancelBtn" style="font-size: 0.8rem; color: #6b7280;">Cancel</button>
+            </div>
+          </div>
         </div>
         <div id="feedbackThanks" style="display:none;">
-          <p style="font-size: 0.75rem; color: #059669;">Thanks for your feedback!</p>
+          <p style="font-size: 0.75rem; color: #059669;">Thanks. Every report is read, and puzzle errors get fixed.</p>
         </div>
       </div>
 
@@ -1804,6 +1920,50 @@
         <p style="margin-top: 0.4rem; font-size: 0.75rem; color: #6b7280;">Create a free account to track stats and compete on leaderboards</p>
       </div>
       <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af;">Check back tomorrow for the next Physiodle!</p>
+      <p style="margin-top: 0.25rem; font-size: 0.75rem;"><button class="btn-link" id="resultInstallBtn" style="font-size: 0.75rem;">Add Physiodle to your home screen</button></p>
+    </div>
+  </div>
+
+  <!-- INSTALL / REMINDER MODAL -->
+  <div class="modal-overlay" id="installModal">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Physiodle on your phone</h2>
+        <button class="modal-close" onclick="closeModal('installModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="installStandaloneMsg" style="display:none;" class="install-note">You're already playing from your home screen. Nice.</div>
+        <div id="installGuide">
+          <div class="install-platform-tabs" id="installPlatformTabs">
+            <button type="button" class="install-platform-tab" data-platform="ios">iPhone / iPad</button>
+            <button type="button" class="install-platform-tab" data-platform="android">Android</button>
+            <button type="button" class="install-platform-tab" data-platform="desktop">Computer</button>
+          </div>
+          <div id="installNativeWrap" style="display:none; margin: 0.6rem 0;">
+            <button class="btn btn-primary btn-full" id="installNativeBtn">Install Physiodle</button>
+            <div class="install-note" style="margin-top: 0.35rem;">One tap. No app store, nothing to download.</div>
+          </div>
+          <ol class="install-steps" id="installSteps"></ol>
+          <div class="install-note" id="installBrowserNote" style="margin-top: 0.5rem;"></div>
+        </div>
+        <div class="install-section">
+          <div class="install-section-title">Daily reminder</div>
+          <div class="install-note">Add a repeating calendar event that opens Physiodle at the same time every day.</div>
+          <div class="reminder-row">
+            <select id="reminderHour" aria-label="Reminder time">
+              <option value="7">7:00 am</option>
+              <option value="8" selected>8:00 am</option>
+              <option value="9">9:00 am</option>
+              <option value="12">12:00 pm</option>
+              <option value="18">6:00 pm</option>
+              <option value="20">8:00 pm</option>
+              <option value="21">9:00 pm</option>
+            </select>
+            <a class="btn btn-secondary btn-small" id="reminderIcsBtn" href="/reminder.ics?hour=8">Apple / Outlook</a>
+            <a class="btn btn-secondary btn-small" id="reminderGcalBtn" href="#" target="_blank" rel="noopener">Google Calendar</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2182,6 +2342,7 @@
       <div class="modal-header">
         <div class="lb-header-left">
           <h2 class="modal-title">Leaderboard</h2>
+          <div class="lb-community" id="lbCommunity"></div>
           <div class="lb-scope-toggle">
             <button class="lb-scope-btn active" id="lbScopeFriends">Friends</button>
             <button class="lb-scope-btn" id="lbScopeGlobal">Global</button>
@@ -3729,6 +3890,7 @@
     const LB_PAGE_SIZE = 10;
 
     async function loadLeaderboardModal() {
+      loadCommunityStats();
       showModal('leaderboardModal');
 
       // Default scope: friends if logged in, global otherwise
@@ -4058,14 +4220,14 @@
             let sameDay = false;
             if (result.completedAt) {
               const caStr = result.completedAt.endsWith('Z') ? result.completedAt : result.completedAt + 'Z';
-              const completedDate = new Date(caStr);
-              // Convert completed_at to AEST by adding 10 hours
-              const completedAEST = new Date(completedDate.getTime() + 10 * 3600000);
-              // Release date for this day number (AEST calendar date)
-              const releaseAEST = new Date(Date.UTC(2026, 2, 4 + (dayNumber - 1)));
-              sameDay = releaseAEST.getUTCFullYear() === completedAEST.getUTCFullYear()
-                && releaseAEST.getUTCMonth() === completedAEST.getUTCMonth()
-                && releaseAEST.getUTCDate() === completedAEST.getUTCDate();
+              const completedMs = new Date(caStr).getTime();
+              // Mirror the server's on-day window (routes/leaderboard.js): day N is
+              // released at 2026-03-04 + (N-1) days, and a completion counts as
+              // on-day from 14h before that UTC midnight to 36h after. The old
+              // strict AEST-date check marked players outside AEST grey even
+              // though the leaderboard had already given them the points.
+              const releaseMs = Date.UTC(2026, 2, 4 + (dayNumber - 1));
+              sameDay = completedMs >= releaseMs - 14 * 3600000 && completedMs < releaseMs + 36 * 3600000;
             }
 
             if (sameDay && result.won) {
@@ -4629,16 +4791,123 @@
     // FEEDBACK SYSTEM
     // ============================================================================
 
-    document.getElementById('feedbackToggle').addEventListener('click', () => {
+    // Structured feedback: category -> (scope + issue type | guess) -> optional text.
+    // Chips carry the signal; prose is optional except for suggestions and bugs.
+    const fb = { category: null, scope: null, issueType: null, guess: null };
+
+    const FB_PLACEHOLDERS = {
+      puzzle_error: 'What specifically is wrong? (optional, but a sentence helps us fix it)',
+      answer_matching: 'Why should it have counted? (optional)',
+      suggestion: 'What would make Physiodle better?',
+      site_bug: 'What happened, and on which phone or browser?',
+      praise: 'Anything you want to add? (optional)',
+    };
+    const FB_TEXT_REQUIRED = { suggestion: true, site_bug: true };
+
+    function fbSelect(group, value) {
+      fb[group] = value;
+      document.querySelectorAll(`.fb-chips[data-group="${group}"] .fb-chip`).forEach(c => {
+        c.classList.toggle('selected', c.getAttribute('data-value') === value);
+      });
+    }
+
+    function fbBuildScopeChips() {
+      const wrap = document.getElementById('fbScopeChips');
+      wrap.innerHTML = '';
+      const items = [['whole', 'Whole puzzle'], ['answer', 'The answer']];
+      const clues = (gameState.puzzle && gameState.puzzle.clues) || [];
+      clues.forEach((c, i) => items.push([`clue:${i}`, c.label || `Clue ${i + 1}`]));
+      if (gameState.puzzle && gameState.puzzle.explanation) items.push(['explanation', 'Clinical insight']);
+      items.forEach(([v, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'fb-chip'; b.setAttribute('data-value', v); b.textContent = label;
+        wrap.appendChild(b);
+      });
+    }
+
+    function fbBuildGuessChips() {
+      const wrap = document.getElementById('fbGuessChips');
+      wrap.innerHTML = '';
+      const guesses = (gameState.guesses || []).filter(Boolean);
+      guesses.forEach(g => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'fb-chip'; b.setAttribute('data-value', g); b.textContent = g;
+        wrap.appendChild(b);
+      });
+      const other = document.createElement('button');
+      other.type = 'button'; other.className = 'fb-chip'; other.setAttribute('data-value', '__other');
+      other.textContent = guesses.length ? 'Something else' : 'I\'ll type it below';
+      wrap.appendChild(other);
+    }
+
+    function fbShowStepsFor(category) {
+      const show = (id, on) => { document.getElementById(id).style.display = on ? '' : 'none'; };
+      show('fbStepScope', category === 'puzzle_error');
+      show('fbStepType', category === 'puzzle_error');
+      show('fbStepGuess', category === 'answer_matching');
+      show('fbStepText', !!category);
+      const ta = document.getElementById('feedbackText');
+      ta.placeholder = FB_PLACEHOLDERS[category] || 'Tell us more';
+      document.getElementById('fbError').style.display = 'none';
+    }
+
+    function openFeedbackForm(presetCategory) {
+      fb.category = null; fb.scope = null; fb.issueType = null; fb.guess = null;
+      document.querySelectorAll('.fb-chip.selected').forEach(c => c.classList.remove('selected'));
+      fbBuildScopeChips();
+      fbBuildGuessChips();
+      document.getElementById('feedbackText').value = '';
+      document.getElementById('feedbackThanks').style.display = 'none';
       document.getElementById('feedbackToggle').style.display = 'none';
       document.getElementById('feedbackForm').style.display = 'block';
-      document.getElementById('feedbackText').focus();
+      if (presetCategory) fbSelect('category', presetCategory);
+      fbShowStepsFor(presetCategory || null);
+      document.getElementById('feedbackForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function closeFeedbackForm() {
+      document.getElementById('feedbackForm').style.display = 'none';
+      document.getElementById('feedbackToggle').style.display = '';
+    }
+
+    document.getElementById('feedbackToggle').addEventListener('click', () => openFeedbackForm(null));
+    document.getElementById('reportPuzzleBtn').addEventListener('click', () => openFeedbackForm('puzzle_error'));
+    document.getElementById('feedbackCancelBtn').addEventListener('click', closeFeedbackForm);
+
+    document.getElementById('feedbackForm').addEventListener('click', (e) => {
+      const chip = e.target.closest('.fb-chip');
+      if (!chip) return;
+      const group = chip.closest('.fb-chips').getAttribute('data-group');
+      const value = chip.getAttribute('data-value');
+      fbSelect(group, value);
+      if (group === 'category') fbShowStepsFor(value);
+      if (group === 'guess' && value === '__other') document.getElementById('feedbackText').focus();
     });
 
-    document.getElementById('feedbackSubmitBtn').addEventListener('click', async () => {
-      const text = document.getElementById('feedbackText').value.trim();
-      if (!text) { document.getElementById('feedbackText').focus(); return; }
+    function detectPlatform() {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) return 'ios';
+      if (/Android/i.test(ua)) return 'android';
+      if (/Windows|Macintosh|Linux|CrOS/i.test(ua)) return 'desktop';
+      return 'other';
+    }
 
+    document.getElementById('feedbackSubmitBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('feedbackSubmitBtn');
+      const err = document.getElementById('fbError');
+      const text = document.getElementById('feedbackText').value.trim();
+      const cat = fb.category;
+      const fail = (msg) => { err.textContent = msg; err.style.display = 'block'; };
+
+      if (!cat) return fail('Pick what this is about first.');
+      if (cat === 'puzzle_error' && (!fb.scope || !fb.issueType)) return fail('Tell us where the problem is and what kind it is.');
+      if (cat === 'answer_matching' && !fb.guess && !text) return fail('Pick the guess that should have counted, or type it below.');
+      if (FB_TEXT_REQUIRED[cat] && !text) return fail('A sentence or two, please.');
+
+      btn.disabled = true; // prevents the double-tap duplicate seen in production
+      btn.textContent = 'Sending...';
+      const guess = fb.guess === '__other' ? null : fb.guess;
       try {
         await fetch('/api/feedback', {
           method: 'POST',
@@ -4649,16 +4918,186 @@
           body: JSON.stringify({
             dayNumber: gameState.currentDay,
             rating: 'comment',
-            comment: text,
+            comment: text || null,
+            category: cat,
+            scope: cat === 'puzzle_error' ? fb.scope : null,
+            issueType: cat === 'puzzle_error' ? fb.issueType : null,
+            guess: cat === 'answer_matching' ? guess : null,
+            platform: detectPlatform(),
           }),
         });
+        if (typeof trackEvent === 'function') trackEvent('feedback_submit', { category: cat, scope: fb.scope, issueType: fb.issueType });
       } catch (e) { /* ignore */ }
 
+      btn.disabled = false;
+      btn.textContent = 'Send';
       document.getElementById('feedbackForm').style.display = 'none';
       document.getElementById('feedbackThanks').style.display = 'block';
     });
 
     function checkFeedbackState() { /* no-op for simple version */ }
+
+    // ============================================================================
+    // INSTALL GUIDE (add to home screen) + DAILY REMINDER
+    // ============================================================================
+
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();               // keep Chrome's mini-infobar quiet; we show our own button
+      deferredInstallPrompt = e;
+      const wrap = document.getElementById('installNativeWrap');
+      if (wrap) wrap.style.display = '';
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      if (typeof trackEvent === 'function') trackEvent('pwa_installed', {});
+      const wrap = document.getElementById('installNativeWrap');
+      if (wrap) wrap.style.display = 'none';
+    });
+
+    function isStandalone() {
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    }
+
+    const INSTALL_GUIDES = {
+      ios: {
+        safari: [
+          'Open <strong>physiodle.up.railway.app</strong> in <strong>Safari</strong>.',
+          'Tap the <span class="install-kbd">Share</span> button (the square with an arrow, bottom of the screen).',
+          'Scroll down and tap <span class="install-kbd">Add to Home Screen</span>.',
+          'Tap <span class="install-kbd">Add</span>. The bone icon appears on your home screen.',
+        ],
+        other: [
+          'Tap the <span class="install-kbd">Share</span> icon in the address bar (Chrome, Edge and Firefox on iPhone all have one).',
+          'Tap <span class="install-kbd">Add to Home Screen</span>, then <span class="install-kbd">Add</span>.',
+          'If you don\'t see that option, open this page in <strong>Safari</strong> and use Share there.',
+        ],
+        note: 'Opens full-screen like an app, remembers your login, and keeps your streak in one tap.',
+      },
+      android: {
+        steps: [
+          'Open <strong>physiodle.up.railway.app</strong> in <strong>Chrome</strong>.',
+          'Tap the <span class="install-kbd">&#8942;</span> menu (top right).',
+          'Tap <span class="install-kbd">Add to Home screen</span> or <span class="install-kbd">Install app</span>, then <span class="install-kbd">Install</span>.',
+        ],
+        samsung: 'On Samsung Internet: tap the <span class="install-kbd">&#8801;</span> menu, then <span class="install-kbd">Add page to</span> &rarr; <span class="install-kbd">Home screen</span>.',
+        note: 'Works on Pixel, Samsung and every other Android phone. No Play Store needed.',
+      },
+      desktop: {
+        steps: [
+          'In <strong>Chrome</strong> or <strong>Edge</strong>, look for the install icon at the right end of the address bar (a monitor with a down arrow).',
+          'Click it, then <span class="install-kbd">Install</span>. Physiodle opens in its own window and shows up in your dock or Start menu.',
+          'On a phone? Open <strong>physiodle.up.railway.app</strong> there and pick the iPhone or Android tab above.',
+        ],
+        note: 'Safari on Mac: File &rarr; Add to Dock does the same thing.',
+      },
+      other: {
+        steps: ['Open your browser\'s menu and look for <span class="install-kbd">Add to Home screen</span> or <span class="install-kbd">Install</span>.'],
+        note: '',
+      },
+    };
+
+    function renderInstallGuide(platform) {
+      const ua = navigator.userAgent || '';
+      const steps = document.getElementById('installSteps');
+      const note = document.getElementById('installBrowserNote');
+      document.querySelectorAll('.install-platform-tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-platform') === platform));
+      let list, extra = '';
+      if (platform === 'ios') {
+        const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+        list = isSafari ? INSTALL_GUIDES.ios.safari : INSTALL_GUIDES.ios.other;
+        extra = INSTALL_GUIDES.ios.note;
+      } else if (platform === 'android') {
+        list = INSTALL_GUIDES.android.steps;
+        extra = (/SamsungBrowser/i.test(ua) ? INSTALL_GUIDES.android.samsung + '<br>' : '') + INSTALL_GUIDES.android.note;
+      } else if (platform === 'desktop') {
+        list = INSTALL_GUIDES.desktop.steps; extra = INSTALL_GUIDES.desktop.note;
+      } else {
+        list = INSTALL_GUIDES.other.steps; extra = INSTALL_GUIDES.other.note;
+      }
+      steps.innerHTML = list.map((t, i) => `<li><span class="install-num">${i + 1}</span><span>${t}</span></li>`).join('');
+      note.innerHTML = extra;
+      // The native one-tap prompt only exists on Chromium/Android; hide it on other tabs.
+      const wrap = document.getElementById('installNativeWrap');
+      wrap.style.display = (deferredInstallPrompt && platform === detectPlatform()) ? '' : 'none';
+    }
+
+    function openInstallModal() {
+      const standalone = isStandalone();
+      document.getElementById('installStandaloneMsg').style.display = standalone ? '' : 'none';
+      document.getElementById('installGuide').style.display = standalone ? 'none' : '';
+      if (!standalone) renderInstallGuide(detectPlatform());
+      updateReminderLinks();
+      document.getElementById('installModal').classList.add('show');
+      if (typeof trackEvent === 'function') trackEvent('install_guide_open', { platform: detectPlatform(), standalone });
+    }
+
+    document.getElementById('installLinkBtn').addEventListener('click', openInstallModal);
+    document.getElementById('resultInstallBtn').addEventListener('click', () => {
+      document.getElementById('resultOverlay').classList.remove('show');
+      openInstallModal();
+    });
+    document.getElementById('installPlatformTabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.install-platform-tab');
+      if (tab) renderInstallGuide(tab.getAttribute('data-platform'));
+    });
+    document.getElementById('installNativeBtn').addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      try {
+        const choice = await deferredInstallPrompt.userChoice;
+        if (typeof trackEvent === 'function') trackEvent('install_prompt_choice', { outcome: choice && choice.outcome });
+      } catch (e) { /* ignore */ }
+      deferredInstallPrompt = null;
+      document.getElementById('installNativeWrap').style.display = 'none';
+    });
+
+    // Already installed: the footer link becomes a reminder link instead.
+    if (isStandalone()) {
+      document.getElementById('installLinkBtn').textContent = 'Daily reminder';
+      const r = document.getElementById('resultInstallBtn');
+      if (r) r.textContent = 'Set a daily reminder';
+    }
+
+    function updateReminderLinks() {
+      const hour = parseInt(document.getElementById('reminderHour').value, 10);
+      document.getElementById('reminderIcsBtn').href = `/reminder.ics?hour=${hour}`;
+      const pad = (n) => String(n).padStart(2, '0');
+      const d = new Date(); d.setDate(d.getDate() + 1);
+      const ymd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: 'Physiodle: today\'s puzzle',
+        details: 'Five clues, five guesses, one diagnosis. https://physiodle.up.railway.app',
+        location: 'https://physiodle.up.railway.app',
+        dates: `${ymd}T${pad(hour)}0000/${ymd}T${pad(hour)}1000`,
+        recur: 'RRULE:FREQ=DAILY',
+      });
+      document.getElementById('reminderGcalBtn').href = `https://calendar.google.com/calendar/render?${params.toString()}`;
+    }
+    document.getElementById('reminderHour').addEventListener('change', updateReminderLinks);
+    document.getElementById('reminderIcsBtn').addEventListener('click', () => { if (typeof trackEvent === 'function') trackEvent('reminder_added', { via: 'ics' }); });
+    document.getElementById('reminderGcalBtn').addEventListener('click', () => { if (typeof trackEvent === 'function') trackEvent('reminder_added', { via: 'gcal' }); });
+
+    // Service worker: no caching, exists for installability + future push.
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+    }
+
+    // ============================================================================
+    // COMMUNITY STATS (leaderboard header)
+    // ============================================================================
+    async function loadCommunityStats() {
+      const el = document.getElementById('lbCommunity');
+      if (!el) return;
+      try {
+        const r = await fetch('/api/leaderboard/community');
+        if (!r.ok) return;
+        const d = await r.json();
+        const fmt = (n) => (n || 0).toLocaleString();
+        el.innerHTML = `<strong>${fmt(d.totalPlayers)}</strong> players &middot; <strong>${fmt(d.playedToday)}</strong> played today`;
+      } catch (e) { /* leave blank */ }
+    }
 
     // ============================================================================
     // LOGIN PROMPT (for unauthenticated users)

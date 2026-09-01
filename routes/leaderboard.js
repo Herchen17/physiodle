@@ -3,6 +3,21 @@ const router = express.Router();
 const db = require('../db');
 const { requireAuth, optionalAuth } = require('../auth');
 
+// GET /api/leaderboard/community — public headline numbers (requested by
+// players who want to see how many people they're competing against).
+router.get('/community', (req, res) => {
+  const pm = require('../puzzle-manager');
+  const today = pm.getCurrentDayNumber();
+  const totalPlayers = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
+  const playedToday = db.prepare(
+    'SELECT COUNT(DISTINCT user_id) AS c FROM game_results WHERE day_number IN (?, ?)'
+  ).get(today, today - 1).c;
+  const solvedToday = db.prepare(
+    'SELECT COUNT(DISTINCT user_id) AS c FROM game_results WHERE day_number = ? AND won = 1'
+  ).get(today).c;
+  res.json({ totalPlayers, playedToday, solvedToday, dayNumber: today });
+});
+
 // Helper: get array of friend IDs + self
 function getFriendIds(userId) {
   const friends = db.prepare('SELECT friend_id FROM friendships WHERE user_id = ?').all(userId);

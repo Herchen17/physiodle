@@ -3,3 +3,4 @@ node_modules/
 physiodle.db
 physiodle.db-journal
 physiodle.db-wal
+sandbox-data/
