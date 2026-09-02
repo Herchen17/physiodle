@@ -1390,16 +1390,26 @@
         display: none; /* hide on very small — shown below logo instead */
       }
 
+      /* Five buttons plus the wordmark do not fit 375px. The icon alone still
+         identifies the app, and a long username is capped rather than pushing
+         the row wider. */
+      .logo-text { display: none; }
+      #accountBtn { max-width: 4.5rem; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1.6; }
+      /* The streak is the one thing that must never be clipped by the button row. */
+      .header-left { flex: 0 0 auto; }
+      .streak-pill { flex: 0 0 auto; margin-left: 0.35rem; }
+
       .header-right {
         gap: 0.25rem;
       }
 
       .header-btn {
         font-size: 0.65rem;
-        padding: 0.25rem 0.4rem;
+        padding: 0.25rem 0.32rem;
         min-height: 28px;
         border-width: 1px;
       }
+      .header-right { gap: 0.2rem; }
 
       .guess-section {
         top: calc(42px + env(safe-area-inset-top, 0px)); /* smaller header + notch */
@@ -1728,6 +1738,8 @@
     .fb-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
     .fb-error { font-size: 0.75rem; color: #dc2626; margin-top: 0.35rem; display: none; }
     .fb-footer-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .fb-footer-legal { margin-top: 0.35rem; }
+    .fb-footer-legal .btn-link { color: #b9c2cc; font-size: 0.7rem; }
     .fb-footer-links .btn-link { font-size: 0.75rem; color: #9ca3af; }
 
     /* ---------------- Install guide ---------------- */
@@ -1884,26 +1896,21 @@
     .email-prompt { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.5rem; padding: 0.8rem 0.9rem; margin-bottom: 1rem; }
     .email-prompt-title { font-size: 0.85rem; font-weight: 700; color: #92400e; margin-bottom: 0.2rem; }
     .email-prompt-text { font-size: 0.75rem; color: #78350f; line-height: 1.45; margin-bottom: 0.5rem; }
-    /* Phone: four header buttons plus the logo overflowed 375px, so they
-       collapse into one menu below 640px. Desktop is unchanged. */
-    .header-btn-menu { display: none; }
-    @media (max-width: 640px) {
-      .header-btn-wide { display: none; }
-      .header-btn-menu { display: inline-flex; }
+    /* "More" opens extra rows of the same pills inside the header, so nothing
+       introduces a second visual language. */
+    .caret {
+      display: inline-block; width: 0; height: 0; margin-left: 0.3rem;
+      border-left: 3.5px solid transparent; border-right: 3.5px solid transparent;
+      border-top: 4px solid currentColor; transition: transform 0.2s;
     }
-    .menu-list { display: flex; flex-direction: column; }
-    .menu-item {
-      display: flex; align-items: center; gap: 0.6rem; width: 100%;
-      background: none; border: none; border-bottom: 1px solid #f3f4f6;
-      padding: 0.85rem 0.25rem; font-family: 'Inter', sans-serif; font-size: 0.95rem;
-      color: #1f2937; text-align: left; cursor: pointer; text-decoration: none;
+    #moreBtn[aria-expanded="true"] .caret { transform: rotate(180deg); }
+    #moreBtn[aria-expanded="true"] { background: #0d9488; color: white; }
+    .header-expand {
+      display: none; flex-wrap: wrap; justify-content: flex-end; gap: 0.35rem;
+      padding-top: 0.5rem; margin-top: 0.5rem; border-top: 1px solid #d1fae5;
     }
-    .menu-item:last-child { border-bottom: none; }
-    .menu-item:active { background: #f0fdf4; }
-    .menu-item .mi-icon { width: 1.4rem; text-align: center; font-size: 1rem; flex: 0 0 auto; }
-    .menu-item .mi-sub { font-size: 0.72rem; color: #9ca3af; margin-left: auto; }
-    .menu-item.menu-love { color: #b45309; font-weight: 600; }
-    .menu-section { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin: 0.9rem 0 0.2rem; }
+    .header-expand.show { display: flex; }
+    .header-expand .header-btn { text-decoration: none; gap: 0.3rem; }
 
     /* Star rating */
     .stars { display: flex; gap: 0.15rem; justify-content: center; }
@@ -1939,10 +1946,7 @@
     .love-text { font-size: 0.85rem; font-weight: 600; color: #374151; }
     .logo-icon-img { width: 28px; height: 28px; border-radius: 7px; display: inline-block; vertical-align: middle; }
     .app-icon { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; flex: 0 0 auto; }
-    .header-btn-install { gap: 0.35rem; background: transparent; border-color: #d1fae5; color: #6b7280; font-weight: 500; }
-    .header-btn-install:hover { background: #f0fdf4; border-color: #0d9488; color: #0d9488; }
-    .header-btn-install .app-icon { width: 16px; height: 16px; }
-    @media (max-width: 640px) { .header-btn-install { display: none; } }
+    .header-expand .app-icon { width: 14px; height: 14px; }
     .result-install-btn { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.78rem; color: #6b7280; text-decoration: none; }
     .result-install-btn:hover { color: #0d9488; }
     .result-install-btn .app-icon { width: 16px; height: 16px; }
@@ -1977,13 +1981,21 @@
         </button>
       </div>
       <div class="header-right">
-        <button class="header-btn header-btn-install" id="headerInstallBtn" title="Add to home screen" aria-label="Add to home screen"><img class="app-icon" src="/favicon-32.png" alt="" width="16" height="16"><span class="header-btn-install-text">Get app</span></button>
-        <button class="header-btn header-btn-wide" id="leaderboardBtn">Leaderboard</button>
-        <button class="header-btn header-btn-wide" id="archiveBtn">Archive</button>
-        <button class="header-btn header-btn-wide" id="friendsBtn">Friends</button>
-        <button class="header-btn header-btn-wide" id="accountBtn">Account</button>
-        <button class="header-btn header-btn-menu" id="menuBtn" aria-label="Menu" aria-haspopup="true">&#9776; Menu</button>
+        <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
+        <button class="header-btn" id="accountBtn">Account</button>
+        <button class="header-btn" id="moreBtn" aria-expanded="false" aria-controls="headerExpand">More <span class="caret" aria-hidden="true"></span></button>
       </div>
+    </div>
+    <!-- "More" opens further rows of the same pills rather than a separate menu -->
+    <div class="header-expand" id="headerExpand">
+      <button class="header-btn" id="archiveBtn">Archive</button>
+      <button class="header-btn" id="friendsBtn">Friends</button>
+      <button class="header-btn" id="headerInstallBtn"><img class="app-icon" src="/favicon-32.png" alt="" width="14" height="14"><span id="moreInstallLabel">Add to home screen</span></button>
+      <button class="header-btn" data-menu="love">Love Physiodle?</button>
+      <button class="header-btn" data-menu="feedback">Leave feedback</button>
+      <a class="header-btn" href="/faq.html">How it works</a>
+      <a class="header-btn" href="/terms.html">Terms</a>
+      <a class="header-btn" href="/privacy.html">Privacy</a>
     </div>
   </header>
 
@@ -2063,9 +2075,11 @@
       <!-- FEEDBACK FOOTER (structured) -->
       <div class="feedback-section" id="feedbackSection">
         <div class="fb-footer-links">
-          <button class="btn-link" id="loveFooterBtn" style="color:#b45309; font-weight:600;">&#10084;&#65039; Love Physiodle?</button>
+          <button class="btn-link" id="loveFooterBtn">Love Physiodle?</button>
           <button class="btn-link" id="feedbackToggle">Leave feedback</button>
           <a class="btn-link" href="/faq.html">How it works</a>
+        </div>
+        <div class="fb-footer-links fb-footer-legal">
           <a class="btn-link" href="/terms.html" target="_blank" rel="noopener">Terms</a>
           <a class="btn-link" href="/privacy.html" target="_blank" rel="noopener">Privacy</a>
         </div>
@@ -2153,36 +2167,6 @@
       <div class="milestone-title" id="milestoneTitle"></div>
       <div class="milestone-sub" id="milestoneSub"></div>
       <button class="btn btn-primary" id="milestoneCloseBtn">Keep it going</button>
-    </div>
-  </div>
-
-  <!-- MENU (phones) -->
-  <div class="modal-overlay" id="menuModal">
-    <div class="modal" style="max-width: 380px;">
-      <div class="modal-header">
-        <h2 class="modal-title">Physiodle</h2>
-        <button class="modal-close" onclick="closeModal('menuModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="menu-list">
-          <button class="menu-item" data-menu="leaderboard"><span class="mi-icon">&#127942;</span>Leaderboard</button>
-          <button class="menu-item" data-menu="archive"><span class="mi-icon">&#128197;</span>Archive<span class="mi-sub">play past puzzles</span></button>
-          <button class="menu-item" data-menu="friends"><span class="mi-icon">&#128101;</span>Friends</button>
-          <button class="menu-item" data-menu="account"><span class="mi-icon">&#128100;</span><span id="menuAccountLabel">Account</span></button>
-        </div>
-        <div class="menu-section">Support Physiodle</div>
-        <div class="menu-list">
-          <button class="menu-item menu-love" data-menu="love"><span class="mi-icon">&#10084;&#65039;</span>Love Physiodle?</button>
-          <button class="menu-item" data-menu="install"><span class="mi-icon">&#128241;</span><span id="menuInstallLabel">Add to home screen</span></button>
-          <button class="menu-item" data-menu="feedback"><span class="mi-icon">&#128172;</span>Leave feedback</button>
-        </div>
-        <div class="menu-section">About</div>
-        <div class="menu-list">
-          <a class="menu-item" href="/faq.html"><span class="mi-icon">&#10067;</span>How it works</a>
-          <a class="menu-item" href="/terms.html"><span class="mi-icon">&#128220;</span>Terms</a>
-          <a class="menu-item" href="/privacy.html"><span class="mi-icon">&#128274;</span>Privacy</a>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -5781,27 +5765,26 @@
       } catch (e) { /* a rating is not worth interrupting anyone for */ }
     }
 
-    // ---- Menu ----
-    document.getElementById('menuBtn').addEventListener('click', () => {
-      const acct = document.getElementById('accountBtn').textContent.trim();
-      document.getElementById('menuAccountLabel').textContent = acct || 'Account';
-      document.getElementById('menuInstallLabel').textContent = isStandalone() ? 'Daily reminder' : 'Add to home screen';
-      showModal('menuModal');
+    // ---- "More": extra rows of pills in the header ----
+    const moreBtn = document.getElementById('moreBtn');
+    const headerExpand = document.getElementById('headerExpand');
+    function closeMore() { headerExpand.classList.remove('show'); moreBtn.setAttribute('aria-expanded', 'false'); }
+    moreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !headerExpand.classList.contains('show');
+      document.getElementById('moreInstallLabel').textContent = isStandalone() ? 'Daily reminder' : 'Add to home screen';
+      headerExpand.classList.toggle('show', open);
+      moreBtn.setAttribute('aria-expanded', String(open));
     });
-    document.getElementById('menuModal').addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => { if (!headerExpand.contains(e.target) && e.target !== moreBtn) closeMore(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMore(); });
+    headerExpand.addEventListener('click', (e) => {
       const item = e.target.closest('[data-menu]');
-      if (!item) return;
+      closeMore(); // any choice collapses the row again
+      if (!item) return; // Archive/Friends/install keep their own handlers; links navigate
       const what = item.getAttribute('data-menu');
-      closeModal('menuModal');
-      setTimeout(() => {
-        if (what === 'leaderboard') document.getElementById('leaderboardBtn').click();
-        else if (what === 'archive') document.getElementById('archiveBtn').click();
-        else if (what === 'friends') document.getElementById('friendsBtn').click();
-        else if (what === 'account') document.getElementById('accountBtn').click();
-        else if (what === 'love') openLoveModal();
-        else if (what === 'install') openInstallModal();
-        else if (what === 'feedback') { openFeedbackForm(null); }
-      }, 120);
+      if (what === 'love') openLoveModal();
+      else if (what === 'feedback') openFeedbackForm(null);
     });
 
     // ---- Love Physiodle ----
@@ -6037,7 +6020,7 @@
     if (isStandalone()) {
       document.body.classList.add('standalone');
       // Already installed: the install links become reminder links.
-      const h = document.getElementById('headerInstallBtn'); if (h) h.querySelector('.header-btn-install-text').textContent = 'Reminders';
+      const h = document.getElementById('moreInstallLabel'); if (h) h.textContent = 'Daily reminder';
       const r = document.getElementById('resultInstallBtn'); if (r) r.querySelector('span').textContent = 'Set a daily reminder';
       const a = document.getElementById('accountInstallBtn'); if (a) a.querySelector('span').textContent = 'Daily reminder';
     }
