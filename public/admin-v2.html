@@ -574,11 +574,14 @@ document.getElementById('seriesBucket').addEventListener('click', (e) => {
   seriesBucket = b.dataset.bucket; localStorage.setItem('pa_series_bucket', seriesBucket);
   loadSeries();
 });
-function fmtBucket(b, bucket) {
-  if (bucket === 'hour') return b.slice(11, 16);
-  if (bucket === 'halfday') return b.slice(5, 10) + (b.endsWith('12:00') ? ' pm' : ' am');
-  if (bucket === 'month') return b.slice(0, 7);
-  return b.slice(5, 10);
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtBucket(b, bucket, long) {
+  const y = b.slice(0, 4), m = MONTHS[parseInt(b.slice(5, 7), 10) - 1], d = parseInt(b.slice(8, 10), 10);
+  if (bucket === 'hour') return (long ? `${d} ${m} ` : '') + b.slice(11, 16);
+  if (bucket === 'halfday') return `${d} ${m} ${b.endsWith('12:00') ? 'pm' : 'am'}`;
+  if (bucket === 'month') return `${m} ${y}`;
+  if (bucket === 'week') return (long ? 'Week of ' : '') + `${d} ${m}`;
+  return `${d} ${m}` + (long ? ` ${y}` : '');
 }
 async function loadSeries() {
   if (!K) return;
@@ -590,22 +593,34 @@ async function loadSeries() {
     const d = await api('/api/analytics/v2/series?range=' + seriesRange + (seriesBucket ? '&bucket=' + seriesBucket : ''));
     if (opts) bucketSeg.querySelectorAll('button').forEach(x => { x.style.display = opts.includes(x.dataset.bucket) ? '' : 'none'; x.classList.toggle('active', x.dataset.bucket === d.bucket); });
     destroyChart('traffic');
-    const labels = d.rows.map(r => fmtBucket(r.bucket, d.bucket));
+    const rows = d.rows;
+    const labels = rows.map(r => fmtBucket(r.bucket, d.bucket));
+    const many = rows.length > 60;
+    // The in-progress bucket is drawn faded so a half-finished day never reads as a drop.
+    const alpha = (solid, faded) => rows.map(r => r.partial ? faded : solid);
     charts.traffic = new Chart(document.getElementById('trafficChart'), {
       type: 'bar',
       data: { labels, datasets: [
-        { label: 'Page Views', data: d.rows.map(r => r.pageviews), backgroundColor: '#3b82f640', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 3, order: 2 },
-        { label: 'Unique Visitors', data: d.rows.map(r => r.visitors), type: 'line', borderColor: '#06b6d4', backgroundColor: '#06b6d420', pointRadius: d.rows.length > 60 ? 0 : 2, tension: 0.3, fill: true, order: 1 },
-        { label: 'Games', data: d.rows.map(r => r.games), type: 'line', borderColor: '#8b5cf6', pointRadius: d.rows.length > 60 ? 0 : 2, tension: 0.3, borderDash: [4,2], order: 0 },
-        { label: 'Sign-ups', data: d.rows.map(r => r.signups), type: 'line', borderColor: '#22c55e', pointRadius: d.rows.length > 60 ? 0 : 2, tension: 0.3, borderDash: [2,2], order: 0 },
+        { label: 'Page views', data: rows.map(r => r.pageviews), backgroundColor: alpha('#3b82f655', '#3b82f622'), borderColor: alpha('#3b82f6', '#3b82f666'), borderWidth: 1, borderRadius: 3, order: 3 },
+        { label: 'Unique visitors', data: rows.map(r => r.visitors), type: 'line', borderColor: '#06b6d4', backgroundColor: '#06b6d4', pointRadius: many ? 0 : 2, pointBackgroundColor: alpha('#06b6d4', '#06b6d455'), tension: 0.25, borderWidth: 2, order: 1, segment: { borderDash: (ctx) => rows[ctx.p1DataIndex] && rows[ctx.p1DataIndex].partial ? [4, 3] : undefined } },
+        { label: 'Games played', data: rows.map(r => r.games), type: 'line', borderColor: '#a78bfa', backgroundColor: '#a78bfa', pointRadius: many ? 0 : 2, tension: 0.25, borderWidth: 2, order: 2, segment: { borderDash: (ctx) => rows[ctx.p1DataIndex] && rows[ctx.p1DataIndex].partial ? [4, 3] : undefined } },
+        { label: 'Sign-ups', data: rows.map(r => r.signups), type: 'line', borderColor: '#22c55e', backgroundColor: '#22c55e', pointRadius: many ? 0 : 2, tension: 0.25, borderWidth: 2, order: 0, segment: { borderDash: (ctx) => rows[ctx.p1DataIndex] && rows[ctx.p1DataIndex].partial ? [4, 3] : undefined } },
       ] },
       options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
         spanGaps: false,
-        scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 16 } } } }
+        plugins: {
+          legend: { labels: { usePointStyle: true, boxWidth: 8, color: '#94a3b8' } },
+          tooltip: { backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: '#334155', borderWidth: 1, padding: 10,
+            callbacks: {
+              title: (items) => { const r = rows[items[0].dataIndex]; return fmtBucket(r.bucket, d.bucket, true) + (r.partial ? ' (so far)' : ''); },
+              label: (item) => ' ' + item.dataset.label + ': ' + (item.raw == null ? 'not tracked' : Number(item.raw).toLocaleString('en-AU')),
+            } },
+        },
+        scales: { y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: (v) => Number(v).toLocaleString('en-AU') } }, x: { grid: { display: false }, ticks: { color: '#64748b', maxTicksLimit: rows.length > 40 ? 12 : 16, maxRotation: 0, autoSkip: true } } } }
     });
     const bucketWord = { hour: 'hourly', halfday: '12-hour', day: 'daily', week: 'weekly', month: 'monthly' }[d.bucket];
-    const gap = d.rows.some(r => r.pageviews === null);
-    document.getElementById('seriesNote').textContent = `${d.rows.length} ${bucketWord} buckets, AEST. One scale for every series.` + (gap && d.trackingSince ? ` Page-view tracking began ${d.trackingSince.slice(0, 10)}; earlier buckets show sign-ups and games only.` : '');
+    const gap = rows.some(r => r.pageviews === null);
+    document.getElementById('seriesNote').textContent = `${rows.length} ${bucketWord} buckets, AEST, one scale. The last bucket is still in progress and drawn faded. Click a legend item to hide a series.` + (gap && d.trackingSince ? ` Page-view tracking began ${fmtBucket(d.trackingSince, 'day', true)}; earlier buckets show sign-ups and games only.` : '');
   } catch (e) { console.error(e); }
 }
 

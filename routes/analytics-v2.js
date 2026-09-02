@@ -212,8 +212,11 @@ router.get('/series', requireAdmin, (req, res) => {
   if (rangeKey === '24h') bucketKey = 'hour';
   if (rangeKey === '7d' && !['hour', 'halfday', 'day'].includes(bucketKey)) bucketKey = 'halfday';
   const days = SERIES_RANGES[rangeKey];
+  // 24 h: start at the top of the hour 23 hours ago, so every bucket except the
+  // current one is a complete hour.
+  const hourStart = new Date(); hourStart.setUTCMinutes(0, 0, 0);
   const from = rangeKey === '24h'
-    ? new Date(Date.now() - 24 * 3600000).toISOString().replace('T', ' ').replace(/\.\d+Z$/, '')
+    ? new Date(hourStart.getTime() - 23 * 3600000).toISOString().replace('T', ' ').replace(/\.\d+Z$/, '')
     : days ? aestMidnightUtc(days - 1) : '2026-03-01 00:00:00';
   const b = BUCKET_EXPR[bucketKey];
   const map = {};
@@ -232,7 +235,10 @@ router.get('/series', requireAdmin, (req, res) => {
       const tracked = !sinceBucket || r.bucket >= sinceBucket;
       return { bucket: r.bucket, pageviews: tracked ? (r.pageviews || 0) : null, visitors: tracked ? (r.visitors || 0) : null, games: r.games || 0, signups: r.signups || 0 };
     });
-  res.json({ range: rangeKey, bucket: bucketKey, from, rows, trackingSince });
+  // The last bucket is still filling up (today, this hour, this week...). Say so,
+  // so the chart can draw it differently instead of looking like a collapse.
+  if (rows.length) rows[rows.length - 1].partial = true;
+  res.json({ range: rangeKey, bucket: bucketKey, from, rows, trackingSince, generatedAt: new Date().toISOString() });
 });
 
 // ============================================================================
