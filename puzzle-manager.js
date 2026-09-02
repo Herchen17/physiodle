@@ -92,6 +92,11 @@ function getTodaysPuzzle(tz) {
   return getPuzzleForDay(dayNum);
 }
 
+// answer_type tells the client what kind of answer to ask for, so the prompt
+// is honest: 'diagnosis' (default), 'procedure' (post-surgical rehab puzzles),
+// 'scenario' (management categories such as cardiac rehab, falls) or
+// 'pattern' (observed postural patterns such as upper crossed syndrome).
+// Added after 12 players complained that "the answer isn't a diagnosis".
 function sanitizePuzzle(puzzle) {
   if (!puzzle) return null;
   return {
@@ -99,6 +104,7 @@ function sanitizePuzzle(puzzle) {
     answer: puzzle.answer,
     aliases: puzzle.aliases || [],
     category: puzzle.category,
+    answerType: puzzle.answer_type || 'diagnosis',
     clues: puzzle.clues,
     explanation: puzzle.explanation || '',
   };
@@ -111,6 +117,7 @@ function fullPuzzle(puzzle) {
     answer: puzzle.answer,
     aliases: puzzle.aliases || [],
     category: puzzle.category,
+    answerType: puzzle.answer_type || 'diagnosis',
     clues: puzzle.clues,
     explanation: puzzle.explanation,
   };

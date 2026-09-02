@@ -310,7 +310,7 @@ router.post('/cross-verify', crossVerifyLimiter, async (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, username, email, created_at FROM users WHERE id = ?').get(req.user.userId);
+  const user = db.prepare('SELECT id, username, email, created_at, profession_level FROM users WHERE id = ?').get(req.user.userId);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -328,27 +328,54 @@ router.get('/me', requireAuth, (req, res) => {
     FROM game_results WHERE user_id = ?
   `).get(user.id);
 
-  // Compute streaks
-  const results = db.prepare(
-    'SELECT day_number, won FROM game_results WHERE user_id = ? ORDER BY day_number ASC'
-  ).all(user.id);
+  // Streaks. Same definition as the leaderboard (routes/leaderboard.js):
+  // consecutive day numbers with an ON-DAY win, counted back from today.
+  // Today doesn't break the streak until it's actually lost or missed.
+  // (Previously this counted any consecutive wins including archive play,
+  // which disagreed with the number shown on the leaderboard.)
+  const pm = require('../puzzle-manager');
+  const todayDay = pm.getCurrentDayNumber();
+  const onDayWhere = `(
+    completed_at >= DATETIME(DATE('2026-03-04', '+' || (day_number - 1) || ' days'), '-14 hours')
+    AND completed_at < DATETIME(DATE('2026-03-04', '+' || (day_number - 1) || ' days'), '+36 hours')
+  )`;
+  const results = db.prepare(`
+    SELECT day_number, won, score, completed_at, ${onDayWhere} AS on_day
+    FROM game_results WHERE user_id = ? ORDER BY day_number ASC
+  `).all(user.id);
 
+  const onDayWins = new Set(results.filter(r => r.won && r.on_day).map(r => r.day_number));
+  const onDayPlayed = new Set(results.filter(r => r.on_day).map(r => r.day_number));
   let currentStreak = 0;
+  {
+    // If today isn't played yet, start counting from yesterday.
+    let d = onDayPlayed.has(todayDay) ? todayDay : todayDay - 1;
+    while (d >= 1 && onDayWins.has(d)) { currentStreak++; d--; }
+  }
   let maxStreak = 0;
-  let streak = 0;
-  for (const r of results) {
-    if (r.won) {
-      streak++;
-      maxStreak = Math.max(maxStreak, streak);
-    } else {
-      streak = 0;
-    }
+  {
+    let run = 0, prev = null;
+    [...onDayWins].sort((a, b) => a - b).forEach(d => {
+      run = (prev !== null && d === prev + 1) ? run + 1 : 1;
+      prev = d; maxStreak = Math.max(maxStreak, run);
+    });
   }
-  currentStreak = 0;
-  for (let i = results.length - 1; i >= 0; i--) {
-    if (results[i].won) currentStreak++;
-    else break;
+
+  // Extra personal stats (chronological, all plays)
+  let firstGuessSolves = 0, bestFirstGuessRun = 0, worstRun = 0;
+  {
+    let fgRun = 0, lossRun = 0;
+    results.forEach(r => {
+      if (r.won && r.score === 1) { firstGuessSolves++; fgRun++; bestFirstGuessRun = Math.max(bestFirstGuessRun, fgRun); } else fgRun = 0;
+      if (!r.won) { lossRun++; worstRun = Math.max(worstRun, lossRun); } else lossRun = 0;
+    });
   }
+  // Trend: average points (6 - score, 0 for a loss) over the last 30 games vs the 30 before.
+  const pts = results.map(r => (r.won ? 6 - r.score : 0));
+  const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  const recentAvg = avg(pts.slice(-30));
+  const priorAvg = pts.length > 30 ? avg(pts.slice(-60, -30)) : null;
+  const avgGuesses = statsRow.won ? avg(results.filter(r => r.won).map(r => r.score)) : null;
 
   // Distribution
   const distRows = db.prepare(`
@@ -393,6 +420,7 @@ router.get('/me', requireAuth, (req, res) => {
     userId: user.id,
     username: user.username,
     email: user.email || null,
+    professionLevel: user.profession_level || null,
     createdAt: user.created_at,
     stats: {
       played: statsRow.played,
@@ -405,6 +433,13 @@ router.get('/me', requireAuth, (req, res) => {
       currentStreak,
       maxStreak,
       perfectGames,
+      firstGuessSolves,
+      bestFirstGuessRun,
+      worstRun,
+      onDayPlayed: onDayPlayed.size,
+      avgGuesses: avgGuesses != null ? parseFloat(avgGuesses.toFixed(2)) : null,
+      recentAvgPoints: recentAvg != null ? parseFloat(recentAvg.toFixed(2)) : null,
+      priorAvgPoints: priorAvg != null ? parseFloat(priorAvg.toFixed(2)) : null,
       distribution,
       firstGame: statsRow.firstGame,
       lastGame: statsRow.lastGame,
@@ -413,6 +448,17 @@ router.get('/me', requireAuth, (req, res) => {
       totalPlayers: totalPlayers.cnt,
     }
   });
+});
+
+// PATCH /api/auth/profile { level } — profession level for profile completion.
+const PROFESSION_LEVELS = ['student', 'new_grad', 'physiotherapist', 'educator', 'other_health', 'other'];
+router.patch('/profile', requireAuth, (req, res) => {
+  const { level } = req.body || {};
+  if (level !== null && level !== undefined && !PROFESSION_LEVELS.includes(level)) {
+    return res.status(400).json({ error: 'Invalid level' });
+  }
+  db.prepare('UPDATE users SET profession_level = ? WHERE id = ?').run(level || null, req.user.userId);
+  res.json({ success: true, professionLevel: level || null });
 });
 
 module.exports = router;

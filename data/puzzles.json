@@ -45,7 +45,8 @@
         }
       ],
       "explanation": "Post-ACL reconstruction represents the early phase following surgical repair of an anterior cruciate ligament tear, typically using an autograft (hamstring, patellar tendon, or quadriceps) to restore knee stability. At four weeks post-operatively, patients naturally present with significant quadriceps inhibition, flexion contractures, and weakness — the surgical trauma to soft tissues, graft integration demands, and immobility during early healing all contribute to this neuromuscular deficit. The extension lag and quadriceps strength of 3+/5 seen here are typical findings at this stage and reflect ongoing motor inhibition rather than graft failure; likewise, hamstring weakness is expected given the harvest site and healing demands. Restoration of knee extension strength and achievement of full passive extension are the primary rehabilitation goals, as deficits at this stage are largely reversible with guided progressional loading and neuromuscular retraining.",
-      "id": 1
+      "id": 1,
+      "answer_type": "procedure"
     },
     {
       "answer": "Bell's Palsy",
@@ -376,7 +377,8 @@
         }
       ],
       "explanation": "Post-ACL reconstruction represents the immediate post-operative phase following surgical graft placement to restore anterior knee stability, typically using autograft (patellar tendon, hamstring) or allograft material. At 4 weeks post-surgery, the graft is in early incorporation but remains biomechanically vulnerable; functional recovery requires progressive neuromuscular re-education, particularly proprioception and dynamic stabiliser control. The persistent difficulty with cutting and pivoting, poor single-leg stance, and residual strength deficits (quadriceps 4+/5) reflect the normal post-operative timeline, though the mild positive Lachman test with firm endpoint suggests the graft is beginning to function appropriately. Rehabilitation success depends on systematically restoring range of motion, muscular strength, and sport-specific control before return to high-demand activities — premature loading risks graft failure and re-injury.",
-      "id": 10
+      "id": 10,
+      "answer_type": "procedure"
     },
     {
       "answer": "Olecranon Bursitis",
@@ -660,7 +662,8 @@
         }
       ],
       "explanation": "Upper crossed syndrome results from chronic postural dysfunction where tight, overactive upper trapezius and pectoralis muscles cross with weak, inhibited lower trapezius and serratus anterior, creating a distinctive pattern of muscular imbalance across the cervical and scapular regions. This presentation is particularly common in desk workers: sustained forward head posture and rounded shoulders shift the cervical load anteriorly, perpetuating upper trapezius dominance while the scapular stabilizers fatigue and atrophy. The loss of cervical lordosis and limited extension observed here, combined with the characteristic scapular elevation and protraction during examination, directly reflect this postural compensatory pattern. Management focuses on restoring motor control through lower trapezius and serratus anterior strengthening alongside upper trapezius and pectoral stretching, with ergonomic modification and postural retraining essential to prevent recurrence.",
-      "id": 18
+      "id": 18,
+      "answer_type": "pattern"
     },
     {
       "answer": "Calf Strain",
@@ -1094,7 +1097,8 @@
         }
       ],
       "explanation": "Total knee replacement (TKR) involves resurfacing the damaged articular surfaces of the tibiofemoral joint with prosthetic components, typically performed for end-stage osteoarthritis or post-traumatic arthropathy when conservative management has failed. The immediate post-operative period (4–8 weeks) is characterized by significant tissue trauma, inflammation, and quadriceps inhibition—a reflex suppression of quadriceps activation that contributes to extension lag and functional limitations like stair climbing and uneven terrain navigation. Early mobilization and aggressive physiotherapy are essential during this window to restore knee range of motion, regain quadriceps strength and neuromuscular control, and prevent arthrofibrosis; the swelling and restricted flexion seen here reflect normal post-operative inflammation, but intensive therapy can significantly improve these parameters by 12 weeks. With well-aligned prosthetic components and an intact bone-cement interface, the prognosis for functional recovery is favorable, provided rehabilitation progresses appropriately.",
-      "id": 30
+      "id": 30,
+      "answer_type": "procedure"
     },
     {
       "answer": "Scaphoid Fracture",
@@ -1641,7 +1645,8 @@
         }
       ],
       "explanation": "Cardiac rehabilitation post-myocardial infarction is a structured, supervised program designed to restore functional capacity and reduce recurrent cardiac events in patients recovering from acute coronary syndromes. Following an inferior STEMI, the left ventricle sustains ischemic injury, initially impairing contractility and exercise tolerance — hence the severely limited 2 METs and dyspnea on exertion seen early in recovery. The rehabilitation process leverages progressive exercise training, education, and psychological support to gradually improve cardiac efficiency, reduce anginal symptoms, and rebuild patient confidence; the improving wall motion on repeat stress echocardiography and absence of inducible ischemia indicate myocardial remodeling and functional recovery. This patient's anxiety about activity, while understandable post-event, is itself a modifiable risk factor that supervised rehabilitation directly addresses through graded exposure and monitoring.",
-      "id": 45
+      "id": 45,
+      "answer_type": "scenario"
     },
     {
       "answer": "Groin Strain",
@@ -1785,7 +1790,8 @@
         }
       ],
       "explanation": "Post-ankle ORIF represents the early recovery phase following surgical fixation of ankle fractures, typically with open reduction and internal fixation using plates, screws, or both to restore articular congruity and mechanical stability. At three weeks post-operatively, patients remain in a vulnerable inflammatory phase characterized by periarticular edema, pain-limited range of motion, and proprioceptive deficits—despite radiographic confirmation of anatomically sound hardware placement. The marked swelling, severe weight-bearing intolerance, and guarding observed here are expected hallmarks of early healing rather than mechanical failure; successful rehabilitation depends on carefully graded mobilization and progressive weight-bearing as soft-tissue inflammation resolves. Proprioceptive training and early dorsiflexor strengthening become critical during this window to prevent long-term ankle instability and functional limitations, even as radiographic alignment appears perfect.",
-      "id": 49
+      "id": 49,
+      "answer_type": "procedure"
     },
     {
       "answer": "Iliotibial Band Syndrome",
@@ -1801,7 +1807,8 @@
       "clues": [
         {
           "label": "Complaint",
-          "text": "A 35-year-old runner presents with lateral knee pain that develops during running activities. The pain is localized to the lateral knee joint line and describes a sharp, stabbing quality. The 4-week onset during increased training volume could represent iliotibial band syndrome, lateral meniscal tear, lateral ligament sprain, or patellofemoral pain syndrome."
+          "text": "A 35-year-old runner presents with lateral knee pain that develops during running. The pain is localised to the lateral joint line and is sharp and stabbing in quality. Onset was over 4 weeks during a period of increased training volume.",
+          "_sandbox_fix": "2026-09-02 removed differential list that named the answer"
         },
         {
           "label": "Activity",
@@ -2500,7 +2507,8 @@
       "clues": [
         {
           "label": "Complaint",
-          "text": "68-year-old retired teacher. Gradual onset shoulder pain over past 2 years, worsening progressively. Describes deep aching pain at rest, exacerbated by movement. No recent trauma or fall. Pain constant but fluctuates with activity level."
+          "text": "68-year-old retired teacher, 6 weeks after shoulder surgery for end-stage joint disease. Reports deep aching pain around the shoulder, present at rest and worse with movement, and marked stiffness. No falls or trauma since the operation.",
+          "_sandbox_fix": "2026-09-02 states surgery in complaint; removed no-prior-procedure contradiction"
         },
         {
           "label": "Activity",
@@ -2508,7 +2516,7 @@
         },
         {
           "label": "History",
-          "text": "Symptoms unresponsive to 18 months of physiotherapy, injections, and anti-inflammatories. Imaging 2 years ago showed advanced joint space narrowing. Surgical intervention performed 6 weeks ago for end-stage joint disease. Medical history: polyarticular osteoarthritis, controlled hypertension. No earlier shoulder surgeries before the recent intervention."
+          "text": "Two years of progressive shoulder pain unresponsive to 18 months of physiotherapy, injections and anti-inflammatories. Pre-operative imaging showed advanced joint space narrowing. Elective surgery 6 weeks ago replaced the joint surfaces. Medical history: polyarticular osteoarthritis, controlled hypertension."
         },
         {
           "label": "Examination",
@@ -2520,7 +2528,8 @@
         }
       ],
       "explanation": "Post-total shoulder replacement (TSR) is the surgical replacement of both humeral and glenoid articular surfaces, typically performed for end-stage osteoarthritis unresponsive to conservative management. The immediate post-operative phase (6 weeks post-surgery) is characterized by significant stiffness and guarding as the body responds to surgical trauma, capsular healing, and rotator cuff repair—explaining the profound disparity between passive and active range of motion despite radiographically sound component positioning. Recovery follows a predictable but gradual trajectory, with early gains in passive mobility under therapist guidance, followed by progressive active-assisted and active strengthening as soft tissue healing permits. The restricted external rotation and abduction seen here, combined with intact imaging and resolved inflammation, are entirely consistent with normal early post-operative TSR and should not be mistaken for complications such as component malposition or rotator cuff failure.",
-      "id": 69
+      "id": 69,
+      "answer_type": "procedure"
     },
     {
       "answer": "Post-Knee Arthroscopy",
@@ -2536,7 +2545,8 @@
       "clues": [
         {
           "label": "Complaint",
-          "text": "45-year-old presents with acute knee pain, swelling, and stiffness over the past week. Reports difficulty straightening leg fully and pain with bending. Guarding evident during movement. No recent trauma reported."
+          "text": "45-year-old presents 10 days after a keyhole knee procedure with pain, swelling and stiffness that began as soon as the anaesthetic wore off. Reports difficulty straightening the leg fully and pain with bending. Guarding evident during movement. No fall or new injury since the procedure.",
+          "_sandbox_fix": "2026-09-02 states procedure in complaint; removed no-trauma contradiction"
         },
         {
           "label": "Activity",
@@ -2544,7 +2554,7 @@
         },
         {
           "label": "History",
-          "text": "Symptoms began immediately following a minimally invasive knee procedure performed 10 days ago for investigation of chronic anterior knee discomfort. Pre-procedure imaging was inconclusive. No acute injury or fall reported during recovery period."
+          "text": "Chronic anterior knee discomfort for 8 months with inconclusive imaging, leading to diagnostic arthroscopy 10 days ago. Uneventful procedure under general anaesthetic. Discharged same day with crutches. No acute injury before or since."
         },
         {
           "label": "Examination",
@@ -2556,7 +2566,8 @@
         }
       ],
       "explanation": "Knee arthroscopy rehabilitation addresses the post-operative inflammatory response and mechanical dysfunction that follows diagnostic or therapeutic knee arthroscopy, particularly when pre-operative pathology is subtle or non-acute. The immediate onset of swelling, extension lag, and restricted range following the procedure reflects synovial irritation and reactive effusion — a predictable consequence of intra-articular instrumentation — rather than structural damage, as confirmed by intact menisci and ligaments on arthroscopic inspection. Early management focuses on controlling effusion through compression and elevation, restoring quadriceps activation to address the extension lag, and graded range-of-work restoration, as aggressive early mobilisation can perpetuate inflammation. This presentation is particularly characteristic when pre-operative imaging yields inconclusive findings, as patients and clinicians may not anticipate the significant post-operative stiffness and functional limitation that can occur despite minimal pathological findings.",
-      "id": 70
+      "id": 70,
+      "answer_type": "procedure"
     },
     {
       "answer": "Jersey Finger",
@@ -2632,7 +2643,8 @@
         }
       ],
       "explanation": "Falls in the elderly represent a multifactorial geriatric syndrome resulting from the intersection of age-related physiological decline, sensorimotor impairment, cognitive changes, and environmental hazards. This patient's presentation illustrates the classic vulnerability profile: reduced postural stability (positive Romberg, impaired tandem stance), gait disturbance with shortened stride and diminished arm swing, mild peripheral neuropathy from diabetes (ankle dorsiflexion weakness 4/5), and cognitive slowing that impairs adaptive balance responses during transitions—particularly lighting changes and floor level variations. The small vessel ischemic changes and inconsistent use of corrective lenses compound these intrinsic deficits by compromising proprioceptive and visual feedback. Risk assessment and intervention require a comprehensive approach addressing medication review, home modification, balance retraining, vision optimization, and management of underlying vascular and metabolic disease rather than focusing on any single cause.",
-      "id": 72
+      "id": 72,
+      "answer_type": "scenario"
     },
     {
       "answer": "Rectocele",
@@ -2841,7 +2853,8 @@
         }
       ],
       "explanation": "Lower Crossed Syndrome is a postural dysfunction pattern characterized by tightness in the hip flexors and lumbar erector spinae paired with weakness in the deep abdominal and hip abductor muscles, creating an anterior pelvic tilt and excessive lumbar lordosis. This imbalance is particularly prevalent in sedentary individuals whose prolonged sitting shortens hip flexors and inhibits gluteal activation, exactly mirroring this patient's 2-year progressive decline from office work. The marked positive Thomas test, weak hip abductors, poor core stability, and pain with both sitting and forward bending all reflect the characteristic movement impairments and postural derangement of the syndrome. Importantly, the absent structural pathology on imaging confirms that the lower back and sacroiliac pain stems from muscular imbalance and faulty movement patterns rather than disc or neural pathology — making this highly responsive to targeted stretching of hip flexors and progressive core and gluteal strengthening.",
-      "id": 78
+      "id": 78,
+      "answer_type": "pattern"
     },
     {
       "answer": "Retrocalcaneal Bursitis",
@@ -3208,7 +3221,8 @@
       ],
       "explanation": "Post-carpal tunnel release syndrome can occur weeks to months after surgical decompression, resulting from residual nerve compression, inadequate release, scar tissue formation, or iatrogenic injury during the procedure. Despite successful surgical intervention for the original median nerve compression, persistent or recurrent focal demyelination—evidenced here by slowed motor latencies and reduced sensory conduction—indicates incomplete decompression or post-operative scarring restricting nerve gliding. The reduced two-point discrimination and weakness in abductor pollicis brevis, combined with the well-healed incision and absence of systemic factors, points to a local post-operative complication rather than recurrent idiopathic carpal tunnel syndrome. Further imaging or exploration may be warranted if symptoms fail to resolve with conservative management over the coming weeks, as some post-operative dysfunction improves with gradual desensitization and mobilization.",
       "id": 88,
-      "condition": "Post-Carpal Tunnel Release"
+      "condition": "Post-Carpal Tunnel Release",
+      "answer_type": "procedure"
     },
     {
       "id": 89,
@@ -3244,7 +3258,8 @@
           "text": "Post-operative AP and lateral knee X-rays: cemented prosthetic components well-aligned, no periprosthetic fractures, no loose or malpositioned implants. Alignment within normal parameters."
         }
       ],
-      "explanation": "Total knee replacement (TKR) is a surgical procedure in which severely arthritic knee joint surfaces are replaced with prosthetic components, typically performed for end-stage osteoarthritis unresponsive to conservative care. In the immediate post-operative period (1–3 days post-op), significant quadriceps inhibition is expected due to surgical trauma, pain, and swelling, manifesting as extensor lag and severe loss of active knee flexion — as seen in this patient's inability to achieve flexion beyond 70 degrees or perform functional tasks like sit-to-stand. The hard end-feel and pain-limited range reflect post-operative stiffness and inflammation rather than implant failure; well-aligned prosthetic components on imaging confirm successful surgical placement. Early physiotherapy focusing on pain management, quadriceps re-education, and progressive range-of-motion work is critical at this stage to prevent stiffness and restore functional mobility, which typically improves significantly over the first 6 weeks."
+      "explanation": "Total knee replacement (TKR) is a surgical procedure in which severely arthritic knee joint surfaces are replaced with prosthetic components, typically performed for end-stage osteoarthritis unresponsive to conservative care. In the immediate post-operative period (1–3 days post-op), significant quadriceps inhibition is expected due to surgical trauma, pain, and swelling, manifesting as extensor lag and severe loss of active knee flexion — as seen in this patient's inability to achieve flexion beyond 70 degrees or perform functional tasks like sit-to-stand. The hard end-feel and pain-limited range reflect post-operative stiffness and inflammation rather than implant failure; well-aligned prosthetic components on imaging confirm successful surgical placement. Early physiotherapy focusing on pain management, quadriceps re-education, and progressive range-of-motion work is critical at this stage to prevent stiffness and restore functional mobility, which typically improves significantly over the first 6 weeks.",
+      "answer_type": "scenario"
     },
     {
       "answer": "Calcific Tendinitis",
@@ -3926,7 +3941,8 @@
         }
       ],
       "explanation": "Post-carpal tunnel release syndrome occurs when symptoms recur after surgical decompression, either from inadequate initial release, recurrent nerve compression, or scar tissue reformation at the surgical site. Despite a well-healed wound and absence of infection or hematoma, the thickened flexor retinaculum and recurrent conduction slowing across the tunnel indicate the median nerve has been re-compressed — a known complication in 5-10% of cases, particularly with repetitive hand loading. The gradual onset weeks after initial improvement, combined with positive Phalen's testing and paresthesias in the median nerve distribution during sustained gripping, mirrors the original presentation and suggests inadequate scarring or reformation of the compression. Management typically involves modification of provocative activities, potential botulinum toxin injection to reduce muscular compression, or in resistant cases, revision surgery with consideration of flexor tenosynovial release or internal neurolysis.",
-      "id": 108
+      "id": 108,
+      "answer_type": "procedure"
     },
     {
       "answer": "Acromioclavicular Joint Sprain",
@@ -4577,7 +4593,8 @@
         }
       ],
       "explanation": "Post-carpal tunnel release syndrome describes a spectrum of poor outcomes following decompression surgery, ranging from incomplete nerve recovery to recurrent compression from scar tissue formation or inadequate initial decompression. The persistent paresthesias and nocturnal symptoms weeks after surgery, combined with positive Tinel's sign at the incision site and residual conduction slowing on EMG/NCS, indicate that the nerve has not fully recovered from either the original compression or the surgical trauma itself. Intrinsic hand weakness and thickened scar tissue are hallmarks of this complication, reflecting both axonal damage and the inflammatory response to surgery. Management typically involves scar mobilization, graded functional retraining, and in cases of true recurrent compression or inadequate initial decompression, consideration of revision surgery or neurolysis.",
-      "id": 126
+      "id": 126,
+      "answer_type": "procedure"
     },
     {
       "answer": "Rotator Cuff Tear",
@@ -5219,7 +5236,8 @@
       ],
       "explanation": "Cancer rehabilitation addresses the complex, multisystem sequelae of oncologic treatment that extend far beyond remission—in this case, chemotherapy-induced cardiotoxicity and radiation-induced pulmonary fibrosis combining to create severe functional limitation. The disproportionate fatigue, dyspnea at minimal exertion, and reduced ejection fraction reflect direct myocardial and pulmonary toxicity from anthracyclines and thoracic radiation, compounded by chemotherapy-related peripheral neuropathy that further limits physical conditioning. Cancer survivors often present with this constellation of treatment-related complications requiring integrated cardiopulmonary rehabilitation, graded exercise prescription, and psychosocial support—a distinct rehabilitation paradigm from single-system recovery. Recognizing these toxicities early allows physiotherapists to safely rebuild exercise tolerance while monitoring cardiac and respiratory thresholds in a population where conventional exercise guidelines must be substantially modified.",
       "id": 144,
-      "condition": "Cancer Rehabilitation"
+      "condition": "Cancer Rehabilitation",
+      "answer_type": "scenario"
     },
     {
       "answer": "Pectoralis Major Rupture",
@@ -5849,7 +5867,8 @@
         }
       ],
       "explanation": "Post-total hip replacement (THR) involves significant soft-tissue disruption—particularly of the hip abductors (gluteus medius and minimus)—during the surgical approach, necessitating a structured 6–12 week rehabilitation protocol to restore strength and mobility. The marked weakness in hip abduction (2/5), combined with limited flexion ROM and anterior hip pain on internal rotation, reflects post-operative gluteal inhibition and capsular tightness rather than mechanical implant failure, as confirmed by normal imaging. The difficulty with bed mobility, compensatory limp pattern, and pain with prolonged sitting are characteristic of the early post-operative phase when tissue healing remains incomplete and neuromuscular control has not yet recovered. Progressive abductor strengthening, ROM restoration, and activity grading are essential to restore functional weight-bearing and prevent chronic movement compensations.",
-      "id": 161
+      "id": 161,
+      "answer_type": "procedure"
     },
     {
       "answer": "Olecranon Bursitis",
@@ -5926,7 +5945,8 @@
         }
       ],
       "explanation": "Delirium is an acute confusional state characterized by inattention, disorganized thinking, and altered consciousness that develops over hours to days—distinct from the gradual cognitive decline of dementia. In this post-operative context, delirium arose from multiple precipitating factors layered onto a vulnerable substrate: pre-existing mild cognitive impairment, opioid introduction, sedating medications, and the physiological stress of hip fracture and surgery, all creating a drug-induced and metabolic delirium despite normal investigations. The fluctuating presentation—daytime somnolence alternating with nocturnal agitation and disorientation to time and place—is classically delirious, as is the impaired attention demonstrated by poor digit span and inability to sequence months backward. Recognition of delirium as a medical emergency requiring medication review, pain optimization, sleep hygiene, mobility, and cognitive reorientation is critical to rehabilitation success; it is not dementia progression, and early intervention can prevent functional decline and prolonged hospital stay.",
-      "id": 163
+      "id": 163,
+      "answer_type": "scenario"
     },
     {
       "answer": "Overactive Bladder",
@@ -6430,7 +6450,8 @@
         }
       ],
       "explanation": "Post-total hip replacement complications can arise from the surgical approach itself, particularly the anterolateral approach used here, which places the superior gluteal nerve at risk of stretch injury or irritation as it passes near the surgical field. The resulting gluteal nerve palsy manifests as selective weakness of hip abduction and flexion with characteristic atrophy of the gluteus medius and minimus, producing a positive Trendelenburg gait and functional deficits in climbing stairs and lateral weight shifting. Though prosthetic positioning appears sound on imaging, the MRI evidence of muscle signal change and atrophy confirms neuromuscular compromise rather than component failure. Recovery can be prolonged, sometimes requiring 6–12 months, and demands careful rehabilitation to prevent hip instability and falls while neural function recovers.",
-      "id": 177
+      "id": 177,
+      "answer_type": "procedure"
     },
     {
       "answer": "Cubital Tunnel Syndrome",
@@ -6712,7 +6733,8 @@
         }
       ],
       "explanation": "Upper crossed syndrome is a postural dysfunction pattern characterized by tightness in the upper trapezius and pectoralis muscles paired with weakness in the lower trapezius and serratus anterior, creating a muscular imbalance across the cervical and shoulder girdle. This pattern develops insidiously in sedentary workers through prolonged forward head and rounded shoulder postures, which gradually reinforce dysfunctional motor patterns and alter scapulohumeral rhythm. The cervical headaches and limited extension ROM reflect secondary cervical spine loading as the posterior chain becomes overworked to stabilize a persistently anteriorly-positioned head — a compensation that becomes increasingly entrenched over years of poor postural habits. Treatment success requires not just temporary relief through stretching, but systematic restoration of lower trapezius and serratus anterior activation combined with sustained postural correction, distinguishing this from acute mechanical neck pain.",
-      "id": 185
+      "id": 185,
+      "answer_type": "pattern"
     },
     {
       "answer": "Tibial Shaft Fracture",
@@ -6892,7 +6914,8 @@
         }
       ],
       "explanation": "Post-cardiac surgery rehabilitation addresses the physiological and psychological sequelae that follow coronary artery bypass grafting or valve replacement, where patients experience deconditioning, lower limb complications from saphenous vein harvesting, and often significant anxiety despite successful surgical outcome. The combination of reduced exercise tolerance, progressive fatigue, and fear-avoidance behaviour reflects both genuine cardiorespiratory deconditioning and the psychological impact of major surgery—factors that structured cardiac rehabilitation specifically targets through graded aerobic training, strength work, and psychoeducation. In this case, the left lower leg swelling and skin changes represent saphenous vein harvest sequelae, common post-CABG complications that cause venous insufficiency and lymphedema; these require early mobilization and lymphatic management to prevent chronic morbidity. The absence of a formal rehabilitation program is notable, as early engagement (typically 4-8 weeks post-surgery) with supervised exercise, education, and graduated return-to-function is the standard approach to restoring functional capacity and confidence in this population.",
-      "id": 190
+      "id": 190,
+      "answer_type": "scenario"
     },
     {
       "answer": "Runner's Nipple",
@@ -7042,7 +7065,8 @@
       ],
       "explanation": "Post-total hip replacement complications present with acute onset pain and functional loss in the weeks following surgery, often stemming from soft tissue inflammation, capsular tightness, or early hip precaution violations rather than implant failure. The severe restriction in flexion and adduction with preserved abduction and external rotation is characteristic of capsular contracture or anterior soft tissue irritation, commonly triggered by crossing the midline — a motion that violates the 90-degree flexion precaution critical in the early post-operative phase. Normal radiographic alignment and absence of loosening or radiolucencies rule out mechanical implant problems, pointing instead to soft tissue healing dysfunction and motor control deficits, as reflected in the positive Trendelenburg sign. Early physiotherapy addressing gentle progressive range of motion, weight-bearing tolerance, and hip precaution education is essential to prevent chronic stiffness and restore functional independence.",
       "id": 194,
-      "condition": "Post-Total Hip Replacement"
+      "condition": "Post-Total Hip Replacement",
+      "answer_type": "procedure"
     },
     {
       "answer": "Trigger Finger",
@@ -7368,7 +7392,8 @@
         }
       ],
       "explanation": "Lower crossed syndrome is a postural dysfunction characterized by a specific pattern of muscular imbalance: tightness in the hip flexors and lumbar extensors paired with weakness in the abdominal core and hip abductors. This imbalance drives anterior pelvic tilt and excessive lumbar lordosis, creating a compensatory 'crossed' pattern of muscle tightness and weakness that perpetuates poor spinal mechanics. The insidious onset in a sedentary worker with minimal neurological involvement and normal imaging is classic—prolonged sitting selectively shortens hip flexors and erector spinae while the deep core and gluteal stabilizers atrophy from disuse. Correction of the postural fault and progressive strengthening of the abdominal and hip abductor musculature, combined with stretching of the tight hip flexors, forms the foundation of management and explains why postural corrections and standing provide rapid relief.",
-      "id": 203
+      "id": 203,
+      "answer_type": "pattern"
     },
     {
       "answer": "Hammer Toe",
@@ -7520,7 +7545,8 @@
         }
       ],
       "explanation": "Post-cardiac surgery rehabilitation addresses the complex recovery phase following major cardiac procedures like CABG, where patients must gradually restore cardiopulmonary fitness and musculoskeletal function while managing surgical trauma and cardiac remodeling. In the early post-operative period (4-12 weeks), exercise intolerance typically reflects deconditioning and protective guarding rather than cardiac dysfunction — as evidenced here by normalized ejection fraction and stress testing, yet marked dyspnea and disproportionate tachycardia with minimal exertion. Sternotomy creates a significant musculoskeletal insult: chest wall splinting, restricted shoulder mobility, and paradoxical breathing patterns perpetuate a cycle of reduced activity and further deconditioning. Effective rehabilitation progressively challenges cardiovascular capacity while addressing incisional pain, breathing mechanics, and shoulder mobility through graded aerobic training, breathing re-education, and early range-of-motion work — allowing safe progression toward functional recovery.",
-      "id": 207
+      "id": 207,
+      "answer_type": "scenario"
     },
     {
       "answer": "Tibial Stress Fracture",
@@ -7664,7 +7690,8 @@
         }
       ],
       "explanation": "Shoulder arthroscopy is a minimally invasive surgical technique used to visualize, diagnose, and treat intra-articular shoulder pathology, commonly performed for rotator cuff repairs following traumatic overhead injuries. Post-operative stiffness is a frequent complication, particularly in the early phase when protective muscle guarding and capsular adhesions can significantly limit active range of motion despite intact repair integrity—as evidenced by the substantial gap between passive and active ROM in this case. The marked discrepancy between passive mobility (110° flexion) and active movement (60° flexion) indicates pain-inhibited guarding and soft tissue restrictions rather than structural failure, a pattern that typically responds to progressive, carefully dosed physiotherapy focusing on pain modulation and graduated mobilization. Early recognition of this stiffness pattern and aggressive but controlled rehabilitation are critical to prevent chronic capsular contracture and functional loss, particularly in young, active patients who require overhead mobility for return to sport.",
-      "id": 211
+      "id": 211,
+      "answer_type": "procedure"
     },
     {
       "answer": "Radial Tunnel Syndrome",
@@ -8269,7 +8296,8 @@
         }
       ],
       "explanation": "Post-mastectomy rehabilitation addresses the predictable loss of shoulder mobility and function that follows breast cancer surgery, particularly when axillary dissection disrupts neurovascular structures and surrounding soft tissues. The constellation of restricted internal rotation, scapular dyskinesis, and functional deficits in overhead and cross-body movements reflects adhesive capsulitis developing from surgical immobility and tissue trauma — a condition fundamentally different from rotator cuff pathology or neurological injury, which imaging and strength testing effectively exclude. Early intensive physiotherapy, incorporating gentle glenohumeral mobilization, scapular stabilization, and progressive loading, is critical during this window; delayed intervention significantly prolongs recovery and functional limitations. Understanding that this represents a mechanical restriction rather than neural or structural damage guides treatment toward active-assisted and active-resisted exercise, not protection or decompression.",
-      "id": 228
+      "id": 228,
+      "answer_type": "scenario"
     },
     {
       "answer": "Biceps Tendinopathy",
@@ -8886,7 +8914,8 @@
         }
       ],
       "explanation": "Post-thoracotomy rehabilitation addresses the complex musculoskeletal and respiratory sequelae following major chest surgery, where the surgical incision through the chest wall and rib spreaders cause acute trauma to intercostal muscles, fascia, and neural structures. The characteristic presentation combines chest wall pain exacerbated by deep breathing and coughing with profound functional limitation in upper limb tasks—reflective of both direct surgical trauma and the protective guarding that accompanies chest pain. Scapular dyskinesis, restricted shoulder external rotation, and shallow breathing patterns are hallmark secondary complications: serratus anterior inhibition from long thoracic nerve irritation, pectoral tightness from scar adhesions, and diaphragmatic splinting from pain all converge to create a cycle of restricted thoracic mobility and reduced functional capacity. Early intervention targeting pain-free breathing re-education, gentle scar mobilisation, and progressive scapular and shoulder control is essential to prevent chronic stiffness and facilitate return to overhead activities.",
-      "id": 245
+      "id": 245,
+      "answer_type": "scenario"
     },
     {
       "answer": "Adhesive Capsulitis",
@@ -9412,7 +9441,8 @@
         }
       ],
       "explanation": "Post-mastectomy rehabilitation addresses the predictable sequelae of breast cancer surgery, particularly the loss of shoulder mobility and functional capacity that follows axillary dissection. The removal of lymph nodes and surrounding tissue creates scar formation and fibrous adhesions in the axilla — a phenomenon sometimes termed 'axillary web syndrome' — which mechanically restricts shoulder abduction and external rotation. Eight weeks post-operatively, the progressive restriction in overhead reaching and the palpable firmness across the chest wall and axilla reflect the maturing scar tissue creating adhesions between muscle layers and the surgical bed. The concurrent lymphedema (swelling in the forearm and hand) is a common companion to axillary dissection, resulting from disrupted lymphatic drainage; early intervention with gentle ROM, soft tissue mobilization, and compression management is critical to prevent contracture and restore functional independence in grooming, dressing, and upper limb activities.",
-      "id": 260
+      "id": 260,
+      "answer_type": "scenario"
     },
     {
       "answer": "Supraspinatous Tendon Calcification",
@@ -9909,7 +9939,8 @@
         }
       ],
       "explanation": "Post-meniscectomy knee pain represents the immediate sequelae following surgical removal of damaged meniscal tissue, typically required when traumatic tears compromise joint mechanics beyond repair. The meniscus serves as both a shock absorber and load distributor; its loss increases mechanical stress on articular cartilage and alters knee biomechanics, particularly in deep flexion and rotational movements where meniscal stability is critical. The presentation here — medial joint line tenderness, difficulty with stairs and squatting, and quadriceps weakness with VMO atrophy — reflects the acute post-operative phase and loss of that protective meniscal function, combined with expected muscle inhibition and effusion following arthroscopic surgery. Recovery depends on progressive weight-bearing rehabilitation and strength restoration; persistent symptoms beyond 6–8 weeks warrant reassessment for residual damage, post-operative adhesions, or early osteoarthritis.",
-      "id": 274
+      "id": 274,
+      "answer_type": "procedure"
     },
     {
       "answer": "Jersey Finger",
@@ -10124,7 +10155,8 @@
         }
       ],
       "explanation": "Post-traumatic stress disorder with physical rehabilitation needs represents a distinct presentation where psychological trauma becomes embodied in persistent musculoskeletal dysfunction, particularly in the neck and upper back—the region often associated with threat detection and protective responses. Following the motor vehicle collision, while acute soft tissue injury resolved, the nervous system remained sensitized, manifesting as chronic muscle guarding, hypervigilance to sensory triggers (loud noises, confined spaces), and centralized pain processing that extends beyond the original injury distribution. The protective muscle tension in the cervical and thoracic spine reflects ongoing defensive posturing rather than structural pathology, explaining why imaging is unremarkable yet symptoms persist and intensify unpredictably. Rehabilitation here requires addressing both the musculoskeletal manifestations—through graded movement retraining and trigger point management—and the underlying hyperarousal and fear-avoidance patterns that perpetuate the protective cycle, often necessitating integrated care with mental health professionals.",
-      "id": 280
+      "id": 280,
+      "answer_type": "scenario"
     },
     {
       "answer": "Reactive Arthritis",
@@ -10478,7 +10510,8 @@
         }
       ],
       "explanation": "Cervical myelopathy from degenerative disc disease causes progressive spinal cord compression, leading to the characteristic constellation of bilateral upper extremity weakness, hyperreflexia, and gait disturbance seen in this patient. The T2 signal changes and cord compression at C5-C6 reflect demyelination and axonal injury from chronic mechanical pressure, explaining why conservative measures fail to halt neurological decline. Anterior cervical discectomy and fusion (ACDF) removes the offending disc material and restores disc space height, directly decompressing the cord and preventing irreversible myelopathic changes. The normalizing cord signal and functional recovery post-operatively underscore why surgical intervention is critical when imaging and clinical signs indicate active myelopathy — timing is essential to prevent permanent neurological loss.",
-      "id": 290
+      "id": 290,
+      "answer_type": "procedure"
     },
     {
       "answer": "Kienbock's Disease",
@@ -10619,7 +10652,8 @@
         }
       ],
       "explanation": "Post-traumatic stress disorder in the context of physical rehabilitation occurs when trauma-related psychological symptoms—hyperarousal, re-experiencing, and avoidance—become the primary barrier to recovery from a healed physical injury. In this case, the tibia fracture has consolidated with minimal residual pathology, yet persistent pain and movement dysfunction are driven by fear-avoidance and catastrophic thinking rather than active tissue damage. The constellation of intrusive trauma memories triggered by rehabilitation settings, exaggerated startle responses during examination, and disproportionate fear of re-injury despite intact strength and sensation exemplifies how the nervous system remains sensitized to threat following major trauma. Effective rehabilitation requires integrated trauma-informed physiotherapy that addresses both the hypervigilant autonomic state and graded, confidence-building exposure to previously avoided movements, rather than focusing solely on the now-healed structural injury.",
-      "id": 294
+      "id": 294,
+      "answer_type": "scenario"
     },
     {
       "answer": "Rheumatoid Arthritis",
@@ -11449,7 +11483,8 @@
       ],
       "explanation": "Post-total hip replacement (THR) represents the early phase following surgical arthroplasty for end-stage osteoarthritis, typically within the first 2-6 weeks when tissue healing and neuromuscular re-education are paramount. The acute onset of pain and severe functional limitation in this patient reflects expected post-operative inflammation, muscle guarding, and protective inhibition rather than implant failure — plain radiographs confirm proper component positioning without signs of loosening or dislocation. The dramatic restrictions in hip flexion beyond 60 degrees and adduction, combined with positive Trendelenburg sign and weak straight leg raise, are characteristic of the immediate post-operative period when hip musculature is inhibited by pain and surgical trauma to the hip abductors and flexors. Successful rehabilitation demands progressive passive and active-assisted range of motion, protected weight-bearing progression, and resolution of muscle guarding over weeks to months, with most patients achieving functional independence by 8-12 weeks if complications such as DVT, infection, or instability are absent.",
       "id": 317,
-      "condition": "Post-Total Hip Replacement"
+      "condition": "Post-Total Hip Replacement",
+      "answer_type": "procedure"
     },
     {
       "answer": "Medial Epicondylitis",
@@ -11951,7 +11986,8 @@
         }
       ],
       "explanation": "Burns rehabilitation addresses the complex tissue remodeling and functional recovery following thermal injury, particularly during the scar maturation phase where hypertrophic scarring and contracture formation dominate the clinical picture. Deep partial and full-thickness burns destroy the dermis and its elastic architecture, triggering excessive collagen deposition and myofibroblast contraction that can persist for months—the blanching erythema and thickened dermis seen here are hallmarks of this phase. The characteristic loss of overhead reach and ankle dorsiflexion reflects contracture development across joints, driven by scar tension along tissue planes and compounded by pain-guarded immobility. Early aggressive therapy—stretching, splinting, and progressive loading—is critical to counteract these contractures and restore functional range before scar tissue matures into fixed deformities.",
-      "id": 331
+      "id": 331,
+      "answer_type": "scenario"
     },
     {
       "answer": "Carpal Tunnel Syndrome",
@@ -12914,7 +12950,8 @@
         }
       ],
       "explanation": "Post-ACL reconstruction represents the early rehabilitation phase following surgical graft placement, typically the first 8-12 weeks when the graft is establishing bony integration at the tunnel entrances—a critical window for functional recovery. The persistent quadriceps weakness and extensor lag are hallmark features of this phase, reflecting both the trauma of surgery and reflex inhibition from joint effusion and pain, which must be addressed aggressively to prevent long-term strength deficits. The residual difficulty with dynamic pivoting and weight-bearing on stairs reflects incomplete neuromuscular control and proprioceptive retraining, even as the Lachman test demonstrates significantly improved passive stability compared to the acute tear. Early post-operative management focuses on restoring quadriceps strength through isolated and functional strengthening, regaining full extension range of motion, and progressively loading the graft while protecting it from excessive rotational stress.",
-      "id": 358
+      "id": 358,
+      "answer_type": "procedure"
     },
     {
       "answer": "Carpal Tunnel Syndrome",
@@ -13411,7 +13448,8 @@
         }
       ],
       "explanation": "Post-total knee replacement (TKR) is a major reconstructive procedure requiring months of progressive rehabilitation to restore function and manage the inflammatory response to surgical trauma. Early post-operative recovery typically involves significant pain, quadriceps weakness, and an extension lag — the inability to fully straighten the knee actively — as neuromuscular control gradually returns despite improving passive range of motion. The variable pain pattern and activity-dependent symptoms reflect the balance between tissue healing and the mechanical demands of mobilization; walking with assistive device support and progressive sit-to-stand transfers are hallmark early goals that reduce pain while protecting the healing soft tissues. Well-aligned prosthesis position and absence of loosening are encouraging prognostic signs, but persistence of the extension lag and quadriceps weakness necessitate targeted strengthening and proprioceptive retraining to prevent long-term mobility limitations.",
-      "id": 372
+      "id": 372,
+      "answer_type": "procedure"
     },
     {
       "answer": "Trigger Finger",
@@ -13910,7 +13948,8 @@
         }
       ],
       "explanation": "Post-thoracotomy rehabilitation addresses the predictable musculoskeletal sequelae following cardiac or pulmonary surgery, where incision through the sternum or ribs and retraction of chest wall structures causes inflammation, scar tissue formation, and reflex inhibition of surrounding muscles. The constellation of findings—anterior chest wall tenderness with a healing surgical scar, restricted shoulder abduction and external rotation, scapular dyskinesia, and reduced inspiratory capacity with accessory muscle overuse—reflects both direct surgical trauma and the kinetic chain dysfunction that develops when patients guard the chest wall and avoid normal movement patterns. The gradual improvement over 4–6 weeks is typical as inflammation resolves and protective muscle guarding begins to normalize, though restoration of full shoulder mobility and breathing mechanics requires targeted rehabilitation to address scar tissue mobility, serratus anterior and lower trapezius function, and thoracic cage mechanics. Comorbid COPD may further limit exercise tolerance and complicate the recovery trajectory, necessitating graded aerobic progression alongside manual therapy and motor control training.",
-      "id": 386
+      "id": 386,
+      "answer_type": "scenario"
     },
     {
       "answer": "Wrist Sprain",
@@ -14797,7 +14836,8 @@
         }
       ],
       "explanation": "Lumbar spinal fusion is a definitive surgical intervention for symptomatic lumbar stenosis with neurogenic claudication that has failed conservative management, involving arthrodesis across degenerated segments to eliminate motion and decompress neural structures. This patient's significant stenosis at L4-L5 with facet arthropathy and two years of progressive symptoms despite physiotherapy and analgesia made her an appropriate surgical candidate. The post-operative imaging demonstrates successful hardware positioning with early bony bridging, while the markedly reduced neurogenic claudication distance prior to surgery — limited to 100 metres — reflects the mechanical decompression achieved by restoring disc height and sagittal alignment. Current ROM restrictions and modest pain with movement are typical early post-operative findings; neurological recovery and functional capacity continue to improve over the following months as bony fusion matures and protective neuromuscular patterns normalize.",
-      "id": 411
+      "id": 411,
+      "answer_type": "procedure"
     },
     {
       "answer": "Lateral Epicondylitis",
@@ -15117,7 +15157,8 @@
         }
       ],
       "explanation": "Cardiac rehabilitation post-myocardial infarction addresses the profound deconditioning and reduced cardiac reserve that follows acute transmural injury, particularly when anterior wall involvement compromises left ventricular function and ejection fraction. The marked dyspnea on minimal exertion — struggling to climb stairs that were previously manageable — reflects both the reduced contractility of the scarred, akinetic anterior wall and the compensatory tachycardia and elevated filling pressures the weakened ventricle generates. With an ejection fraction of 35% and secondary mitral regurgitation from LV dilatation, the heart's ability to increase output during activity is severely limited, necessitating graded aerobic reconditioning, strength work, and cardiac risk factor modification to improve functional capacity and reduce arrhythmia risk. Early mobilization within safe hemodynamic limits remains critical in this phase to reverse deconditioning whilst the myocardium undergoes remodelling.",
-      "id": 420
+      "id": 420,
+      "answer_type": "scenario"
     },
     {
       "answer": "Turf Toe",
@@ -15262,7 +15303,8 @@
         }
       ],
       "explanation": "Post-rotator cuff repair represents the early mobilization phase following surgical reattachment of a torn rotator cuff, where the primary challenge is balancing tissue healing with prevention of stiffness. At 4 weeks post-op, the repair site is in early collagen deposition but remains mechanically fragile, necessitating strict ROM limits and pain-controlled progression—typically capped around 70° of flexion and 30° of external rotation to avoid excessive tensioning of the healing tendon. The guarding and scapulohumeral rhythm disruption reflect both pain inhibition and neuromuscular deconditioning after immobilization. Successful progression depends on gradual, symptom-limited strengthening as imaging confirms repair integrity, with the goal of restoring functional ROM and rotator cuff strength over 3–6 months while minimizing re-tear risk.",
-      "id": 424
+      "id": 424,
+      "answer_type": "procedure"
     },
     {
       "answer": "Elbow Dislocation",
@@ -15687,7 +15729,8 @@
         }
       ],
       "explanation": "Shoulder arthroscopy is a minimally invasive surgical procedure used to diagnose and treat intra-articular and subacromial pathology, including rotator cuff tears, impingement, and osteoarthritis. In this case, the patient underwent arthroscopic subacromial decompression to relieve chronic impingement—the removal of osteophytes and inflamed tissue explains the enlarged subacromial space on post-operative imaging. The acute post-operative phase typically presents with pain, stiffness, and guarding (as seen with the supraspinatus and infraspinatus weakness), which gradually resolve with appropriate rehabilitation over weeks to months. The intact rotator cuff and mild subdeltoid edema are reassuring findings consistent with normal healing, and symptom management through progressive physiotherapy remains the priority during this recovery window.",
-      "id": 436
+      "id": 436,
+      "answer_type": "procedure"
     },
     {
       "answer": "Boutonniere Deformity",
@@ -15754,7 +15797,8 @@
         }
       ],
       "explanation": "Delirium in the rehabilitation phase represents the ongoing cognitive and functional recovery after an acute delirious episode, typically following critical illness such as sepsis. The acute infection triggered diffuse cerebral dysfunction—manifested during hospitalization as agitation and confusion—and while the infection has resolved, the brain's recovery lags behind physiological markers. Post-ICU delirium rehabilitation is characterized by persistent inattention, disorientation to time and place, proximal weakness from critical illness myopathy, and fatigue lasting weeks to months even after infection clearance and normal metabolic workup. This patient's preserved alertness, lack of focal neurological signs, slow EEG background activity, and difficulty sustaining attention over 90 seconds are hallmark features of the rehabilitation phase—distinct from the acute hyperactive or hypoactive delirium seen in the ICU, and requiring graded mobility, cognitive retraining, and realistic expectation-setting as core rehabilitation goals.",
-      "id": 438
+      "id": 438,
+      "answer_type": "scenario"
     },
     {
       "answer": "Central Sensitisation Syndrome",
@@ -16107,7 +16151,8 @@
       ],
       "explanation": "Post-total shoulder replacement (TSR) arthroplasty represents a surgical intervention for end-stage glenohumeral arthropathy, yet the early post-operative period carries significant risk for stiffness and dysfunction—particularly when pre-operative mobility was already compromised. The acute, severe loss of motion with pain on both active and passive attempts, combined with marked guarding and apprehension, reflects the inflammatory cascade and protective muscle splinting that commonly follows TSR, especially in patients with poor baseline range. The imaging findings of secure component fixation and expected soft tissue inflammation confirm a mechanically successful procedure, yet this does not guarantee functional recovery; aggressive pain management and carefully graded passive mobilization during this critical 6-week window are essential to prevent adhesion formation and arthrofibrosis. The visible atrophy and psychological apprehension underscore why early physiotherapy intervention is crucial in TSR rehabilitation, as neuromuscular re-education and progressive loading must resume promptly once acute inflammation is managed.",
       "id": 448,
-      "condition": "Post-Total Shoulder Replacement"
+      "condition": "Post-Total Shoulder Replacement",
+      "answer_type": "procedure"
     },
     {
       "answer": "Wrist Sprain",
@@ -16562,7 +16607,8 @@
       ],
       "explanation": "Post-spinal fusion syndrome represents the immediate post-operative recovery phase following instrumented fusion for degenerative disc disease and spinal stenosis, during which the patient must maintain strict immobilization and activity restriction while bone fusion consolidates and neural tissues recover from decompression. The acute worsening 2–3 weeks post-operatively, coupled with severe movement-related pain and profound functional limitation in sitting, bending, and mobility, reflects normal post-operative inflammation, surgical trauma to musculature, and adherence to critical bracing protocols—not hardware failure or infection, as imaging confirms proper alignment and early callus formation. Persistent lower extremity weakness and sensory changes are common in this phase as demyelinated nerve roots gradually remyelinate following decompression; these typically resolve over weeks to months with structured rehabilitation. The rehabilitation focus at this stage emphasizes gradual mobilization within post-operative restrictions, core activation without flexion/extension, and progressive functional retraining to restore tolerance for sitting, standing, and walking.",
       "id": 461,
-      "condition": "Post-Spinal Fusion"
+      "condition": "Post-Spinal Fusion",
+      "answer_type": "procedure"
     },
     {
       "answer": "Calcific Tendinitis",
@@ -16968,7 +17014,8 @@
         }
       ],
       "explanation": "Post-laminectomy syndrome describes persistent or recurrent radicular symptoms following lumbar decompressive surgery, most commonly due to re-herniation at the same level or adjacent segment pathology, occurring in 5–15% of post-operative cases. The mechanism here involves recurrent neural compression of the L5 root, evidenced by the unchanged dermatomal motor deficit (weak ankle dorsiflexion at 3/5) and limited straight leg raise 10 weeks post-operatively — timepoints where functional improvement should be evident. Unlike post-operative inflammation which typically resolves within 4–6 weeks, true re-compression produces persistent or worsening radicular pain with ongoing neurological deficits. Management hinges on imaging confirmation of structural recurrence and the patient's tolerance for conservative care versus revision decompression.",
-      "id": 472
+      "id": 472,
+      "answer_type": "procedure"
     },
     {
       "answer": "Serratus Anterior Injury",
@@ -17326,7 +17373,8 @@
         }
       ],
       "explanation": "Post-total hip replacement (THR) recovery involves a predictable rehabilitation phase as soft tissues adapt to the prosthetic construct and neuromuscular control is restored. The guarded movement patterns—particularly the restriction in combined flexion, adduction, and internal rotation—reflect both protective muscle inhibition and the anatomical constraints imposed by hip precautions designed to prevent prosthetic dislocation in the early postoperative period. The weakness of hip abductors (3/5) and positive Trendelenburg sign at 6 weeks are typical findings as the gluteus medius recovers from surgical disruption and denervation, a process that typically requires 8–12 weeks or longer for full strength restoration. Well-positioned radiographic findings rule out mechanical complications, confirming that the functional deficits and pain are attributable to normal postoperative sequelae rather than component malposition or loosening, and that continued progressive loading and strengthening in physiotherapy will drive functional recovery toward the expected plateau at 3–6 months post-surgery.",
-      "id": 482
+      "id": 482,
+      "answer_type": "procedure"
     },
     {
       "answer": "Shoulder Labral Tear",
@@ -17401,7 +17449,8 @@
         }
       ],
       "explanation": "Frailty syndrome is a geriatric condition characterised by loss of physiological reserve across multiple systems — manifesting as progressive weakness, weight loss, reduced physical activity tolerance, and increased vulnerability to stressors — rather than a single disease process. It typically emerges from a combination of sarcopenia, micronutrient insufficiency, chronic low-grade inflammation, and social isolation, as reflected in this patient's unintentional weight loss, reduced grip and hip extension strength, and slow gait velocity below the frailty threshold of 0.6 m/s. The absence of acute illness, normal metabolic screening, and low-normal serum albumin point toward cumulative nutritional decline and disuse rather than reversible acute pathology. Recognition of frailty phenotype is crucial because these patients have substantially elevated risk of falls, hospitalisation, and functional decline with minimal physiological perturbation — making preventive strength training, nutritional optimisation, and social engagement core rehabilitation priorities.",
-      "id": 484
+      "id": 484,
+      "answer_type": "scenario"
     },
     {
       "answer": "Little League Elbow",
@@ -17641,7 +17690,8 @@
         }
       ],
       "explanation": "Post-laminectomy syndrome describes persistent or recurrent symptoms following spinal decompression surgery, occurring in 10–15% of cases despite technically adequate neural decompression. The condition arises from multiple mechanisms: incomplete resolution of pre-existing nerve damage (as reflected in the persistent ankle dorsiflexion weakness matching the pre-operative deficit), adjacent-segment degeneration and instability from altered biomechanics at the surgical level, and occasionally scar tissue formation or residual inflammation. In this case, adequate decompression of the stenosis and neural foraminal opening is confirmed on imaging, yet the plateau in functional recovery and persistent radicular-pattern weakness at 6 weeks—coupled with emerging adjacent-level changes—points to irreversible nerve injury from chronic compression rather than ongoing mechanical obstruction. Management typically shifts from surgical expectations to rehabilitation focused on neural mobilisation, functional loading tolerance, and addressing the secondary degenerative changes driving the sustained neuropathic component.",
-      "id": 491
+      "id": 491,
+      "answer_type": "procedure"
     },
     {
       "answer": "Rotator Cuff Tendinopathy",
@@ -17717,7 +17767,8 @@
         }
       ],
       "explanation": "Falls in the elderly result from a complex interplay of intrinsic factors—declining balance, strength, cognition, and sensory function—combined with extrinsic environmental hazards and often iatrogenic medication effects. This case exemplifies how polypharmacy in older adults can precipitate falls: the recent addition of metoprolol, dosed inappropriately for renal impairment, combined with existing antihypertensive therapy, produced significant orthostatic hypotension (27 mmHg drop) and bradycardia (HR 58), directly causing the presyncope and balance loss before each fall. Her impaired postural control—demonstrated by poor tandem stance and slow gait—reflects age-related declines in proprioception and vestibular compensation, while environmental factors (scatter rugs, low lighting, social isolation) and deconditioning from reduced activity compounded the risk. Recognition of medication-induced orthostatic hypotension, combined with balance retraining and environmental modification, represents the cornerstone of fall prevention in this population.",
-      "id": 493
+      "id": 493,
+      "answer_type": "scenario"
     },
     {
       "answer": "Tarsal Coalition",
@@ -17960,7 +18011,8 @@
         }
       ],
       "explanation": "Post-spinal fusion syndrome encompasses the constellation of persistent or recurrent symptoms following initially successful spinal fusion surgery, often driven by adjacent segment degeneration — accelerated degenerative changes at levels above or below the fusion due to altered biomechanics and increased load-bearing demands. In this case, the solid L4-L5 fusion created a rigid segment, shifting stress proximally to L3-L4 where disc desiccation and foraminal stenosis have developed, re-engaging the L5 nerve root and reproducing the patient's original radicular pattern. The initial post-operative improvement followed by declining tolerance to flexion and activity, combined with MRI evidence of stenotic changes at the adjacent level, distinguishes this from acute post-operative complications or fusion failure. This represents a common long-term sequela affecting 5-15% of fusion patients, requiring careful rehabilitation to restore segmental mobility above and below the fused level while managing activity load.",
-      "id": 500
+      "id": 500,
+      "answer_type": "procedure"
     },
     {
       "answer": "Rotator Cuff Tendinopathy",
@@ -18273,7 +18325,8 @@
         }
       ],
       "explanation": "Burns rehabilitation addresses the complex recovery process following thermal injury, where tissue damage triggers inflammatory edema, microvascular disruption, and scar tissue formation that can severely limit function. The hallmark challenge in post-burn management is preventing contractures—the early finger flexion deformities seen here at the PIP joints—which develop as collagen-rich scar tissue matures and shortens without active, sustained stretching. At 6 weeks post-injury, this patient exemplifies the critical window for aggressive therapy: edema persists, tissue is healing with active granulation, and the gap between passive and active range of motion reveals significant pain-driven functional loss rather than structural damage. Manual laborers face particular challenges returning to work, requiring coordinated pain management, progressive loading, and sustained movement strategies to maintain mobility and rebuild grip strength before scar maturation becomes irreversible.",
-      "id": 509
+      "id": 509,
+      "answer_type": "scenario"
     },
     {
       "answer": "Acromioclavicular Joint Sprain",
@@ -18589,7 +18642,8 @@
         }
       ],
       "explanation": "Necrotising fasciitis is a rapidly progressive, life-threatening soft tissue infection caused by polymicrobial or monomicrobial bacteria (commonly Group A Streptococcus, Vibrio, or Clostridium species) that spreads along fascial planes rather than vertically through tissue layers. The hallmark presentation — pain grossly out of proportion to visible skin changes, systemic toxicity, and rapid progression over hours — reflects the aggressive subcutaneous spread of infection beneath an initially deceptively normal-appearing skin surface. The combination of crepitus, mottling, blistering, and MRI evidence of fluid tracking along tissue planes establishes the fascial compartment involvement that distinguishes this from cellulitis or simple wound infection. This is a surgical emergency requiring immediate fasciotomy and broad-spectrum antibiotics; delayed recognition during rehabilitation settings is a critical risk factor for mortality.",
-      "id": 518
+      "id": 518,
+      "answer_type": "scenario"
     },
     {
       "answer": "Suprascapular Neuropathy",
@@ -18921,7 +18975,8 @@
         }
       ],
       "explanation": "Post-total knee replacement (TKR) complications in the early recovery phase commonly involve stiffness and functional deficits when rehabilitation targets are not met, particularly in patients with pre-existing contractures. This patient's persistent extension lag, limited active flexion of 85 degrees, and quadriceps weakness reflect inadequate neuromuscular re-education and insufficient aggressive stretching during the critical 6-week window when scar tissue formation is still reversible. The pre-operative 15-degree flexion contracture compounded by suboptimal compliance with home exercises created a high-risk scenario for extension deficit; combined with significant effusion from activity-induced inflammation, the knee has stiffened rather than progressed. Since imaging confirms proper component alignment and no mechanical failure, the prognosis is favourable with intensive physiotherapy focusing on quadriceps activation, progressive extension stretching, and pain-controlled range-of-motion exercises — the mechanical reconstruction is sound, but the soft tissue recovery has lagged.",
-      "id": 527
+      "id": 527,
+      "answer_type": "procedure"
     },
     {
       "answer": "Scapular Dyskinesis",
@@ -18992,7 +19047,8 @@
         }
       ],
       "explanation": "Falls in older adults represent a multifactorial geriatric syndrome where age-related physiological decline intersects with modifiable risk factors—orthostatic hypotension from polypharmacy, reduced balance confidence, slower reaction times, and environmental hazards converge to destabilize mobility. This 82-year-old's recurrent falls during positional changes and nighttime walking reflect the classic vulnerability window: orthostatic blood pressure drops combined with impaired postural reflexes and diminished sensory feedback create a cascade where even routine transitions become hazardous. The significantly prolonged Timed Up and Go test, reduced single-leg stance duration, and abnormal Berg Balance Scale reflect the neuromotor integration failure characteristic of fall-prone older adults. Beyond falling mechanics, the reduced confidence and activity avoidance highlight the secondary psychological impact—deconditioning and fall anxiety perpetuate the cycle, making comprehensive assessment of medications, home environment, strength, and balance retraining essential to breaking this pattern.",
-      "id": 529
+      "id": 529,
+      "answer_type": "scenario"
     },
     {
       "answer": "Hypermobility Syndrome",
@@ -19245,7 +19301,8 @@
         }
       ],
       "explanation": "Post-meniscectomy represents the immediate post-operative phase following surgical removal of a damaged meniscus, during which the knee must adapt to both the surgical trauma and loss of the meniscal shock-absorbing function. The reactive joint effusion, limited flexion range, and quadriceps weakness seen here are expected inflammatory responses in the early weeks after surgery, reflecting the body's attempt to stabilize the joint while healing progresses. Symptom resolution of mechanical signs like McMurray's positivity and joint line tenderness confirms successful meniscal removal, but functional recovery—particularly tolerance for sustained weight-bearing activities like prolonged walking and stair descent—lags behind structural healing. Progressive rehabilitation focusing on quadriceps strengthening, controlled range of motion restoration, and graduated functional loading is essential at this stage to prevent chronic stiffness and to prepare the knee for its altered biomechanics without the meniscal cushion.",
-      "id": 536
+      "id": 536,
+      "answer_type": "procedure"
     },
     {
       "answer": "Supraspinatous Tendon Calcification",
@@ -19597,7 +19654,8 @@
         }
       ],
       "explanation": "Total knee replacement is a surgical intervention for severe osteoarthritis in which the joint surfaces are resurfaced with metal and polyethylene components, restoring load-bearing capacity but requiring a period of protected healing and intensive rehabilitation. The acute presentation of swelling and significant flexion limitation in the immediate post-operative weeks reflects the inflammatory response to surgical trauma and the inherent stiffness that accompanies soft tissue disruption and capsular tightening. The quadriceps inhibition and extension lag are characteristic neuromuscular sequelae following TKR, driven by pain-mediated reflex suppression and require aggressive active and passive mobilization to prevent permanent loss of range. Early mobilization outcomes depend on surgeon technique and post-operative rehabilitation intensity, making the first 4-6 weeks critical to restoring functional movement patterns such as stair negotiation and sit-to-stand transfers.",
-      "id": 546
+      "id": 546,
+      "answer_type": "procedure"
     },
     {
       "answer": "Acromioclavicular Joint Sprain",
@@ -19884,7 +19942,8 @@
         }
       ],
       "explanation": "Post-amputation rehabilitation is the intensive, multifaceted recovery process following limb loss, requiring not only tissue healing and scar maturation but also neuromuscular re-education, prosthetic fitting, and psychological adjustment to profound functional change. The 8-week timeframe here represents a critical window where surgical healing is complete enough for prosthetic training, yet the patient faces compounding challenges: weak hip musculature (3+/5) needed for prosthetic ambulation, poor trunk stability limiting transfer capacity, and significant depression (PHQ-9 = 18) that commonly co-occurs with sudden disability and identity loss. Pre-existing diabetes with neuropathy and a sedentary baseline further complicate the motor learning and cardiovascular demands of prosthetic use. Success depends on addressing not just the biomechanics of the residual limb—its edema control, scar mobility, and strength progression—but equally on managing pain perception, fall anxiety, and depression that often become the true barriers to functional independence in this population.",
-      "id": 554
+      "id": 554,
+      "answer_type": "scenario"
     },
     {
       "answer": "Multidirectional Instability",
@@ -20171,7 +20230,8 @@
         }
       ],
       "explanation": "Dupuytren's disease is a chronic fibroproliferative disorder affecting the palmar fascia, characterized by progressive contracture of the hand — particularly at the MCP and PIP joints — with a strong male predominance and typically increasing prevalence after age 50. While fasciectomy successfully removes diseased tissue and restores motion acutely, recurrence is common, especially with aggressive early mobilization and increased hand use in the post-operative period. The return of tightness and developing PIP joint stiffness seen here, coupled with ultrasound evidence of hypoechoic nodules reforming at the surgical margins, reflects the disease's inherent aggressive biology rather than surgical failure — Dupuytren's tends to recur in 20–50% of cases as the underlying fibroblastic process reactivates. Managing post-operative progression requires careful balance between early mobilization to prevent stiffness and activity modification to minimize the stimulus for recurrent nodule formation.",
-      "id": 562
+      "id": 562,
+      "answer_type": "procedure"
     },
     {
       "answer": "Suprascapular Neuropathy",
@@ -20457,7 +20517,8 @@
         }
       ],
       "explanation": "Cancer rehabilitation addresses the multifaceted functional decline that follows curative oncological treatment, driven by the cumulative toxicity of chemotherapy, surgery, and radiation rather than active disease. This patient exemplifies the constellation of treatment-related sequelae: chemotherapy-induced peripheral neuropathy (CIPN) causing distal sensory loss and ankle weakness, surgical/radiation-induced axillary cording and shoulder restriction limiting overhead mobility, and the pervasive cancer-related fatigue that disproportionately impairs activity tolerance and energy reserve. Cancer rehabilitation differs fundamentally from other post-operative or neurological conditions because it must simultaneously address multiple tissue systems affected by different treatment modalities while managing fatigue as a primary limiting factor rather than a secondary symptom. Restoration of function requires graded activity pacing, targeted mobility work for fibrosed tissues, sensory retraining for neuropathy, and strategic energy management to rebuild exercise capacity and return to meaningful activities.",
-      "id": 570
+      "id": 570,
+      "answer_type": "scenario"
     },
     {
       "answer": "Multidirectional Instability",
@@ -20984,7 +21045,8 @@
         }
       ],
       "explanation": "Post-amputation rehabilitation addresses the complex physical and psychological recovery following limb loss, requiring coordinated management of residual limb healing, phantom limb pain, and progressive functional retraining. In the acute phase—as seen in this 3-week post-traumatic amputation—the focus is on edema management, scar mobility, and pain control while the residual limb undergoes tissue remodeling and bone healing. Phantom pain, the shooting and burning sensations experienced in the absent limb, is a nearly universal phenomenon driven by cortical reorganization and peripheral nerve sensitization, often exacerbated by attempted movement. Early rehabilitation emphasizes trunk stability, upper extremity strengthening, transfer training, and graduated weight-bearing preparation for prosthetic fitting, with psychological support integral to addressing the sudden functional loss and adjustment to living with amputation.",
-      "id": 585
+      "id": 585,
+      "answer_type": "scenario"
     },
     {
       "answer": "Colles Fracture",
@@ -21087,7 +21149,8 @@
         }
       ],
       "explanation": "Frailty syndrome is a geriatric syndrome characterized by diminished physiological reserves and increased vulnerability to stressors, resulting from accumulated deficits across multiple systems—sarcopenia, malnutrition, reduced activity, and systemic inflammation. Rather than a disease itself, it reflects a state of biological dysregulation where small perturbations can trigger cascading functional decline, as evidenced here by progressive unintentional weight loss, profound weakness (grip 12 kg, knee extension 3/5), slowness (TUG 35 seconds), and withdrawal from meaningful activities. The constellation of low albumin, anemia, osteopenia, and cognitive slowing reflects the multisystem nature of the syndrome. Recognition of frailty phenotype status—positive for weakness, slowness, weight loss, exhaustion, and inactivity—is crucial because these patients require integrated rehabilitation addressing nutrition, progressive resistance training, cognitive engagement, and medical optimization to prevent further decompensation.",
-      "id": 588
+      "id": 588,
+      "answer_type": "scenario"
     },
     {
       "answer": "Biceps Femoris Tendinopathy",
@@ -21268,7 +21331,8 @@
         }
       ],
       "explanation": "Post-ankle open reduction and internal fixation (ORIF) represents a critical recovery phase following operative management of displaced ankle fractures, where restoration of anatomical alignment must be followed by careful tissue healing and progressive mobilisation. The persistent swelling, restricted dorsiflexion and plantarflexion, and ongoing weight-bearing limitations at 8 weeks reflect the significant soft tissue injury accompanying the initial fracture and the inflammatory cascade triggered by surgical trauma — normal radiographic findings confirm the hardware is well-positioned, but soft tissue healing and capsular/ligamentous recovery lag behind bony healing. The pitting edema and pronounced stiffness are characteristic of post-operative ankle immobility; prolonged immobilisation preserves fracture stability but increases risk of periarticular fibrosis and arthrokinematic dysfunction. Early progressive mobilisation within safe load parameters, oedema management, and graded functional exercises are essential to restore dorsiflexion, plantarflexion, and weight-bearing tolerance before these restrictions become chronic.",
-      "id": 593
+      "id": 593,
+      "answer_type": "procedure"
     },
     {
       "answer": "Thoracic Outlet Syndrome",
@@ -21797,7 +21861,8 @@
         }
       ],
       "explanation": "Post-rotator cuff repair represents the immediate post-operative phase following surgical reattachment of a torn rotator cuff tendon, typically lasting 8–12 weeks as healing progresses through early collagen deposition and neovascularization. The marked gap between passive and active range of motion—passive forward flexion of 110° against active range of only 45°—is pathognomonic of this phase: the repair is mechanically intact (confirmed on ultrasound), but neuromotor control and muscular strength remain substantially compromised due to pain inhibition, deconditioning, and the biological lag in tendon-bone healing. Scapular dyskinesis and guarding on supraspinatus testing reflect protective muscle splinting and altered neuromuscular patterning common in early repair stages. Progressive restoration of active motion and strength depends on graded loading within tissue tolerance, making adherence to structured rehabilitation protocol essential to prevent stiffness while protecting repair integrity during this vulnerable window.",
-      "id": 608
+      "id": 608,
+      "answer_type": "procedure"
     },
     {
       "answer": "ICU-Acquired Weakness",

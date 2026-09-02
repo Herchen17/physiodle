@@ -129,6 +129,37 @@ db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE
 // players now also tag WHAT the feedback is about (category), WHERE in the
 // puzzle (scope), WHAT KIND of problem (issue_type) and, for answer-matching
 // complaints, WHICH guess should have been accepted (guess).
+// 2026-09-02: profession level (Student / Physiotherapist / Educator ...) for
+// profile completion and, later, curriculum-filtered practice.
+if (!columnExists('users', 'profession_level')) {
+  console.log('[migration] adding users.profession_level column');
+  db.exec('ALTER TABLE users ADD COLUMN profession_level TEXT');
+}
+
+// 2026-09-02: Web Push daily reminders. One row per browser subscription.
+// hour_local + tz let the scheduler fire at the player's wall-clock hour.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    endpoint TEXT UNIQUE NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    hour_local INTEGER NOT NULL DEFAULT 8,
+    tz TEXT NOT NULL DEFAULT 'Australia/Sydney',
+    platform TEXT,
+    last_sent_day INTEGER,
+    failures INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+`);
+
 for (const col of ['category', 'scope', 'issue_type', 'guess', 'platform']) {
   if (!columnExists('feedback', col)) {
     console.log(`[migration] adding feedback.${col} column`);

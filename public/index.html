@@ -1753,6 +1753,55 @@
     }
     .lb-community { font-size: 0.72rem; color: #6b7280; margin-top: 0.15rem; }
     .lb-community strong { color: #0d9488; }
+    /* ---------------- Streak ---------------- */
+    .puzzle-prompt-alt { color: #b45309; }
+    .streak-pill {
+      display: inline-flex; align-items: center; gap: 0.2rem;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; color: #b45309;
+      background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 999px; padding: 0.15rem 0.55rem 0.15rem 0.4rem;
+      cursor: pointer; margin-left: 0.5rem; line-height: 1.2;
+    }
+    .streak-pill:hover { background: #fef3c7; }
+    .streak-flame { display: inline-block; font-size: 0.9rem; transform-origin: 50% 90%; }
+    .streak-pill.extend .streak-flame { animation: flameFlicker 1.6s ease-in-out 3; }
+    .streak-pill.extend { animation: streakPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes flameFlicker {
+      0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+      20% { transform: scale(1.35) rotate(-6deg); filter: brightness(1.3); }
+      40% { transform: scale(1.15) rotate(5deg); }
+      60% { transform: scale(1.4) rotate(-3deg); filter: brightness(1.4); }
+      80% { transform: scale(1.1) rotate(4deg); }
+    }
+    @keyframes streakPop { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+    .milestone-overlay {
+      position: fixed; inset: 0; z-index: 400; display: none; align-items: center; justify-content: center;
+      background: rgba(17, 24, 39, 0.55); padding: 1rem;
+    }
+    .milestone-overlay.show { display: flex; }
+    .milestone-card {
+      background: white; border-radius: 1rem; padding: 2rem 1.75rem; text-align: center; max-width: 360px; width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25); position: relative; overflow: hidden;
+      animation: resultPopIn 0.35s ease-out;
+    }
+    .milestone-flame { font-size: 3.5rem; line-height: 1; animation: flameFlicker 1.6s ease-in-out infinite; display: inline-block; }
+    .milestone-title { font-size: 1.4rem; font-weight: 800; color: #1f2937; margin-top: 0.5rem; }
+    .milestone-sub { font-size: 0.9rem; color: #6b7280; margin-top: 0.35rem; line-height: 1.5; }
+    .milestone-card .btn { margin-top: 1.25rem; }
+    .spark { position: absolute; width: 8px; height: 8px; border-radius: 2px; top: 50%; left: 50%; pointer-events: none; animation: sparkFly 1.1s ease-out forwards; }
+    @keyframes sparkFly {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3) rotate(240deg); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .streak-pill.extend, .streak-pill.extend .streak-flame, .milestone-flame, .spark { animation: none; }
+    }
+    .account-select {
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; padding: 0.4rem 0.5rem; width: 100%;
+      border: 1.5px solid #e5e7eb; border-radius: 0.375rem; background: white; color: #1f2937;
+    }
+    .account-trend-up { color: #059669; }
+    .account-trend-down { color: #dc2626; }
   </style>
 </head>
 <body>
@@ -1763,6 +1812,9 @@
         <span class="logo-icon">🦴</span>
         <span class="logo-text">Physiodle</span>
         <span class="day-indicator" id="dayIndicator"></span>
+        <button class="streak-pill" id="streakPill" title="Current streak" style="display:none;" aria-label="Current streak">
+          <span class="streak-flame" aria-hidden="true">&#128293;</span><span id="streakCount">0</span>
+        </button>
       </div>
       <div class="header-right">
         <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
@@ -1924,6 +1976,16 @@
     </div>
   </div>
 
+  <!-- STREAK MILESTONE -->
+  <div class="milestone-overlay" id="milestoneOverlay">
+    <div class="milestone-card" id="milestoneCard">
+      <span class="milestone-flame" aria-hidden="true">&#128293;</span>
+      <div class="milestone-title" id="milestoneTitle"></div>
+      <div class="milestone-sub" id="milestoneSub"></div>
+      <button class="btn btn-primary" id="milestoneCloseBtn">Keep it going</button>
+    </div>
+  </div>
+
   <!-- INSTALL / REMINDER MODAL -->
   <div class="modal-overlay" id="installModal">
     <div class="modal" style="max-width: 440px;">
@@ -1946,10 +2008,10 @@
           <ol class="install-steps" id="installSteps"></ol>
           <div class="install-note" id="installBrowserNote" style="margin-top: 0.5rem;"></div>
         </div>
-        <div class="install-section">
+        <div class="install-section" id="reminderSection">
           <div class="install-section-title">Daily reminder</div>
-          <div class="install-note">Add a repeating calendar event that opens Physiodle at the same time every day.</div>
-          <div class="reminder-row">
+          <div class="install-note" id="reminderNote">A single notification each day when the new puzzle is out. Nothing else, ever.</div>
+          <div class="reminder-row" id="reminderControls">
             <select id="reminderHour" aria-label="Reminder time">
               <option value="7">7:00 am</option>
               <option value="8" selected>8:00 am</option>
@@ -1959,9 +2021,10 @@
               <option value="20">8:00 pm</option>
               <option value="21">9:00 pm</option>
             </select>
-            <a class="btn btn-secondary btn-small" id="reminderIcsBtn" href="/reminder.ics?hour=8">Apple / Outlook</a>
-            <a class="btn btn-secondary btn-small" id="reminderGcalBtn" href="#" target="_blank" rel="noopener">Google Calendar</a>
+            <button class="btn btn-primary btn-small" id="reminderOnBtn">Turn on reminders</button>
+            <button class="btn btn-secondary btn-small" id="reminderOffBtn" style="display:none;">Turn off</button>
           </div>
+          <div class="install-note" id="reminderStatus" style="margin-top: 0.4rem;"></div>
         </div>
       </div>
     </div>
@@ -2277,7 +2340,43 @@
               <span class="account-perf-label">Friends</span>
               <span class="account-perf-value" id="accountFriends">0</span>
             </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">First-guess solves</span>
+              <span class="account-perf-value" id="accountFirstGuess">0</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Best first-guess run</span>
+              <span class="account-perf-value" id="accountFirstGuessRun">0</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Longest losing run</span>
+              <span class="account-perf-value" id="accountWorstRun">0</span>
+            </div>
+            <div class="account-perf-row">
+              <span class="account-perf-label">Avg guesses (wins)</span>
+              <span class="account-perf-value" id="accountAvgGuesses">-</span>
+            </div>
+            <div class="account-perf-row" style="grid-column: 1 / -1;">
+              <span class="account-perf-label">Trend, last 30 vs prior 30</span>
+              <span class="account-perf-value" id="accountTrend">-</span>
+            </div>
           </div>
+        </div>
+
+        <!-- Profile -->
+        <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.6rem;">Profile</div>
+          <label for="accountLevel" style="display:block; font-size: 0.8rem; color: #374151; margin-bottom: 0.3rem;">I am a</label>
+          <select id="accountLevel" class="account-select">
+            <option value="">Prefer not to say</option>
+            <option value="student">Physiotherapy student</option>
+            <option value="new_grad">New graduate physiotherapist</option>
+            <option value="physiotherapist">Physiotherapist</option>
+            <option value="educator">Educator / academic</option>
+            <option value="other_health">Other health professional or student</option>
+            <option value="other">Other</option>
+          </select>
+          <div id="accountLevelSaved" style="font-size: 0.72rem; color: #059669; margin-top: 0.3rem; min-height: 1em;"></div>
         </div>
 
         <!-- Guess Distribution -->
@@ -3144,7 +3243,22 @@
     // CLUES & GAME RENDERING
     // ============================================================================
 
+    const PROMPTS = {
+      diagnosis: "What's the diagnosis?",
+      procedure: 'What procedure is this patient recovering from?',
+      scenario: "What's the clinical scenario?",
+      pattern: "What's the movement pattern?",
+    };
+    function updatePuzzlePrompt() {
+      const el = document.getElementById('puzzlePrompt');
+      if (!el) return;
+      const t = (gameState.puzzle && gameState.puzzle.answerType) || 'diagnosis';
+      el.textContent = PROMPTS[t] || PROMPTS.diagnosis;
+      el.classList.toggle('puzzle-prompt-alt', t !== 'diagnosis');
+    }
+
     function renderClues() {
+      updatePuzzlePrompt();
       const container = document.getElementById('cluesContainer');
       container.innerHTML = '';
 
@@ -3554,6 +3668,12 @@
 
       // Show as popup overlay
       document.getElementById('resultOverlay').classList.add('show');
+
+      // Streak: the win is submitted to the server just after this; give it a
+      // moment, then refresh so the pill animates and milestones fire.
+      if (won && gameState.userToken && gameState.currentDay === gameState.todayDay) {
+        setTimeout(() => refreshStreak(true), 1500);
+      }
     }
 
     function showAnswerSummary(won, answerText, explanationText) {
@@ -4340,6 +4460,25 @@
           document.getElementById('accountMaxStreak').textContent = s.maxStreak || 0;
           document.getElementById('accountPerfect').textContent = s.perfectGames || 0;
           document.getElementById('accountFriends').textContent = s.friendCount || 0;
+          document.getElementById('accountFirstGuess').textContent = s.firstGuessSolves || 0;
+          document.getElementById('accountFirstGuessRun').textContent = s.bestFirstGuessRun || 0;
+          document.getElementById('accountWorstRun').textContent = s.worstRun || 0;
+          document.getElementById('accountAvgGuesses').textContent = s.avgGuesses != null ? s.avgGuesses.toFixed(1) : '-';
+          const trendEl = document.getElementById('accountTrend');
+          if (s.recentAvgPoints != null && s.priorAvgPoints != null) {
+            const diff = s.recentAvgPoints - s.priorAvgPoints;
+            const sign = diff > 0 ? '+' : '';
+            trendEl.textContent = `${s.recentAvgPoints.toFixed(1)} pts/game (${sign}${diff.toFixed(1)})`;
+            trendEl.className = 'account-perf-value ' + (diff > 0.05 ? 'account-trend-up' : diff < -0.05 ? 'account-trend-down' : '');
+          } else if (s.recentAvgPoints != null) {
+            trendEl.textContent = `${s.recentAvgPoints.toFixed(1)} pts/game (need 60 games for a trend)`;
+            trendEl.className = 'account-perf-value';
+          } else {
+            trendEl.textContent = '-';
+          }
+          document.getElementById('accountLevel').value = user.professionLevel || '';
+          document.getElementById('accountLevelSaved').textContent = '';
+          updateStreakPill(s.currentStreak || 0, false);
 
           // Guess distribution bar chart
           const dist = s.distribution || {};
@@ -4534,6 +4673,7 @@
       updateAccountBtn();
       await initGame();
       checkFeedbackState();
+      refreshStreak(false);
 
       // After login, try to submit any completion done while logged out
       if (gameState.userToken) {
@@ -4938,6 +5078,88 @@
     function checkFeedbackState() { /* no-op for simple version */ }
 
     // ============================================================================
+    // STREAK ON THE MAIN PAGE + MILESTONES
+    // ============================================================================
+    const STREAK_MILESTONES = {
+      3: ['Three in a row', 'A habit is forming.'],
+      7: ['One week streak', 'Seven days straight. That is real revision.'],
+      14: ['Two week streak', 'Fourteen consecutive cases solved.'],
+      30: ['One month streak', 'Thirty days without a miss. Elite.'],
+      50: ['50 day streak', 'Half a century of diagnoses.'],
+      100: ['100 day streak', 'A hundred cases, a hundred days.'],
+      365: ['One year streak', 'Every single day for a year. Remarkable.'],
+    };
+    let lastKnownStreak = null;
+
+    function updateStreakPill(streak, animate) {
+      const pill = document.getElementById('streakPill');
+      const count = document.getElementById('streakCount');
+      if (!gameState.userToken || !streak) { pill.style.display = 'none'; lastKnownStreak = streak || 0; return; }
+      count.textContent = streak;
+      pill.style.display = '';
+      pill.title = `${streak}-day streak`;
+      if (animate) {
+        pill.classList.remove('extend');
+        void pill.offsetWidth; // restart animation
+        pill.classList.add('extend');
+        setTimeout(() => pill.classList.remove('extend'), 5000);
+      }
+      lastKnownStreak = streak;
+    }
+
+    async function refreshStreak(afterWin) {
+      if (!gameState.userToken) { updateStreakPill(0, false); return; }
+      try {
+        const user = await getCurrentUser();
+        const streak = (user && user.stats && user.stats.currentStreak) || 0;
+        const extended = afterWin && lastKnownStreak != null && streak > lastKnownStreak;
+        updateStreakPill(streak, extended);
+        if (extended && STREAK_MILESTONES[streak]) showMilestone(streak);
+        if (extended && typeof trackEvent === 'function') trackEvent('streak_extended', { streak });
+      } catch (e) { /* ignore */ }
+    }
+
+    function showMilestone(streak) {
+      const [title, sub] = STREAK_MILESTONES[streak];
+      document.getElementById('milestoneTitle').textContent = title;
+      document.getElementById('milestoneSub').textContent = sub;
+      const card = document.getElementById('milestoneCard');
+      card.querySelectorAll('.spark').forEach(x => x.remove());
+      const colours = ['#f59e0b', '#fbbf24', '#0d9488', '#ef4444', '#fcd34d'];
+      for (let i = 0; i < 28; i++) {
+        const sp = document.createElement('span');
+        sp.className = 'spark';
+        const angle = (Math.PI * 2 * i) / 28 + Math.random() * 0.3;
+        const dist = 110 + Math.random() * 90;
+        sp.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+        sp.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+        sp.style.background = colours[i % colours.length];
+        sp.style.animationDelay = `${Math.random() * 0.15}s`;
+        card.appendChild(sp);
+      }
+      // Milestone shows after the result popup has had its moment.
+      setTimeout(() => document.getElementById('milestoneOverlay').classList.add('show'), 900);
+      if (typeof trackEvent === 'function') trackEvent('streak_milestone', { streak });
+    }
+    document.getElementById('milestoneCloseBtn').addEventListener('click', () => document.getElementById('milestoneOverlay').classList.remove('show'));
+    document.getElementById('milestoneOverlay').addEventListener('click', (e) => { if (e.target.id === 'milestoneOverlay') e.currentTarget.classList.remove('show'); });
+    document.getElementById('streakPill').addEventListener('click', loadAccountModal);
+
+    // Profile level save
+    document.getElementById('accountLevel').addEventListener('change', async (e) => {
+      const level = e.target.value || null;
+      const saved = document.getElementById('accountLevelSaved');
+      try {
+        const r = await fetch('/api/auth/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${gameState.userToken}` },
+          body: JSON.stringify({ level }),
+        });
+        saved.textContent = r.ok ? 'Saved' : 'Could not save';
+      } catch (err) { saved.textContent = 'Could not save'; }
+    });
+
+    // ============================================================================
     // INSTALL GUIDE (add to home screen) + DAILY REMINDER
     // ============================================================================
 
@@ -5027,7 +5249,7 @@
       document.getElementById('installStandaloneMsg').style.display = standalone ? '' : 'none';
       document.getElementById('installGuide').style.display = standalone ? 'none' : '';
       if (!standalone) renderInstallGuide(detectPlatform());
-      updateReminderLinks();
+      updateReminderUI();
       document.getElementById('installModal').classList.add('show');
       if (typeof trackEvent === 'function') trackEvent('install_guide_open', { platform: detectPlatform(), standalone });
     }
@@ -5059,30 +5281,125 @@
       if (r) r.textContent = 'Set a daily reminder';
     }
 
-    function updateReminderLinks() {
-      const hour = parseInt(document.getElementById('reminderHour').value, 10);
-      document.getElementById('reminderIcsBtn').href = `/reminder.ics?hour=${hour}`;
-      const pad = (n) => String(n).padStart(2, '0');
-      const d = new Date(); d.setDate(d.getDate() + 1);
-      const ymd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-      const params = new URLSearchParams({
-        action: 'TEMPLATE',
-        text: 'Physiodle: today\'s puzzle',
-        details: 'Five clues, five guesses, one diagnosis. https://physiodle.up.railway.app',
-        location: 'https://physiodle.up.railway.app',
-        dates: `${ymd}T${pad(hour)}0000/${ymd}T${pad(hour)}1000`,
-        recur: 'RRULE:FREQ=DAILY',
+    // ---- Web Push daily reminder ----
+    // iPhone: Web Push only works once the site is on the home screen (iOS 16.4+),
+    // and the permission request must follow a tap. Android/desktop: works in
+    // the browser tab directly.
+    const swSupported = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost');
+    let swRegistration = null;
+    if (swSupported) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(r => { swRegistration = r; }).catch(() => {});
       });
-      document.getElementById('reminderGcalBtn').href = `https://calendar.google.com/calendar/render?${params.toString()}`;
     }
-    document.getElementById('reminderHour').addEventListener('change', updateReminderLinks);
-    document.getElementById('reminderIcsBtn').addEventListener('click', () => { if (typeof trackEvent === 'function') trackEvent('reminder_added', { via: 'ics' }); });
-    document.getElementById('reminderGcalBtn').addEventListener('click', () => { if (typeof trackEvent === 'function') trackEvent('reminder_added', { via: 'gcal' }); });
 
-    // Service worker: no caching, exists for installability + future push.
-    if ('serviceWorker' in navigator && location.protocol === 'https:') {
-      window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+    function pushSupported() {
+      return swSupported && 'PushManager' in window && 'Notification' in window;
     }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = window.atob(base64);
+      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    async function getPushSubscription() {
+      if (!pushSupported()) return null;
+      const reg = swRegistration || await navigator.serviceWorker.ready;
+      return reg.pushManager.getSubscription();
+    }
+
+    async function updateReminderUI() {
+      const note = document.getElementById('reminderNote');
+      const controls = document.getElementById('reminderControls');
+      const status = document.getElementById('reminderStatus');
+      const onBtn = document.getElementById('reminderOnBtn');
+      const offBtn = document.getElementById('reminderOffBtn');
+      const platform = detectPlatform();
+      status.textContent = '';
+
+      if (platform === 'ios' && !isStandalone()) {
+        note.innerHTML = 'On iPhone, reminders only work after Physiodle is on your home screen. Follow the steps above, open it from the new icon, then come back here to turn reminders on.';
+        controls.style.display = 'none';
+        return;
+      }
+      if (!pushSupported()) {
+        note.textContent = 'This browser can\'t show notifications. Try Chrome, Edge, Firefox or Safari.';
+        controls.style.display = 'none';
+        return;
+      }
+      controls.style.display = '';
+      if (Notification.permission === 'denied') {
+        note.textContent = 'Notifications are blocked for this site in your browser settings. Allow them there, then try again.';
+        onBtn.disabled = true;
+        return;
+      }
+      onBtn.disabled = false;
+      const sub = await getPushSubscription();
+      if (sub) {
+        try {
+          const r = await fetch(`/api/push/status?endpoint=${encodeURIComponent(sub.endpoint)}`);
+          const d = await r.json();
+          if (d.subscribed) {
+            document.getElementById('reminderHour').value = String(d.hour);
+            onBtn.textContent = 'Update time';
+            offBtn.style.display = '';
+            status.textContent = `Reminders are on. You\'ll get one at ${formatHour(d.hour)} each day.`;
+            return;
+          }
+        } catch (e) { /* fall through */ }
+      }
+      onBtn.textContent = 'Turn on reminders';
+      offBtn.style.display = 'none';
+    }
+
+    function formatHour(h) {
+      const d = new Date(); d.setHours(h, 0, 0, 0);
+      return d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    async function enableReminder() {
+      const status = document.getElementById('reminderStatus');
+      const hour = parseInt(document.getElementById('reminderHour').value, 10);
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') { status.textContent = 'Permission not granted.'; return; }
+        const reg = swRegistration || await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          const keyRes = await fetch('/api/push/vapid-public-key');
+          const { key } = await keyRes.json();
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key) });
+        }
+        const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'Australia/Sydney';
+        const r = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(gameState.userToken && { 'Authorization': `Bearer ${gameState.userToken}` }) },
+          body: JSON.stringify({ subscription: sub.toJSON(), hour, tz, platform: detectPlatform() }),
+        });
+        if (!r.ok) throw new Error('subscribe failed');
+        if (typeof trackEvent === 'function') trackEvent('reminder_on', { hour, platform: detectPlatform() });
+        await updateReminderUI();
+      } catch (e) {
+        status.textContent = 'Couldn\'t turn on reminders. Try again, or check notification settings.';
+      }
+    }
+
+    async function disableReminder() {
+      try {
+        const sub = await getPushSubscription();
+        if (sub) {
+          await fetch('/api/push/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+          await sub.unsubscribe();
+        }
+        if (typeof trackEvent === 'function') trackEvent('reminder_off', {});
+      } catch (e) { /* ignore */ }
+      await updateReminderUI();
+    }
+
+    document.getElementById('reminderOnBtn').addEventListener('click', enableReminder);
+    document.getElementById('reminderOffBtn').addEventListener('click', disableReminder);
 
     // ============================================================================
     // COMMUNITY STATS (leaderboard header)

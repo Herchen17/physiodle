@@ -91,6 +91,9 @@ app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/admin', require('./routes/admin-user-stats'));
+const push = require('./routes/push');
+app.use('/api/push', push.router);
+push.startScheduler();
 
 // Feedback endpoint (simple, inline)
 const { optionalAuth } = require('./auth');
@@ -138,45 +141,6 @@ app.post('/api/feedback', optionalAuth, (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(userId, dayNumber, rating, text, cat, sc, it, g, pl);
   res.json({ success: true });
-});
-
-// Daily reminder as a calendar subscription file. Served from the server (not a
-// blob: URL) because iOS Safari only offers "Add to Calendar" for real .ics
-// responses. Floating local time (no Z) so it fires at the same wall-clock
-// hour wherever the player is.
-app.get('/reminder.ics', (req, res) => {
-  const hour = Math.min(Math.max(parseInt(req.query.hour, 10) || 8, 0), 23);
-  const pad = (n) => String(n).padStart(2, '0');
-  const start = new Date();
-  start.setDate(start.getDate() + 1);
-  const dtstart = `${start.getFullYear()}${pad(start.getMonth() + 1)}${pad(start.getDate())}T${pad(hour)}0000`;
-  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-  const ics = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Physiodle//Daily reminder//EN',
-    'CALSCALE:GREGORIAN',
-    'BEGIN:VEVENT',
-    `UID:physiodle-daily-${hour}@physiodle.up.railway.app`,
-    `DTSTAMP:${stamp}`,
-    `DTSTART:${dtstart}`,
-    'DURATION:PT10M',
-    'RRULE:FREQ=DAILY',
-    'SUMMARY:Physiodle — today\'s puzzle',
-    'DESCRIPTION:Five clues\, five guesses\, one diagnosis. https://physiodle.up.railway.app',
-    'URL:https://physiodle.up.railway.app',
-    'BEGIN:VALARM',
-    'TRIGGER:PT0M',
-    'ACTION:DISPLAY',
-    'DESCRIPTION:Physiodle',
-    'END:VALARM',
-    'END:VEVENT',
-    'END:VCALENDAR',
-    '',
-  ].join('\r\n');
-  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="physiodle-daily-reminder.ics"');
-  res.send(ics);
 });
 
 // Health check
