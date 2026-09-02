@@ -1896,7 +1896,7 @@
     .result-install-btn .app-icon { width: 16px; height: 16px; }
     #accountInstallBtn { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #6b7280; text-decoration: none; }
     #accountInstallBtn:hover { color: #0d9488; }
-    body.standalone .header-btn-install, body.standalone .result-install-btn, body.standalone #accountInstallWrap { display: none !important; }
+    /* Installed app: the same three links stay, relabelled to 'Daily reminder' (see JS) */
     .install-help { margin-top: 0.75rem; }
     .install-help summary { font-size: 0.78rem; color: #0d9488; cursor: pointer; font-weight: 600; }
     .install-help ul { margin: 0.4rem 0 0 1rem; padding: 0; font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
@@ -4691,7 +4691,7 @@
           document.getElementById('accountReferralsActive').textContent = user.referralsActive || 0;
           document.getElementById('accountReferralLink').value = shareUrl();
           renderReferralLevel(user.referrals || 0);
-          document.getElementById('accountInstallWrap').style.display = isStandalone() ? 'none' : '';
+          document.getElementById('accountInstallWrap').style.display = '';
           document.getElementById('accountLevel').value = user.professionLevel || '';
           renderAccountEmail(user);
           document.getElementById('accountLevelSaved').textContent = '';
@@ -5650,6 +5650,7 @@
     function openInstallModal() {
       const standalone = isStandalone();
       document.getElementById('installStandaloneMsg').style.display = standalone ? '' : 'none';
+      document.querySelector('#installModal .modal-title').textContent = standalone ? 'Daily reminder' : 'Physiodle on your phone';
       document.getElementById('installGuide').style.display = standalone ? 'none' : '';
       if (!standalone) renderInstallGuide(detectPlatform());
       updateReminderUI();
@@ -5659,7 +5660,13 @@
 
     document.getElementById('headerInstallBtn').addEventListener('click', openInstallModal);
     document.getElementById('accountInstallBtn').addEventListener('click', () => { closeModal('accountModal'); openInstallModal(); });
-    if (isStandalone()) document.body.classList.add('standalone');
+    if (isStandalone()) {
+      document.body.classList.add('standalone');
+      // Already installed: the install links become reminder links.
+      const h = document.getElementById('headerInstallBtn'); if (h) h.querySelector('.header-btn-install-text').textContent = 'Reminders';
+      const r = document.getElementById('resultInstallBtn'); if (r) r.querySelector('span').textContent = 'Set a daily reminder';
+      const a = document.getElementById('accountInstallBtn'); if (a) a.querySelector('span').textContent = 'Daily reminder';
+    }
     document.getElementById('resultInstallBtn').addEventListener('click', () => {
       document.getElementById('resultOverlay').classList.remove('show');
       openInstallModal();
@@ -5722,7 +5729,7 @@
       status.textContent = '';
 
       if (platform === 'ios' && !isStandalone()) {
-        note.innerHTML = 'On iPhone, reminders only work after Physiodle is on your home screen. Follow the steps above, open it from the new icon, then come back here to turn reminders on.';
+        note.innerHTML = 'You\'re on an iPhone or iPad in the browser, and Apple only allows notifications from the home-screen version. Add Physiodle to your home screen (iPhone tab above), open it from the new icon, and the reminder switch will be here. This depends on the device you\'re using, not the tab selected above.';
         controls.style.display = 'none';
         return;
       }
