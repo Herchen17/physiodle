@@ -144,6 +144,15 @@ app.post('/api/feedback', optionalAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// Admin-only outbound mail test: GET /api/admin/mail-test?to=you@example.com (x-admin-key header)
+app.get('/api/admin/mail-test', async (req, res) => {
+  const key = req.headers['x-admin-key'] || req.query.key;
+  if (!key || key !== (process.env.ADMIN_KEY || 'physiodle-admin-2026')) return res.status(401).json({ error: 'Invalid admin key' });
+  const to = String(req.query.to || process.env.MAIL_USER || '');
+  if (!/^[^@\s]+@[^@\s]+$/.test(to)) return res.status(400).json({ error: 'to required' });
+  res.json(await require('./mailer').selfTest(to));
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({

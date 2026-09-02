@@ -24,8 +24,10 @@ if (MODE === 'smtp') {
     port: parseInt(process.env.MAIL_PORT, 10) || 465,
     secure: (process.env.MAIL_SECURE || 'true') !== 'false',
     auth: { user: MAIL_USER, pass: MAIL_PASS },
-    pool: true,
-    maxConnections: 2,
+    // Fail fast: a hung SMTP socket must never hold a web request open.
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 console.log(`[mail] transport=${MODE}${MODE === 'smtp' ? ` as ${MAIL_USER}` : ''}`);
@@ -49,6 +51,7 @@ async function sendMail({ to, subject, text, html }) {
   const msg = { from: fromAddress(), to, subject, text, html };
   if (MODE === 'smtp') {
     const info = await transport.sendMail(msg);
+    console.log(`[mail] sent to=${to} subject="${subject}" id=${info.messageId}`);
     return { ok: true, id: info.messageId };
   }
   if (MODE === 'json') {
@@ -89,4 +92,18 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-module.exports = { sendMail, sendPasswordReset, sendEmailConfirmation, APP_URL, MODE };
+// Diagnostic: try a real send with a hard 20 s cap and report the outcome.
+async function selfTest(to) {
+  const started = Date.now();
+  try {
+    const r = await Promise.race([
+      sendMail({ to, subject: 'Physiodle mail test', text: 'If you can read this, outbound email from the server works.', html: '<p>If you can read this, outbound email from the server works.</p>' }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timed out after 20 s (SMTP port probably blocked or unreachable)')), 20000)),
+    ]);
+    return { ok: true, mode: MODE, host: process.env.MAIL_HOST || 'smtp.gmail.com', port: parseInt(process.env.MAIL_PORT, 10) || 465, ms: Date.now() - started, id: r.id };
+  } catch (e) {
+    return { ok: false, mode: MODE, host: process.env.MAIL_HOST || 'smtp.gmail.com', port: parseInt(process.env.MAIL_PORT, 10) || 465, ms: Date.now() - started, error: e.message, code: e.code || null, response: e.response || null };
+  }
+}
+
+module.exports = { sendMail, sendPasswordReset, sendEmailConfirmation, selfTest, APP_URL, MODE };

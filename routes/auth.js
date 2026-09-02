@@ -505,8 +505,9 @@ router.post('/forgot', async (req, res) => {
   const user = findUserByIdentifier(identifier.trim());
   if (user && user.email) {
     const token = issueToken(user.id, 'reset', 30);
-    try { await mailer.sendPasswordReset({ to: user.email, username: user.username, token }); }
-    catch (e) { console.error('[mail] reset failed:', e.message); }
+    // Send in the background: the response must not wait on SMTP.
+    mailer.sendPasswordReset({ to: user.email, username: user.username, token })
+      .catch(e => console.error('[mail] reset failed:', e.message));
   }
   res.json({ success: true, message: 'If that account has an email address, a reset link is on its way.' });
 });
