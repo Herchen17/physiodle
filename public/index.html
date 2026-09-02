@@ -1765,6 +1765,45 @@
     .streak-flame { display: inline-block; font-size: 0.9rem; transform-origin: 50% 90%; }
     .streak-pill.extend .streak-flame { animation: flameFlicker 1.6s ease-in-out 3; }
     .streak-pill.extend { animation: streakPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    /* Tiers: 1 = 1-2 days, 2 = 3-6, 3 = 7-29, 4 = 30-99, 5 = 100+ */
+    .streak-pill.streak-t2 { border-color: #f59e0b; }
+    .streak-pill.streak-t3 { background: #fff7ed; border-color: #f97316; color: #c2410c; }
+    .streak-pill.streak-t4 { background: linear-gradient(135deg, #fff7ed, #fee2e2); border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+    .streak-pill.streak-t5 { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #d97706; color: #92400e; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+    .streak-pill.streak-t3.extend .streak-flame { animation: flameFlicker 1.2s ease-in-out 5; }
+    .streak-pill.streak-t4.extend { animation: streakPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulse 1.2s ease-out 4; }
+    .streak-pill.streak-t4.extend .streak-flame { animation: flameFlicker 1s ease-in-out 6; }
+    .streak-pill.streak-t5 .streak-flame { animation: flameFlicker 2.4s ease-in-out infinite; }
+    .streak-pill.streak-t5.extend { animation: streakPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulseGold 1s ease-out 6; }
+    @keyframes glowPulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 100% { box-shadow: 0 0 0 16px rgba(239,68,68,0); } }
+    @keyframes glowPulseGold { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); } 100% { box-shadow: 0 0 0 22px rgba(245,158,11,0); } }
+    .ember {
+      position: fixed; width: 6px; height: 6px; border-radius: 50%; z-index: 450; pointer-events: none;
+      transform: translate(-50%, -50%) scale(var(--s, 1)); animation: emberRise 2.2s ease-out forwards; opacity: 0;
+    }
+    .ember-screen { position: absolute; z-index: 0; }
+    @keyframes emberRise {
+      0% { transform: translate(-50%, -50%) scale(var(--s, 1)); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); opacity: 0; }
+    }
+    .milestone-overlay.milestone-t4 { background: rgba(69, 10, 10, 0.72); }
+    .milestone-overlay.milestone-t5 { background: radial-gradient(circle at 50% 45%, rgba(120, 53, 15, 0.85), rgba(17, 24, 39, 0.92)); }
+    .milestone-t3 .milestone-flame { font-size: 4rem; }
+    .milestone-t4 .milestone-flame { font-size: 4.5rem; animation-duration: 1s; }
+    .milestone-t5 .milestone-flame { font-size: 5rem; animation-duration: 0.8s; filter: drop-shadow(0 0 18px rgba(245,158,11,0.9)); }
+    .milestone-t4 .milestone-card { box-shadow: 0 0 60px rgba(249,115,22,0.55), 0 20px 40px rgba(0,0,0,0.3); }
+    .milestone-t5 .milestone-card { box-shadow: 0 0 90px rgba(245,158,11,0.8), 0 20px 40px rgba(0,0,0,0.3); border: 2px solid #f59e0b; }
+    .milestone-t5 .milestone-title { background: linear-gradient(90deg, #b45309, #f59e0b, #b45309); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 1.6rem; }
+    .milestone-ring {
+      position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; border-radius: 50%; pointer-events: none;
+      border: 3px solid rgba(251, 191, 36, 0.9); transform: translate(-50%, -50%) scale(0.5); opacity: 0;
+      animation: ringOut 1.6s ease-out forwards;
+    }
+    .milestone-t5 .milestone-ring { animation-iteration-count: infinite; animation-duration: 2.2s; }
+    @keyframes ringOut { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.9; } 100% { transform: translate(-50%, -50%) scale(7); opacity: 0; } }
+    @keyframes cardShake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, -1px); } 80% { transform: translate(3px, 1px); } }
+    .milestone-t4 .milestone-card, .milestone-t5 .milestone-card { animation: resultPopIn 0.35s ease-out, cardShake 0.5s ease-in-out 0.35s 2; }
     @keyframes flameFlicker {
       0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
       20% { transform: scale(1.35) rotate(-6deg); filter: brightness(1.3); }
@@ -1794,7 +1833,7 @@
       100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3) rotate(240deg); opacity: 0; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .streak-pill.extend, .streak-pill.extend .streak-flame, .milestone-flame, .spark { animation: none; }
+      .streak-pill.extend, .streak-pill.extend .streak-flame, .milestone-flame, .spark, .ember, .milestone-ring, .milestone-card { animation: none; }
     }
     .account-select {
       font-family: 'Inter', sans-serif; font-size: 0.85rem; padding: 0.4rem 0.5rem; width: 100%;
@@ -1822,10 +1861,17 @@
     .referral-row .form-input { flex: 1; font-size: 0.8rem; padding: 0.45rem 0.5rem; }
     .love-block { margin-top: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
     .love-text { font-size: 0.85rem; font-weight: 600; color: #374151; }
-    .header-btn-install { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
-    .header-btn-install:hover { background: #f59e0b; border-color: #f59e0b; color: white; }
-    @media (max-width: 640px) { .header-btn-install-text { display: none; } }
-    body.standalone .header-btn-install, body.standalone .love-block { display: none !important; }
+    .app-icon { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; flex: 0 0 auto; }
+    .header-btn-install { gap: 0.35rem; background: transparent; border-color: #d1fae5; color: #6b7280; font-weight: 500; }
+    .header-btn-install:hover { background: #f0fdf4; border-color: #0d9488; color: #0d9488; }
+    .header-btn-install .app-icon { width: 16px; height: 16px; }
+    @media (max-width: 640px) { .header-btn-install-text { display: none; } .header-btn-install { padding: 0.35rem 0.45rem; } }
+    .result-install-btn { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.78rem; color: #6b7280; text-decoration: none; }
+    .result-install-btn:hover { color: #0d9488; }
+    .result-install-btn .app-icon { width: 16px; height: 16px; }
+    #accountInstallBtn { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #6b7280; text-decoration: none; }
+    #accountInstallBtn:hover { color: #0d9488; }
+    body.standalone .header-btn-install, body.standalone .result-install-btn, body.standalone #accountInstallWrap { display: none !important; }
     .install-help { margin-top: 0.75rem; }
     .install-help summary { font-size: 0.78rem; color: #0d9488; cursor: pointer; font-weight: 600; }
     .install-help ul { margin: 0.4rem 0 0 1rem; padding: 0; font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
@@ -1854,7 +1900,7 @@
         </button>
       </div>
       <div class="header-right">
-        <button class="header-btn header-btn-install" id="headerInstallBtn" title="Add to home screen" aria-label="Add to home screen">&#128241;<span class="header-btn-install-text"> Get app</span></button>
+        <button class="header-btn header-btn-install" id="headerInstallBtn" title="Add to home screen" aria-label="Add to home screen"><img class="app-icon" src="/favicon-32.png" alt="" width="16" height="16"><span class="header-btn-install-text">Get app</span></button>
         <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
         <button class="header-btn" id="archiveBtn">Archive</button>
         <button class="header-btn" id="friendsBtn">Friends</button>
@@ -1927,10 +1973,6 @@
         </div>
         <div style="margin-top: 1.25rem; text-align: center;">
           <button class="btn btn-primary" id="persistentShareBtn" style="font-size: 0.95rem; padding: 0.6rem 1.4rem;">Share Your Result</button>
-          <div class="love-block" id="loveBlock">
-            <span class="love-text">Love Physiodle?</span>
-            <button class="btn btn-secondary btn-small" id="loveInstallBtn">&#128241; Add it to your home screen</button>
-          </div>
           <div style="margin-top: 0.6rem;">
             <button class="btn-link" id="reportPuzzleBtn" style="font-size: 0.75rem; color: #6b7280;">Something wrong with this puzzle?</button>
           </div>
@@ -1944,7 +1986,6 @@
       <div class="feedback-section" id="feedbackSection">
         <div class="fb-footer-links">
           <button class="btn-link" id="feedbackToggle">Leave feedback</button>
-          <button class="btn-link" id="installLinkBtn">Add to home screen</button>
           <a class="btn-link" href="/terms.html" target="_blank" rel="noopener">Terms</a>
           <a class="btn-link" href="/privacy.html" target="_blank" rel="noopener">Privacy</a>
         </div>
@@ -2016,14 +2057,14 @@
         <p style="margin-top: 0.4rem; font-size: 0.75rem; color: #6b7280;">Create a free account to track stats and compete on leaderboards</p>
       </div>
       <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af;">Check back tomorrow for the next Physiodle!</p>
-      <p style="margin-top: 0.25rem; font-size: 0.75rem;"><button class="btn-link" id="resultInstallBtn" style="font-size: 0.75rem;">Add Physiodle to your home screen</button></p>
+      <button class="btn-link result-install-btn" id="resultInstallBtn"><img class="app-icon" src="/favicon-32.png" alt="" width="16" height="16"><span>Add Physiodle to your home screen</span></button>
     </div>
   </div>
 
   <!-- STREAK MILESTONE -->
   <div class="milestone-overlay" id="milestoneOverlay">
     <div class="milestone-card" id="milestoneCard">
-      <span class="milestone-flame" aria-hidden="true">&#128293;</span>
+      <span class="milestone-flame" id="milestoneFlame" aria-hidden="true">&#128293;</span>
       <div class="milestone-title" id="milestoneTitle"></div>
       <div class="milestone-sub" id="milestoneSub"></div>
       <button class="btn btn-primary" id="milestoneCloseBtn">Keep it going</button>
@@ -2455,13 +2496,9 @@
             <option value="other">Other</option>
           </select>
           <div id="accountLevelSaved" style="font-size: 0.72rem; color: #059669; margin-top: 0.3rem; min-height: 1em;"></div>
-          <label class="consent-row" style="margin-top: 0.5rem;">
-            <input type="checkbox" id="accountMarketing">
-            <span>Email me occasional Physiodle updates</span>
-          </label>
           <div class="account-stat-note" style="margin-top: 0.5rem;">Friends: <strong id="accountFriendsInline">0</strong></div>
           <div id="accountInstallWrap" style="margin-top: 0.75rem;">
-            <button class="btn btn-secondary btn-full btn-small" id="accountInstallBtn">&#128241; Put Physiodle on your home screen</button>
+            <button class="btn-link" id="accountInstallBtn"><img class="app-icon" src="/favicon-32.png" alt="" width="16" height="16"><span>Put Physiodle on your home screen</span></button>
           </div>
         </div>
 
@@ -4579,7 +4616,6 @@
           document.getElementById('accountReferralsActive').textContent = user.referralsActive || 0;
           document.getElementById('accountReferralLink').value = shareUrl();
           renderReferralLevel(user.referrals || 0);
-          document.getElementById('accountMarketing').checked = !!user.marketingConsent;
           document.getElementById('accountInstallWrap').style.display = isStandalone() ? 'none' : '';
           document.getElementById('accountLevel').value = user.professionLevel || '';
           document.getElementById('accountLevelSaved').textContent = '';
@@ -5198,20 +5234,46 @@
     };
     let lastKnownStreak = null;
 
+    // Tiers: the longer the streak, the hotter the pill and the bigger the show.
+    function streakTier(n) { return n >= 100 ? 5 : n >= 30 ? 4 : n >= 7 ? 3 : n >= 3 ? 2 : 1; }
+    const TIER_FLAMES = { 1: 1, 2: 1, 3: 2, 4: 3, 5: 3 };
+
     function updateStreakPill(streak, animate) {
       const pill = document.getElementById('streakPill');
       const count = document.getElementById('streakCount');
       if (!gameState.userToken || !streak) { pill.style.display = 'none'; lastKnownStreak = streak || 0; return; }
+      const tier = streakTier(streak);
       count.textContent = streak;
+      pill.querySelector('.streak-flame').textContent = '\u{1F525}'.repeat(TIER_FLAMES[tier]);
+      pill.className = `streak-pill streak-t${tier}`;
       pill.style.display = '';
       pill.title = `${streak}-day streak`;
       if (animate) {
-        pill.classList.remove('extend');
         void pill.offsetWidth; // restart animation
         pill.classList.add('extend');
-        setTimeout(() => pill.classList.remove('extend'), 5000);
+        if (tier >= 3) emberBurst(pill, tier);
+        setTimeout(() => pill.classList.remove('extend'), 6000);
       }
       lastKnownStreak = streak;
+    }
+
+    // Embers rising from the pill (tier 3+), more and higher with each tier.
+    function emberBurst(anchor, tier) {
+      const rect = anchor.getBoundingClientRect();
+      const n = { 3: 10, 4: 22, 5: 40 }[tier] || 10;
+      for (let i = 0; i < n; i++) {
+        const e = document.createElement('span');
+        e.className = 'ember';
+        e.style.left = `${rect.left + Math.random() * rect.width}px`;
+        e.style.top = `${rect.top + rect.height / 2}px`;
+        e.style.setProperty('--dx', `${(Math.random() - 0.5) * 60}px`);
+        e.style.setProperty('--dy', `${-(40 + Math.random() * (tier === 5 ? 160 : tier === 4 ? 110 : 70))}px`);
+        e.style.setProperty('--s', `${0.5 + Math.random() * (tier >= 4 ? 1.2 : 0.7)}`);
+        e.style.animationDelay = `${Math.random() * 0.8}s`;
+        e.style.background = ['#f59e0b', '#f97316', '#ef4444', '#fbbf24'][i % 4];
+        document.body.appendChild(e);
+        setTimeout(() => e.remove(), 2600);
+      }
     }
 
     async function refreshStreak(afterWin) {
@@ -5227,25 +5289,62 @@
     }
 
     function showMilestone(streak) {
-      const [title, sub] = STREAK_MILESTONES[streak];
+      const [title, sub] = STREAK_MILESTONES[streak] || [`${streak} day streak`, 'Keep it going.'];
+      const tier = streakTier(streak);
       document.getElementById('milestoneTitle').textContent = title;
       document.getElementById('milestoneSub').textContent = sub;
+      const overlay = document.getElementById('milestoneOverlay');
       const card = document.getElementById('milestoneCard');
+      overlay.className = `milestone-overlay milestone-t${tier}`;
       card.querySelectorAll('.spark').forEach(x => x.remove());
-      const colours = ['#f59e0b', '#fbbf24', '#0d9488', '#ef4444', '#fcd34d'];
-      for (let i = 0; i < 28; i++) {
+      overlay.querySelectorAll('.ember, .milestone-ring').forEach(x => x.remove());
+      document.getElementById('milestoneFlame').textContent = '\u{1F525}'.repeat(TIER_FLAMES[tier]);
+
+      // Sparks from the card: 28 -> 48 -> 80 -> 140, flying further each tier.
+      const sparks = { 1: 28, 2: 28, 3: 48, 4: 80, 5: 140 }[tier];
+      const reach = { 1: 110, 2: 110, 3: 150, 4: 220, 5: 320 }[tier];
+      const colours = tier >= 4 ? ['#f59e0b', '#fbbf24', '#f97316', '#ef4444', '#fde68a', '#ffffff'] : ['#f59e0b', '#fbbf24', '#0d9488', '#ef4444', '#fcd34d'];
+      for (let i = 0; i < sparks; i++) {
         const sp = document.createElement('span');
         sp.className = 'spark';
-        const angle = (Math.PI * 2 * i) / 28 + Math.random() * 0.3;
-        const dist = 110 + Math.random() * 90;
+        const angle = (Math.PI * 2 * i) / sparks + Math.random() * 0.3;
+        const dist = reach * 0.6 + Math.random() * reach * 0.8;
         sp.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
         sp.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
         sp.style.background = colours[i % colours.length];
-        sp.style.animationDelay = `${Math.random() * 0.15}s`;
+        sp.style.animationDelay = `${Math.random() * (tier >= 4 ? 0.6 : 0.15)}s`;
+        sp.style.animationDuration = `${1.1 + Math.random() * (tier >= 4 ? 1.2 : 0.3)}s`;
         card.appendChild(sp);
       }
+      // Tier 4+: shockwave rings. Tier 5: rings keep coming.
+      if (tier >= 4) {
+        const rings = tier === 5 ? 4 : 2;
+        for (let i = 0; i < rings; i++) {
+          const ring = document.createElement('span');
+          ring.className = 'milestone-ring';
+          ring.style.animationDelay = `${i * 0.45}s`;
+          overlay.appendChild(ring);
+        }
+      }
+      // Tier 3+: embers rising across the whole screen behind the card.
+      if (tier >= 3) {
+        const n = { 3: 30, 4: 70, 5: 140 }[tier];
+        for (let i = 0; i < n; i++) {
+          const e = document.createElement('span');
+          e.className = 'ember ember-screen';
+          e.style.left = `${Math.random() * 100}vw`;
+          e.style.top = `${60 + Math.random() * 50}vh`;
+          e.style.setProperty('--dx', `${(Math.random() - 0.5) * 80}px`);
+          e.style.setProperty('--dy', `${-(200 + Math.random() * 500)}px`);
+          e.style.setProperty('--s', `${0.6 + Math.random() * (tier === 5 ? 1.8 : 1.1)}`);
+          e.style.animationDelay = `${Math.random() * 2.5}s`;
+          e.style.animationDuration = `${2 + Math.random() * 2}s`;
+          e.style.background = colours[i % colours.length];
+          overlay.appendChild(e);
+        }
+      }
       // Milestone shows after the result popup has had its moment.
-      setTimeout(() => document.getElementById('milestoneOverlay').classList.add('show'), 900);
+      setTimeout(() => overlay.classList.add('show'), 900);
       if (typeof trackEvent === 'function') trackEvent('streak_milestone', { streak });
     }
     document.getElementById('milestoneCloseBtn').addEventListener('click', () => document.getElementById('milestoneOverlay').classList.remove('show'));
@@ -5266,18 +5365,6 @@
       if (typeof trackEvent === 'function') trackEvent('referral_link_copied', {});
     });
 
-    // Email updates toggle (Account modal)
-    document.getElementById('accountMarketing').addEventListener('change', async (e) => {
-      try {
-        await fetch('/api/auth/profile', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${gameState.userToken}` },
-          body: JSON.stringify({ marketingConsent: e.target.checked }),
-        });
-        showToast(e.target.checked ? 'Email updates on' : 'Email updates off', 'success');
-      } catch (err) { showToast('Could not save', 'error'); }
-    });
-
     // ---- Demo panel (?demo=1): trigger animations and popups on demand ----
     if (/[?&]demo=1/.test(location.search)) {
       const panel = document.createElement('div');
@@ -5285,6 +5372,7 @@
       panel.innerHTML = '<h4>Sandbox demo</h4>';
       const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', fn); panel.appendChild(b); };
       const closeAll = () => document.querySelectorAll('.modal-overlay.show, .result-overlay.show, .milestone-overlay.show').forEach(el => el.classList.remove('show'));
+      [1, 7, 30, 100, 365].forEach(n => add(`Streak ${n}`, () => { const t = gameState.userToken; gameState.userToken = t || 'demo'; updateStreakPill(n, true); gameState.userToken = t; }));
       add('Streak +1', () => { const n = (parseInt(document.getElementById('streakCount').textContent, 10) || 0) + 1; const t = gameState.userToken; gameState.userToken = t || 'demo'; updateStreakPill(n, true); gameState.userToken = t; });
       [3, 7, 30, 100, 365].forEach(n => add(`Milestone ${n}`, () => { closeAll(); showMilestone(n); }));
       add('Win popup', () => { closeAll(); showResult(true, { answer: (gameState.puzzle && gameState.puzzle.answer) || 'Demo answer', explanation: (gameState.puzzle && gameState.puzzle.explanation) || '' }); });
@@ -5405,9 +5493,7 @@
       if (typeof trackEvent === 'function') trackEvent('install_guide_open', { platform: detectPlatform(), standalone });
     }
 
-    document.getElementById('installLinkBtn').addEventListener('click', openInstallModal);
     document.getElementById('headerInstallBtn').addEventListener('click', openInstallModal);
-    document.getElementById('loveInstallBtn').addEventListener('click', openInstallModal);
     document.getElementById('accountInstallBtn').addEventListener('click', () => { closeModal('accountModal'); openInstallModal(); });
     if (isStandalone()) document.body.classList.add('standalone');
     document.getElementById('resultInstallBtn').addEventListener('click', () => {
@@ -5431,9 +5517,6 @@
 
     // Already installed: the footer link becomes a reminder link instead.
     if (isStandalone()) {
-      document.getElementById('installLinkBtn').textContent = 'Daily reminder';
-      const r = document.getElementById('resultInstallBtn');
-      if (r) r.textContent = 'Set a daily reminder';
     }
 
     // ---- Web Push daily reminder ----

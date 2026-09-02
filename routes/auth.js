@@ -321,7 +321,11 @@ router.post('/cross-verify', crossVerifyLimiter, async (req, res) => {
 router.get('/me', requireAuth, (req, res) => {
   const user = db.prepare('SELECT id, username, email, created_at, profession_level, marketing_consent, referral_code FROM users WHERE id = ?').get(req.user.userId);
   const referrals = db.prepare('SELECT COUNT(*) AS c FROM users WHERE referred_by = ?').get(user.id).c;
-  const referralsActive = db.prepare('SELECT COUNT(DISTINCT u.id) AS c FROM users u JOIN game_results gr ON gr.user_id = u.id WHERE u.referred_by = ?').get(user.id).c;
+  // "Still playing" = referred players with at least one game in the last 14 days.
+  const referralsActive = db.prepare(`
+    SELECT COUNT(DISTINCT u.id) AS c FROM users u JOIN game_results gr ON gr.user_id = u.id
+    WHERE u.referred_by = ? AND gr.completed_at >= DATETIME('now', '-14 days')
+  `).get(user.id).c;
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
