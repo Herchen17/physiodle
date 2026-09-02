@@ -1124,10 +1124,15 @@
       font-weight: 600;
       color: #1f2937;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
     }
+    /* The name shrinks first (down to 78%), then truncates. Badges never truncate. */
+    .lb-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .lb-name .lb-streak, .lb-name em { flex: 0 0 auto; }
 
     .lb-row.lb-gold .lb-name { color: #b8860b; }
     .lb-row.lb-gold .lb-rank { color: #b8860b; }
@@ -4345,7 +4350,7 @@
         const rankClass = entry._displayRank === 1 ? ' lb-gold' : entry._displayRank === 2 ? ' lb-silver' : entry._displayRank === 3 ? ' lb-bronze' : '';
         return `<div class="lb-row${isCurrentUser ? ' lb-you' : ''}${rankClass}">
           <span class="lb-rank">#${entry._displayRank}</span>
-          <span class="lb-name">${entry.username}${streakBadge}${isCurrentUser ? ' <em>(you)</em>' : ''}</span>
+          <span class="lb-name"><span class="lb-name-text">${entry.username}</span>${streakBadge}${isCurrentUser ? ' <em>(you)</em>' : ''}</span>
           <span class="lb-stat">${entry.played}</span>
           <span class="lb-stat">${entry.winRate}%</span>
           <span class="lb-stat">${entry.avgPoints}</span>
@@ -4361,6 +4366,7 @@
         </div>` : '';
 
       content.innerHTML = `<div class="lb-header">${headerCells}</div>${rows}${paginationHtml}`;
+      fitLeaderboardNames(content);
 
       // Wire sort buttons — no API re-fetch, just re-render
       content.querySelectorAll('.lb-col-btn[data-sort]').forEach(btn => {
@@ -5295,6 +5301,20 @@
     });
 
     function checkFeedbackState() { /* no-op for simple version */ }
+
+    // Leaderboard names: reduce font size a little before falling back to an ellipsis,
+    // so a long username doesn't eat the streak badge.
+    function fitLeaderboardNames(root) {
+      root.querySelectorAll('.lb-name').forEach(cell => {
+        const txt = cell.querySelector('.lb-name-text');
+        if (!txt) return;
+        txt.style.fontSize = '';
+        const extras = Array.from(cell.children).filter(c => c !== txt).reduce((w, c) => w + c.getBoundingClientRect().width + 5, 0);
+        const room = cell.clientWidth - extras;
+        let size = 1;
+        while (txt.scrollWidth > room && size > 0.78) { size -= 0.04; txt.style.fontSize = size + 'em'; }
+      });
+    }
 
     // ============================================================================
     // STREAK ON THE MAIN PAGE + MILESTONES
