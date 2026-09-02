@@ -285,12 +285,15 @@
     }
 
     /* CARDS */
+    /* Hairline cards: 1px border, no accent stripe, no shadow. State is carried
+       by the border and label colour only. */
     .card {
       background: white;
       border-radius: 0.75rem;
       padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 0.75rem;
+      border: 1px solid #e5e7eb;
+      box-shadow: none;
       transition: all 0.3s ease;
     }
 
@@ -304,7 +307,8 @@
     }
 
     .card.clue-card.blurred {
-      background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+      background: #eef2f1;
+      border-color: transparent;
       color: transparent;
       user-select: none;
       filter: blur(8px);
@@ -314,18 +318,15 @@
       background: white;
       color: #1f2937;
       filter: blur(0);
-      border-left: 4px solid #0d9488;
       position: relative;
     }
 
     .card.clue-card.revealed.clue-wrong {
-      border-left: 4px solid #ef4444;
-      background: #fef2f2;
+      border-color: #fecaca;
     }
 
     .card.clue-card.revealed.clue-correct {
-      border-left: 4px solid #059669;
-      background: #f0fdf4;
+      border-color: #a7f3d0;
     }
 
     .clue-status-icon {
@@ -586,16 +587,16 @@
 
     /* ANSWER SUMMARY (persists after popup close) */
     .answer-summary {
-      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-      border: 2px solid #059669;
+      background: #f3fcf7;
+      border: 1px solid #a7f3d0;
       border-radius: 0.75rem;
       padding: 1rem 1.25rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     .answer-summary.lost {
-      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-      border-color: #dc2626;
+      background: #fff7f7;
+      border-color: #fecaca;
     }
 
     .answer-summary-label {
@@ -724,8 +725,8 @@
     }
 
     .result-explanation {
-      background: #f0fdf4;
-      border-left: 3px solid #059669;
+      background: #f3fcf7;
+      border: 1px solid #a7f3d0;
       padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       margin-bottom: 0.75rem;
@@ -1111,7 +1112,6 @@
 
     .lb-you {
       background: #f0f9ff;
-      border-left: 3px solid #0d9488;
     }
 
     .lb-rank {
