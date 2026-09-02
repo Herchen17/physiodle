@@ -28,6 +28,72 @@ const VAPID_PUBLIC = loadVapid();
 
 const VALID_TZ = (tz) => { try { Intl.DateTimeFormat('en-AU', { timeZone: tz }); return true; } catch (e) { return false; } };
 
+// "Surprise me": stored as -1, delivered at a different hour each day between
+// SURPRISE_FROM and SURPRISE_TO (local time).
+const SURPRISE = -1;
+const SURPRISE_FROM = 7;   // 7am
+const SURPRISE_TO = 21;    // 9pm, so the last one lands before 10pm
+
+// Stable per subscription per day, so the sweep can't fire twice or drift.
+function surpriseHour(id, day) {
+  // Math.imul keeps the multiply in 32 bits, and the final >>> 0 makes it
+  // unsigned: plain ^ returns a SIGNED int32 and would give negative hours.
+  let x = Math.imul(id, 2654435761) ^ Math.imul(day, 40503);
+  x = Math.imul(x ^ (x >>> 15), 2246822507);
+  x = (x ^ (x >>> 13)) >>> 0;
+  return SURPRISE_FROM + (x % (SURPRISE_TO - SURPRISE_FROM + 1));
+}
+
+// Rotating copy so the daily nudge doesn't read like the same robot every morning.
+// Picked by day number, so everyone gets the same one on a given day.
+const DAILY_MESSAGES = [
+  ['Can you solve today\'s Physiodle?', 'Five clues, five guesses, one diagnosis.'],
+  ['A new patient is waiting', 'Can you work out what\'s going on?'],
+  ['Today\'s case is ready', 'How early can you call it?'],
+  ['What\'s the diagnosis?', 'Today\'s case just went live.'],
+  ['Think you can get it first go?', 'Today\'s Physiodle is out.'],
+  ['A new case just landed', 'Five clues stand between you and the answer.'],
+  ['Your daily case has arrived', 'Read the clues, make the call.'],
+  ['Ready to diagnose?', 'Today\'s Physiodle takes about two minutes.'],
+  ['One case, five clues', 'See how few you need today.'],
+  ['Today\'s patient is in the waiting room', 'Can you work out what\'s wrong?'],
+];
+
+// Someone with a streak gets a reason to protect it instead of a generic nudge.
+const STREAK_MESSAGES = [
+  (n) => [`Your ${n}-day streak is waiting`, 'Today\'s case is ready. Keep it alive.'],
+  (n) => [`Don\'t let a ${n}-day streak go`, 'Two minutes and today\'s case is done.'],
+  (n) => [`${n} days in a row`, 'Today\'s Physiodle is out. Make it ${n + 1}.'.replace('${n + 1}', String(n + 1))],
+];
+
+// Current on-day win streak, same rule as the leaderboard.
+function currentStreak(userId) {
+  try {
+    const today = pm.getCurrentDayNumber();
+    const rows = db.prepare(`
+      SELECT day_number FROM game_results
+      WHERE user_id = ? AND won = 1 AND day_number > ?
+        AND completed_at >= DATETIME(DATE('2026-03-04', '+' || (day_number - 1) || ' days'), '-14 hours')
+        AND completed_at < DATETIME(DATE('2026-03-04', '+' || (day_number - 1) || ' days'), '+36 hours')
+      ORDER BY day_number DESC
+    `).all(userId, today - 400);
+    const wins = new Set(rows.map(r => r.day_number));
+    let d = wins.has(today) ? today : today - 1, n = 0;
+    while (d >= 1 && wins.has(d)) { n++; d--; }
+    return n;
+  } catch (e) { return 0; }
+}
+
+function messageFor(day, streak) {
+  if (streak >= 3) {
+    const pick = STREAK_MESSAGES[day % STREAK_MESSAGES.length];
+    const [title, body] = pick(streak);
+    return { title, body };
+  }
+  const [title, body] = DAILY_MESSAGES[day % DAILY_MESSAGES.length];
+  return { title, body };
+}
+
 router.get('/vapid-public-key', (req, res) => res.json({ key: VAPID_PUBLIC }));
 
 // POST /api/push/subscribe { subscription, hour, tz, platform }
@@ -37,7 +103,9 @@ router.post('/subscribe', optionalAuth, (req, res) => {
     return res.status(400).json({ error: 'Invalid subscription' });
   }
   if (String(subscription.endpoint).length > 2000) return res.status(400).json({ error: 'Endpoint too long' });
-  const h = Math.min(Math.max(parseInt(hour, 10) || 8, 0), 23);
+  // -1 means "surprise me": the sweep picks a different hour each day.
+  const raw = parseInt(hour, 10);
+  const h = raw === SURPRISE ? SURPRISE : Math.min(Math.max(Number.isFinite(raw) ? raw : 8, 0), 23);
   const zone = (typeof tz === 'string' && tz.length < 64 && VALID_TZ(tz)) ? tz : 'Australia/Sydney';
   const userId = req.user ? req.user.userId : null;
   db.prepare(`
@@ -73,7 +141,9 @@ router.post('/test', async (req, res) => {
   const row = endpoint ? db.prepare('SELECT * FROM push_subscriptions WHERE endpoint = ?').get(endpoint) : null;
   if (!row) return res.status(404).json({ error: 'Not subscribed' });
   try {
-    await sendTo(row, { title: 'Physiodle', body: 'Test notification. Reminders are on.', tag: 'physiodle-test' });
+    const day = pm.getCurrentDayNumber();
+    const msg = messageFor(day, row.user_id ? currentStreak(row.user_id) : 0);
+    await sendTo(row, { title: msg.title, body: msg.body + ' (This is a test of your daily reminder.)', tag: 'physiodle-test' });
     res.json({ success: true });
   } catch (e) {
     res.status(502).json({ error: 'Push failed', detail: e.statusCode || e.message });
@@ -111,18 +181,17 @@ async function runReminderSweep() {
   for (const row of rows) {
     let lh;
     try { lh = localHourAndDay(row.tz); } catch (e) { continue; }
-    if (lh.hour !== row.hour_local || lh.day < 1 || row.last_sent_day === lh.day) continue;
+    if (lh.day < 1 || row.last_sent_day === lh.day) continue;
+    const targetHour = row.hour_local === SURPRISE ? surpriseHour(row.id, lh.day) : row.hour_local;
+    if (lh.hour !== targetHour) continue;
     if (row.user_id) {
       const played = db.prepare('SELECT 1 FROM game_results WHERE user_id = ? AND day_number = ?').get(row.user_id, lh.day);
       if (played) { db.prepare('UPDATE push_subscriptions SET last_sent_day = ? WHERE id = ?').run(lh.day, row.id); continue; }
     }
     db.prepare('UPDATE push_subscriptions SET last_sent_day = ? WHERE id = ?').run(lh.day, row.id);
     try {
-      await sendTo(row, {
-        title: `Physiodle #${lh.day} is ready`,
-        body: 'Five clues, five guesses, one diagnosis. Keep the streak alive.',
-        tag: `physiodle-day-${lh.day}`,
-      });
+      const msg = messageFor(lh.day, row.user_id ? currentStreak(row.user_id) : 0);
+      await sendTo(row, { title: msg.title, body: msg.body, tag: `physiodle-day-${lh.day}` });
       sent++;
     } catch (e) { /* logged via failures column */ }
   }

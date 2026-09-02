@@ -2150,13 +2150,24 @@
           <div class="install-note" id="reminderNote">A single notification each day when the new puzzle is out.</div>
           <div class="reminder-row" id="reminderControls">
             <select id="reminderHour" aria-label="Reminder time">
+              <option value="6">6:00 am</option>
               <option value="7">7:00 am</option>
               <option value="8" selected>8:00 am</option>
               <option value="9">9:00 am</option>
+              <option value="10">10:00 am</option>
+              <option value="11">11:00 am</option>
               <option value="12">12:00 pm</option>
+              <option value="13">1:00 pm</option>
+              <option value="14">2:00 pm</option>
+              <option value="15">3:00 pm</option>
+              <option value="16">4:00 pm</option>
+              <option value="17">5:00 pm</option>
               <option value="18">6:00 pm</option>
+              <option value="19">7:00 pm</option>
               <option value="20">8:00 pm</option>
               <option value="21">9:00 pm</option>
+              <option value="22">10:00 pm</option>
+              <option value="-1">Surprise me</option>
             </select>
             <button class="btn btn-primary btn-small" id="reminderOnBtn">Turn on reminders</button>
             <button class="btn btn-secondary btn-small" id="reminderTestBtn" style="display:none;">Send a test</button>
@@ -5896,7 +5907,9 @@
             offBtn.style.display = '';
             document.getElementById('reminderTestBtn').style.display = '';
             status.style.color = '';
-            status.textContent = `Reminders are on. You'll get one at ${formatHour(d.hour)} each day, unless you've already played that day's puzzle.`;
+            status.textContent = Number(d.hour) === -1
+              ? "Reminders are on. You'll get one at a random time between 7am and 10pm, different each day, unless you've already played."
+              : `Reminders are on. You'll get one at ${formatHour(d.hour)} each day, unless you've already played that day's puzzle.`;
             return;
           }
         } catch (e) { /* fall through */ }
@@ -5907,6 +5920,7 @@
     }
 
     function formatHour(h) {
+      if (Number(h) === -1) return 'a random time between 7am and 10pm';
       const d = new Date(); d.setHours(h, 0, 0, 0);
       return d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
     }
