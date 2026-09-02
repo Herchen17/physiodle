@@ -157,12 +157,10 @@ th[data-key] { cursor: pointer; }
   <!-- KPI Row -->
   <div class="stats-row" id="kpiRow"></div>
 
-  <!-- v2: period comparison -->
-  <div class="section-header"><span class="section-title">This period vs the one before</span><span class="nav-time" id="rangeNote"></span></div>
-  <div class="stats-row" id="periodRow"></div>
+  <!-- v2: arrival funnel -->
   <div class="chart-grid">
     <div class="chart-card full">
-      <div class="chart-title">Where people go &middot; people who first arrived in this period</div>
+      <div class="chart-title">Where people go &middot; people who first arrived in the selected period <span class="nav-time" id="rangeNote" style="text-transform:none;letter-spacing:0;margin-left:0.5rem"></span></div>
       <div class="funnel" id="funnel"></div>
     </div>
   </div>
@@ -335,7 +333,9 @@ Chart.defaults.plugins.legend.labels.boxWidth = 10;
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
+let lastV1 = null, lastV2 = null;
 function renderAll(d) {
+  lastV1 = d;
   renderKPIs(d);
   renderTrafficChart(d);
   renderWinLoss(d);
@@ -383,18 +383,9 @@ function periodDelta(cur, prev) {
 }
 
 function renderV2(d) {
-  const k = d.kpis, s = d.series;
-  document.getElementById('rangeNote').textContent = d.range.key === 'all' ? 'since launch' : d.range.days + ' day' + (d.range.days > 1 ? 's' : '') + ', compared with the ' + d.range.days + ' before';
-  const defs = [
-    ['Visitors', k.visitors, 'visitors', 'blue', '#3b82f6'],
-    ['Sign-ups', k.signups, 'signups', 'green', '#22c55e'],
-    ['Games Played', k.games, 'games', 'purple', '#8b5cf6'],
-    ['Active Players', k.activePlayers, 'activePlayers', 'amber', '#f59e0b'],
-    ['Page Views', k.pageviews, 'pageviews', 'cyan', '#06b6d4'],
-  ];
-  document.getElementById('periodRow').innerHTML = defs.map(([label, v, sk, cls, col]) =>
-    '<div class="stat-card ' + cls + '"><div class="stat-label">' + label + '</div><div class="stat-value">' + fmtN(v.current) + '</div>' + periodDelta(v.current, v.previous) + spark(s.map(r => r[sk]), col) + '</div>').join('')
-    + '<div class="stat-card pink"><div class="stat-label">Win Rate</div><div class="stat-value">' + pct(k.wins.current, k.games.current) + '</div><div class="stat-sub">' + (k.wins.previous == null ? 'since launch' : 'previous ' + pct(k.wins.previous, k.games.previous)) + '</div></div>';
+  lastV2 = d;
+  if (lastV1) renderKPIs(lastV1);
+  document.getElementById('rangeNote').textContent = d.range.key === 'all' ? 'since launch' : d.range.days + ' day' + (d.range.days > 1 ? 's' : '') + ', vs the ' + d.range.days + ' before';
 
   const f = d.funnel;
   const steps = [['Visitors', f.visitors, null], ['Signed up', f.signups, f.visitors], ['Played a game', f.firstGame, f.signups], ['Came back later', f.returned, f.firstGame]];
@@ -447,14 +438,25 @@ function renderPuzzles(rows) {
 
 function renderKPIs(d) {
   const delta = (a, b) => { if (!b) return ''; const pct = Math.round(((a-b)/Math.max(b,1))*100); return '<div class="stat-delta ' + (pct>=0?'up':'down') + '">' + (pct>=0?'+':'') + pct + '% vs yesterday</div>'; };
+  // Period line: same card, third line, driven by the range control (v2 data).
+  const v2 = lastV2;
+  const label = v2 ? (v2.range.key === 'all' ? 'since launch' : 'last ' + v2.range.days + 'd') : '';
+  const period = (k, sk, col) => {
+    if (!v2) return '';
+    const v = v2.kpis[k];
+    let cmp = '';
+    if (v.previous != null && v.previous > 0) { const ch = (v.current - v.previous) / v.previous; cmp = ' <span class="' + (ch > 0.02 ? 'stat-delta up' : ch < -0.02 ? 'stat-delta down' : 'stat-sub') + '" style="display:inline">' + (ch > 0 ? '+' : '') + Math.round(ch * 100) + '% vs prior ' + v2.range.days + 'd</span>'; }
+    return '<div class="stat-sub" style="margin-top:0.35rem;border-top:1px solid var(--border);padding-top:0.35rem">' + label + ': <strong style="color:var(--text)">' + fmtN(v.current) + '</strong>' + cmp + '</div>' + spark(v2.series.map(r => r[sk]), col);
+  };
   const cards = [
-    { label: 'Visitors Today', value: d.uniqueVisitors.today, sub: 'Total: ' + d.uniqueVisitors.total, color: 'blue', extra: delta(d.uniqueVisitors.today, d.uniqueVisitors.yesterday) },
-    { label: 'Page Views Today', value: d.pageViews.today, sub: 'Total: ' + d.pageViews.total, color: 'cyan', extra: delta(d.pageViews.today, d.pageViews.yesterday) },
-    { label: 'Sign-ups', value: d.signups.total, sub: 'Today: ' + d.signups.today + ' | Week: ' + d.signups.thisWeek, color: 'green' },
-    { label: 'Games Played', value: d.gamesPlayed.total, sub: 'Today: ' + d.gamesPlayed.today + ' | Week: ' + d.gamesPlayed.thisWeek, color: 'purple' },
-    { label: 'Win Rate', value: d.winLoss.winRate + '%', sub: d.winLoss.wins + 'W / ' + d.winLoss.losses + 'L', color: 'amber' },
+    { label: 'Visitors Today', value: d.uniqueVisitors.today, sub: 'Total: ' + d.uniqueVisitors.total, color: 'blue', extra: delta(d.uniqueVisitors.today, d.uniqueVisitors.yesterday) + period('visitors', 'visitors', '#3b82f6') },
+    { label: 'Page Views Today', value: d.pageViews.today, sub: 'Total: ' + d.pageViews.total, color: 'cyan', extra: delta(d.pageViews.today, d.pageViews.yesterday) + period('pageviews', 'pageviews', '#06b6d4') },
+    { label: 'Sign-ups', value: d.signups.total, sub: 'Today: ' + d.signups.today + ' | Week: ' + d.signups.thisWeek, color: 'green', extra: period('signups', 'signups', '#22c55e') },
+    { label: 'Games Played', value: d.gamesPlayed.total, sub: 'Today: ' + d.gamesPlayed.today + ' | Week: ' + d.gamesPlayed.thisWeek, color: 'purple', extra: period('games', 'games', '#8b5cf6') },
+    { label: 'Active Players', value: v2 ? fmtN(v2.kpis.activePlayers.current) : '\u2013', sub: v2 ? 'played in the ' + label.replace('last ', 'last ') : 'loading', color: 'amber', extra: v2 && v2.kpis.activePlayers.previous ? period('activePlayers', 'activePlayers', '#f59e0b') : '' },
+    { label: 'Win Rate', value: d.winLoss.winRate + '%', sub: d.winLoss.wins + 'W / ' + d.winLoss.losses + 'L', color: 'amber', extra: v2 ? '<div class="stat-sub">' + label + ': ' + pct(v2.kpis.wins.current, v2.kpis.games.current) + (v2.kpis.wins.previous != null ? ' (prior ' + pct(v2.kpis.wins.previous, v2.kpis.games.previous) + ')' : '') + '</div>' : '' },
     { label: 'Avg Score', value: d.averageScore, sub: 'Lower is better (1-5)', color: 'pink' },
-    { label: 'Conversion', value: d.conversionRate + '%', sub: 'Visitors \u2192 Sign-ups', color: 'green' },
+    { label: 'Conversion', value: d.conversionRate + '%', sub: 'Visitors \u2192 Sign-ups', color: 'green', extra: v2 ? '<div class="stat-sub">' + label + ': ' + pct(v2.funnel.signups, v2.funnel.visitors) + '</div>' : '' },
     { label: 'Games / User', value: d.gamesPerUser, sub: d.social.totalFriendships + ' friendships', color: 'cyan' },
   ];
   document.getElementById('kpiRow').innerHTML = cards.map(c =>
