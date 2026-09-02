@@ -3,7 +3,11 @@
 // MAIL_APP_PASSWORD). Later: Brevo/Postmark by swapping the transport here.
 //
 // Transports:
-//   smtp  - real sending via smtp.gmail.com (default when MAIL_USER is set)
+//   brevo - Brevo transactional HTTPS API (BREVO_API_KEY + MAIL_FROM). Railway
+//           blocks outbound SMTP below the Pro plan, so this is the default
+//           whenever a Brevo key is present.
+//   smtp  - SMTP with MAIL_USER + MAIL_APP_PASSWORD (Gmail app password); only
+//           works where outbound SMTP ports are open (Railway Pro or elsewhere)
 //   json  - append every message to MAIL_OUTBOX_FILE (sandbox / tests)
 //   log   - print to stdout, send nothing (default when nothing is configured)
 const nodemailer = require('nodemailer');
@@ -14,7 +18,9 @@ const APP_URL = (process.env.APP_URL || 'https://physiodle.up.railway.app').repl
 const FROM_NAME = process.env.MAIL_FROM_NAME || 'Physiodle';
 const MAIL_USER = process.env.MAIL_USER || '';
 const MAIL_PASS = process.env.MAIL_APP_PASSWORD || '';
-const MODE = process.env.MAIL_TRANSPORT || (MAIL_USER && MAIL_PASS ? 'smtp' : 'log');
+const BREVO_KEY = process.env.BREVO_API_KEY || '';
+const MAIL_FROM = process.env.MAIL_FROM || MAIL_USER; // address verified with the provider
+const MODE = process.env.MAIL_TRANSPORT || (BREVO_KEY ? 'brevo' : MAIL_USER && MAIL_PASS ? 'smtp' : 'log');
 const OUTBOX = process.env.MAIL_OUTBOX_FILE || path.join(__dirname, 'sandbox-data', 'outbox.json');
 
 let transport = null;
@@ -30,10 +36,34 @@ if (MODE === 'smtp') {
     socketTimeout: 15000,
   });
 }
-console.log(`[mail] transport=${MODE}${MODE === 'smtp' ? ` as ${MAIL_USER}` : ''}`);
+console.log(`[mail] transport=${MODE}${MODE === 'smtp' ? ` as ${MAIL_USER}` : MODE === 'brevo' ? ` from ${MAIL_FROM}` : ''}`);
 
 function fromAddress() {
-  return `${FROM_NAME} <${MAIL_USER || 'no-reply@physiodle.local'}>`;
+  return `${FROM_NAME} <${MAIL_FROM || 'no-reply@physiodle.local'}>`;
+}
+
+// Brevo: POST https://api.brevo.com/v3/smtp/email with the api-key header.
+async function sendViaBrevo({ to, subject, text, html }) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': BREVO_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: MAIL_FROM, name: FROM_NAME },
+        to: [{ email: to }],
+        subject,
+        textContent: text,
+        ...(html ? { htmlContent: html } : {}),
+      }),
+      signal: ctrl.signal,
+    });
+    const body = await r.text();
+    if (!r.ok) { const e = new Error(`Brevo ${r.status}: ${body.slice(0, 300)}`); e.code = 'EBREVO'; e.response = body.slice(0, 300); throw e; }
+    let id = null; try { id = JSON.parse(body).messageId; } catch (e) { /* ignore */ }
+    return { ok: true, id };
+  } finally { clearTimeout(timer); }
 }
 
 // Minimal, readable HTML. No tracking, no images.
@@ -49,6 +79,11 @@ function wrapHtml(title, bodyHtml) {
 
 async function sendMail({ to, subject, text, html }) {
   const msg = { from: fromAddress(), to, subject, text, html };
+  if (MODE === 'brevo') {
+    const r = await sendViaBrevo(msg);
+    console.log(`[mail] sent via brevo to=${to} subject="${subject}" id=${r.id}`);
+    return r;
+  }
   if (MODE === 'smtp') {
     const info = await transport.sendMail(msg);
     console.log(`[mail] sent to=${to} subject="${subject}" id=${info.messageId}`);
