@@ -21,7 +21,7 @@ function loadVapid() {
       console.log('[push] generated VAPID keys (stored in app_settings)');
     }
   }
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:AlexHerchen@icloud.com', pub, priv);
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:Physiodle@gmail.com', pub, priv);
   return pub;
 }
 const VAPID_PUBLIC = loadVapid();
