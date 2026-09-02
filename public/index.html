@@ -1751,7 +1751,7 @@
       font-family: 'Inter', sans-serif; font-size: 0.85rem; padding: 0.4rem 0.5rem;
       border: 1.5px solid #e5e7eb; border-radius: 0.375rem; background: white;
     }
-    .lb-community { font-size: 0.72rem; color: #6b7280; margin-top: 0.15rem; }
+    .lb-community { font-size: 0.78rem; color: #6b7280; margin: 0 0 0.6rem; min-height: 1em; }
     .lb-community strong { color: #0d9488; }
     /* ---------------- Streak ---------------- */
     .puzzle-prompt-alt { color: #b45309; }
@@ -1802,6 +1802,43 @@
     }
     .account-trend-up { color: #059669; }
     .account-trend-down { color: #dc2626; }
+    .consent-row { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8rem; color: #374151; line-height: 1.4; cursor: pointer; }
+    .consent-row input { margin-top: 0.2rem; accent-color: #0d9488; flex: 0 0 auto; }
+    .form-hint a, .fb-footer-links a { color: #0d9488; }
+    .account-section { background: #f9fafb; border-radius: 0.5rem; padding: 0.85rem; margin-bottom: 1rem; }
+    .account-section-title { font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.6rem; }
+    .account-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .account-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+    .account-section .account-stat-card { background: white; border: 1px solid #e5e7eb; padding: 0.55rem 0.25rem; }
+    .account-section .account-stat-label { color: #6b7280; text-transform: none; letter-spacing: 0; font-size: 0.7rem; line-height: 1.25; }
+    .account-stat-card-streak .account-stat-value { color: #b45309; }
+    .account-stat-note { font-size: 0.72rem; color: #6b7280; margin-top: 0.5rem; line-height: 1.4; }
+    .account-stat-note.account-trend-up { color: #059669; }
+    .account-stat-note.account-trend-down { color: #dc2626; }
+    @media (max-width: 480px) {
+      .account-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    .referral-row { display: flex; gap: 0.4rem; margin-top: 0.6rem; }
+    .referral-row .form-input { flex: 1; font-size: 0.8rem; padding: 0.45rem 0.5rem; }
+    .love-block { margin-top: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+    .love-text { font-size: 0.85rem; font-weight: 600; color: #374151; }
+    .header-btn-install { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+    .header-btn-install:hover { background: #f59e0b; border-color: #f59e0b; color: white; }
+    @media (max-width: 640px) { .header-btn-install-text { display: none; } }
+    body.standalone .header-btn-install, body.standalone .love-block { display: none !important; }
+    .install-help { margin-top: 0.75rem; }
+    .install-help summary { font-size: 0.78rem; color: #0d9488; cursor: pointer; font-weight: 600; }
+    .install-help ul { margin: 0.4rem 0 0 1rem; padding: 0; font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
+    .demo-panel {
+      position: fixed; left: 0.75rem; bottom: 0.75rem; z-index: 500; background: #111827; color: white;
+      border-radius: 0.75rem; padding: 0.6rem 0.7rem; font-size: 0.72rem; max-width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .demo-panel h4 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin: 0 0 0.4rem; }
+    .demo-panel button {
+      font-family: 'Inter', sans-serif; font-size: 0.7rem; background: #1f2937; color: white; border: 1px solid #374151;
+      border-radius: 0.35rem; padding: 0.25rem 0.45rem; margin: 0 0.25rem 0.25rem 0; cursor: pointer;
+    }
+    .demo-panel button:hover { background: #0d9488; border-color: #0d9488; }
   </style>
 </head>
 <body>
@@ -1817,6 +1854,7 @@
         </button>
       </div>
       <div class="header-right">
+        <button class="header-btn header-btn-install" id="headerInstallBtn" title="Add to home screen" aria-label="Add to home screen">&#128241;<span class="header-btn-install-text"> Get app</span></button>
         <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
         <button class="header-btn" id="archiveBtn">Archive</button>
         <button class="header-btn" id="friendsBtn">Friends</button>
@@ -1889,6 +1927,10 @@
         </div>
         <div style="margin-top: 1.25rem; text-align: center;">
           <button class="btn btn-primary" id="persistentShareBtn" style="font-size: 0.95rem; padding: 0.6rem 1.4rem;">Share Your Result</button>
+          <div class="love-block" id="loveBlock">
+            <span class="love-text">Love Physiodle?</span>
+            <button class="btn btn-secondary btn-small" id="loveInstallBtn">&#128241; Add it to your home screen</button>
+          </div>
           <div style="margin-top: 0.6rem;">
             <button class="btn-link" id="reportPuzzleBtn" style="font-size: 0.75rem; color: #6b7280;">Something wrong with this puzzle?</button>
           </div>
@@ -1903,6 +1945,8 @@
         <div class="fb-footer-links">
           <button class="btn-link" id="feedbackToggle">Leave feedback</button>
           <button class="btn-link" id="installLinkBtn">Add to home screen</button>
+          <a class="btn-link" href="/terms.html" target="_blank" rel="noopener">Terms</a>
+          <a class="btn-link" href="/privacy.html" target="_blank" rel="noopener">Privacy</a>
         </div>
         <div id="feedbackForm" class="feedback-form" style="display:none;">
           <div class="fb-step" id="fbStepCategory">
@@ -2007,10 +2051,20 @@
           </div>
           <ol class="install-steps" id="installSteps"></ol>
           <div class="install-note" id="installBrowserNote" style="margin-top: 0.5rem;"></div>
+          <details class="install-help">
+            <summary>Removed it and want it back? Not seeing an install option?</summary>
+            <ul>
+              <li>Reload this page first. Browsers only offer the one-tap install once per page load.</li>
+              <li><strong>Chrome or Edge on a computer:</strong> click the <span class="install-kbd">&#8942;</span> menu, then <span class="install-kbd">Cast, save and share</span> (or <span class="install-kbd">Apps</span>) and <span class="install-kbd">Install page as app</span>. Chrome hides the address-bar icon for a while after you dismiss it.</li>
+              <li><strong>Android:</strong> <span class="install-kbd">&#8942;</span> menu, then <span class="install-kbd">Add to Home screen</span>. If it says "Open" instead, the app is still installed; find it in your app drawer.</li>
+              <li><strong>iPhone:</strong> the Share sheet always has <span class="install-kbd">Add to Home Screen</span>. In Chrome or Firefox, open this page in Safari if you can't find it.</li>
+              <li><strong>Safari on Mac:</strong> File &rarr; Add to Dock.</li>
+            </ul>
+          </details>
         </div>
         <div class="install-section" id="reminderSection">
           <div class="install-section-title">Daily reminder</div>
-          <div class="install-note" id="reminderNote">A single notification each day when the new puzzle is out. Nothing else, ever.</div>
+          <div class="install-note" id="reminderNote">A single notification each day when the new puzzle is out.</div>
           <div class="reminder-row" id="reminderControls">
             <select id="reminderHour" aria-label="Reminder time">
               <option value="7">7:00 am</option>
@@ -2261,7 +2315,14 @@
             <div class="form-hint">Minimum 6 characters</div>
             <div class="form-error" id="signupPasswordError"></div>
           </div>
+          <div class="form-group">
+            <label class="consent-row">
+              <input type="checkbox" id="signupMarketing" checked>
+              <span>Email me occasional Physiodle updates. Unsubscribe any time.</span>
+            </label>
+          </div>
           <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+          <div class="form-hint" style="text-align:center; margin-top: 0.5rem;">By creating an account you agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Use</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</div>
         </form>
         <div class="auth-link">
           <span>Already have an account?</span>
@@ -2312,55 +2373,72 @@
           </div>
         </div>
 
-        <!-- Performance section -->
-        <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.85rem; margin-bottom: 1rem;">
-          <div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.6rem;">Performance</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
-            <div class="account-perf-row">
-              <span class="account-perf-label">Avg Score</span>
-              <span class="account-perf-value" id="accountAvgScore">-</span>
+        <!-- Streaks -->
+        <div class="account-section">
+          <div class="account-section-title">Streaks</div>
+          <div class="account-grid-3">
+            <div class="account-stat-card account-stat-card-streak">
+              <div class="account-stat-value" id="accountCurrentStreak">0</div>
+              <div class="account-stat-label">Current streak</div>
             </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Best Score</span>
-              <span class="account-perf-value" id="accountBestScore">-</span>
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountMaxStreak">0</div>
+              <div class="account-stat-label">Best streak</div>
             </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Current Streak</span>
-              <span class="account-perf-value" id="accountCurrentStreak">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Best Streak</span>
-              <span class="account-perf-value" id="accountMaxStreak">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Perfect Games</span>
-              <span class="account-perf-value" id="accountPerfect">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Friends</span>
-              <span class="account-perf-value" id="accountFriends">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">First-guess solves</span>
-              <span class="account-perf-value" id="accountFirstGuess">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Best first-guess run</span>
-              <span class="account-perf-value" id="accountFirstGuessRun">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Longest losing run</span>
-              <span class="account-perf-value" id="accountWorstRun">0</span>
-            </div>
-            <div class="account-perf-row">
-              <span class="account-perf-label">Avg guesses (wins)</span>
-              <span class="account-perf-value" id="accountAvgGuesses">-</span>
-            </div>
-            <div class="account-perf-row" style="grid-column: 1 / -1;">
-              <span class="account-perf-label">Trend, last 30 vs prior 30</span>
-              <span class="account-perf-value" id="accountTrend">-</span>
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountOnDay">0</div>
+              <div class="account-stat-label">Days played</div>
             </div>
           </div>
+          <div class="account-stat-note">A streak is consecutive days solved on the day they came out. Archive games don't count.</div>
+        </div>
+
+        <!-- Guessing -->
+        <div class="account-section">
+          <div class="account-section-title">Guessing</div>
+          <div class="account-grid-4">
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountAvgGuesses">-</div>
+              <div class="account-stat-label">Avg guesses<br>to solve</div>
+            </div>
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountFirstGuess">0</div>
+              <div class="account-stat-label">Solved on<br>first guess</div>
+            </div>
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountFirstGuessRun">0</div>
+              <div class="account-stat-label">Best first-guess<br>run</div>
+            </div>
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountWorstRun">0</div>
+              <div class="account-stat-label">Longest<br>losing run</div>
+            </div>
+          </div>
+          <div class="account-stat-note" id="accountTrend" style="display:none;"></div>
+        </div>
+
+        <!-- Invite friends -->
+        <div class="account-section">
+          <div class="account-section-title">Invite friends</div>
+          <div class="account-grid-3">
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountReferrals">0</div>
+              <div class="account-stat-label">Joined from<br>your link</div>
+            </div>
+            <div class="account-stat-card">
+              <div class="account-stat-value" id="accountReferralsActive">0</div>
+              <div class="account-stat-label">Of them<br>still playing</div>
+            </div>
+            <div class="account-stat-card account-stat-card-streak">
+              <div class="account-stat-value" id="accountReferralLevel" style="font-size: 1rem; padding-top: 0.2rem;">-</div>
+              <div class="account-stat-label" id="accountReferralNext">level</div>
+            </div>
+          </div>
+          <div class="referral-row">
+            <input class="form-input" id="accountReferralLink" readonly>
+            <button class="btn btn-primary btn-small" id="accountCopyReferralBtn">Copy link</button>
+          </div>
+          <div class="account-stat-note">Your share card and share text already use this link. Anyone who signs up through it counts.</div>
         </div>
 
         <!-- Profile -->
@@ -2377,6 +2455,14 @@
             <option value="other">Other</option>
           </select>
           <div id="accountLevelSaved" style="font-size: 0.72rem; color: #059669; margin-top: 0.3rem; min-height: 1em;"></div>
+          <label class="consent-row" style="margin-top: 0.5rem;">
+            <input type="checkbox" id="accountMarketing">
+            <span>Email me occasional Physiodle updates</span>
+          </label>
+          <div class="account-stat-note" style="margin-top: 0.5rem;">Friends: <strong id="accountFriendsInline">0</strong></div>
+          <div id="accountInstallWrap" style="margin-top: 0.75rem;">
+            <button class="btn btn-secondary btn-full btn-small" id="accountInstallBtn">&#128241; Put Physiodle on your home screen</button>
+          </div>
         </div>
 
         <!-- Guess Distribution -->
@@ -2441,7 +2527,6 @@
       <div class="modal-header">
         <div class="lb-header-left">
           <h2 class="modal-title">Leaderboard</h2>
-          <div class="lb-community" id="lbCommunity"></div>
           <div class="lb-scope-toggle">
             <button class="lb-scope-btn active" id="lbScopeFriends">Friends</button>
             <button class="lb-scope-btn" id="lbScopeGlobal">Global</button>
@@ -2450,6 +2535,7 @@
         <button class="modal-close" onclick="closeModal('leaderboardModal')">×</button>
       </div>
       <div class="modal-body">
+        <div class="lb-community" id="lbCommunity"></div>
         <div class="lb-controls">
           <div class="modal-tabs lb-tabs">
             <button class="modal-tab active" data-tab="leaderboardWeekly">Weekly</button>
@@ -3018,6 +3104,21 @@
       gradientTo: '#14b8a6',
     };
 
+    // Referral link: remember who sent this visitor, attribute at signup.
+    (function captureReferral() {
+      try {
+        const ref = new URLSearchParams(location.search).get('ref');
+        if (ref && /^[a-z0-9._-]{2,24}$/i.test(ref) && !localStorage.getItem('physiodle_token')) {
+          localStorage.setItem('physiodle_ref', ref.toLowerCase());
+          if (typeof trackEvent === 'function') trackEvent('ref_visit', { ref: ref.toLowerCase() });
+        }
+      } catch (e) { /* ignore */ }
+    })();
+    let myReferralCode = null;
+    function shareUrl() {
+      return myReferralCode ? `${SHARE_CONFIG.url}/?ref=${encodeURIComponent(myReferralCode)}` : SHARE_CONFIG.url;
+    }
+
     // ============================================================================
     // STATE & GLOBALS
     // ============================================================================
@@ -3072,10 +3173,10 @@
       return response.json();
     }
 
-    async function signup(username, email, password) {
+    async function signup(username, email, password, marketingConsent) {
       const data = await apiCall('/auth/signup', {
         method: 'POST',
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, marketingConsent: !!marketingConsent, ref: localStorage.getItem('physiodle_ref') || null }),
       });
       gameState.userToken = data.token;
       gameState.userId = data.userId;
@@ -3732,7 +3833,7 @@
       const headline = won
         ? `I got ${SHARE_CONFIG.brand} Day ${day} on my ${ORDINALS[guessCount]} guess today. Can you beat me?`
         : `I missed ${SHARE_CONFIG.brand} Day ${day} today. Can you beat me?`;
-      return `${headline}\n\n${boxes}\n\nTry it yourself at\n${SHARE_CONFIG.url}`;
+      return `${headline}\n\n${boxes}\n\nTry it yourself at\n${shareUrl()}`;
     }
 
     function drawRoundedRect(ctx, x, y, w, h, r) {
@@ -3826,13 +3927,13 @@
 
       // Make the preview canvas itself clickable — opens the game URL in a new tab.
       canvas.style.cursor = 'pointer';
-      canvas.onclick = () => window.open(SHARE_CONFIG.url, '_blank', 'noopener,noreferrer');
+      canvas.onclick = () => window.open(shareUrl(), '_blank', 'noopener,noreferrer');
 
       // Wire up the text URL link below the card (brand-coloured, opens new tab).
       const urlLink = document.getElementById('shareUrlLink');
       if (urlLink) {
-        urlLink.href = SHARE_CONFIG.url;
-        urlLink.textContent = SHARE_CONFIG.url;
+        urlLink.href = shareUrl();
+        urlLink.textContent = shareUrl().replace(/^https:\/\//, '');
         urlLink.style.color = SHARE_CONFIG.gradientFrom;
       }
 
@@ -4454,28 +4555,32 @@
           document.getElementById('accountTotalPts').textContent = s.totalPoints || 0;
 
           // Performance
-          document.getElementById('accountAvgScore').textContent = s.avgScore != null ? s.avgScore : '-';
-          document.getElementById('accountBestScore').textContent = s.bestScore != null ? `${s.bestScore}/5` : '-';
           document.getElementById('accountCurrentStreak').textContent = s.currentStreak || 0;
           document.getElementById('accountMaxStreak').textContent = s.maxStreak || 0;
-          document.getElementById('accountPerfect').textContent = s.perfectGames || 0;
-          document.getElementById('accountFriends').textContent = s.friendCount || 0;
+          document.getElementById('accountOnDay').textContent = s.onDayPlayed || 0;
           document.getElementById('accountFirstGuess').textContent = s.firstGuessSolves || 0;
           document.getElementById('accountFirstGuessRun').textContent = s.bestFirstGuessRun || 0;
           document.getElementById('accountWorstRun').textContent = s.worstRun || 0;
           document.getElementById('accountAvgGuesses').textContent = s.avgGuesses != null ? s.avgGuesses.toFixed(1) : '-';
+          // Trend only appears once there are 60 games to compare; otherwise nothing.
           const trendEl = document.getElementById('accountTrend');
           if (s.recentAvgPoints != null && s.priorAvgPoints != null) {
             const diff = s.recentAvgPoints - s.priorAvgPoints;
-            const sign = diff > 0 ? '+' : '';
-            trendEl.textContent = `${s.recentAvgPoints.toFixed(1)} pts/game (${sign}${diff.toFixed(1)})`;
-            trendEl.className = 'account-perf-value ' + (diff > 0.05 ? 'account-trend-up' : diff < -0.05 ? 'account-trend-down' : '');
-          } else if (s.recentAvgPoints != null) {
-            trendEl.textContent = `${s.recentAvgPoints.toFixed(1)} pts/game (need 60 games for a trend)`;
-            trendEl.className = 'account-perf-value';
+            const word = diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'level';
+            trendEl.textContent = `Trend: ${s.recentAvgPoints.toFixed(1)} points per game over your last 30, ${word}${word === 'level' ? '' : ' ' + Math.abs(diff).toFixed(1)} on the 30 before.`;
+            trendEl.className = 'account-stat-note ' + (word === 'up' ? 'account-trend-up' : word === 'down' ? 'account-trend-down' : '');
+            trendEl.style.display = '';
           } else {
-            trendEl.textContent = '-';
+            trendEl.style.display = 'none';
           }
+          document.getElementById('accountFriendsInline').textContent = s.friendCount || 0;
+          myReferralCode = user.referralCode || null;
+          document.getElementById('accountReferrals').textContent = user.referrals || 0;
+          document.getElementById('accountReferralsActive').textContent = user.referralsActive || 0;
+          document.getElementById('accountReferralLink').value = shareUrl();
+          renderReferralLevel(user.referrals || 0);
+          document.getElementById('accountMarketing').checked = !!user.marketingConsent;
+          document.getElementById('accountInstallWrap').style.display = isStandalone() ? 'none' : '';
           document.getElementById('accountLevel').value = user.professionLevel || '';
           document.getElementById('accountLevelSaved').textContent = '';
           updateStreakPill(s.currentStreak || 0, false);
@@ -4674,6 +4779,7 @@
       await initGame();
       checkFeedbackState();
       refreshStreak(false);
+      if (gameState.userToken && gameState.username) myReferralCode = gameState.username.toLowerCase();
 
       // After login, try to submit any completion done while logged out
       if (gameState.userToken) {
@@ -4745,7 +4851,7 @@
         // No title — host apps prepend it as a separate line above the text.
         const data = navigator.canShare && navigator.canShare({ files: [file] })
           ? { files: [file], text }
-          : { text, url: SHARE_CONFIG.url };
+          : { text, url: shareUrl() };
         await navigator.share(data);
       } catch (e) {
         if (e.name !== 'AbortError') showToast('Share failed', 'error');
@@ -4762,7 +4868,7 @@
       const { day, won, guessCount } = getShareData();
       const score = won ? `${guessCount}/5` : 'X/5';
       const title = `${SHARE_CONFIG.brand} ${day} \u2014 ${score}`;
-      const url = `https://www.reddit.com/submit?title=${encodeURIComponent(title)}&url=${encodeURIComponent(SHARE_CONFIG.url)}`;
+      const url = `https://www.reddit.com/submit?title=${encodeURIComponent(title)}&url=${encodeURIComponent(shareUrl())}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     });
 
@@ -4852,6 +4958,7 @@
       const username = document.getElementById('signupUsername').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
+      const marketingConsent = document.getElementById('signupMarketing').checked;
       const errorEl = document.getElementById('signupUsernameError');
       const emailErrorEl = document.getElementById('signupEmailError');
       errorEl.textContent = '';
@@ -4863,7 +4970,7 @@
       }
 
       try {
-        await signup(username, email, password);
+        await signup(username, email, password, marketingConsent);
         showToast('Account created!', 'success');
         closeModal('signupModal');
         location.reload();
@@ -5145,6 +5252,50 @@
     document.getElementById('milestoneOverlay').addEventListener('click', (e) => { if (e.target.id === 'milestoneOverlay') e.currentTarget.classList.remove('show'); });
     document.getElementById('streakPill').addEventListener('click', loadAccountModal);
 
+    // Referral levels: named after what a good study group does.
+    const REFERRAL_LEVELS = [[0, 'Player'], [1, 'Scout'], [3, 'Recruiter'], [10, 'Ambassador'], [25, 'Champion'], [50, 'Legend']];
+    function renderReferralLevel(n) {
+      let current = REFERRAL_LEVELS[0], next = null;
+      for (const lvl of REFERRAL_LEVELS) { if (n >= lvl[0]) current = lvl; else { next = lvl; break; } }
+      document.getElementById('accountReferralLevel').textContent = current[1];
+      document.getElementById('accountReferralNext').textContent = next ? `${next[0] - n} more for ${next[1]}` : 'top level';
+    }
+    document.getElementById('accountCopyReferralBtn').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(shareUrl()); showToast('Link copied', 'success'); }
+      catch (e) { document.getElementById('accountReferralLink').select(); }
+      if (typeof trackEvent === 'function') trackEvent('referral_link_copied', {});
+    });
+
+    // Email updates toggle (Account modal)
+    document.getElementById('accountMarketing').addEventListener('change', async (e) => {
+      try {
+        await fetch('/api/auth/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${gameState.userToken}` },
+          body: JSON.stringify({ marketingConsent: e.target.checked }),
+        });
+        showToast(e.target.checked ? 'Email updates on' : 'Email updates off', 'success');
+      } catch (err) { showToast('Could not save', 'error'); }
+    });
+
+    // ---- Demo panel (?demo=1): trigger animations and popups on demand ----
+    if (/[?&]demo=1/.test(location.search)) {
+      const panel = document.createElement('div');
+      panel.className = 'demo-panel';
+      panel.innerHTML = '<h4>Sandbox demo</h4>';
+      const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', fn); panel.appendChild(b); };
+      const closeAll = () => document.querySelectorAll('.modal-overlay.show, .result-overlay.show, .milestone-overlay.show').forEach(el => el.classList.remove('show'));
+      add('Streak +1', () => { const n = (parseInt(document.getElementById('streakCount').textContent, 10) || 0) + 1; const t = gameState.userToken; gameState.userToken = t || 'demo'; updateStreakPill(n, true); gameState.userToken = t; });
+      [3, 7, 30, 100, 365].forEach(n => add(`Milestone ${n}`, () => { closeAll(); showMilestone(n); }));
+      add('Win popup', () => { closeAll(); showResult(true, { answer: (gameState.puzzle && gameState.puzzle.answer) || 'Demo answer', explanation: (gameState.puzzle && gameState.puzzle.explanation) || '' }); });
+      add('Loss popup', () => { closeAll(); showResult(false, { answer: (gameState.puzzle && gameState.puzzle.answer) || 'Demo answer', explanation: '' }); });
+      add('Install guide', () => { closeAll(); openInstallModal(); });
+      add('Feedback form', () => { closeAll(); openFeedbackForm('puzzle_error'); });
+      add('Toast', () => showToast('Toast looks like this', 'success'));
+      add('Close all', closeAll);
+      document.body.appendChild(panel);
+    }
+
     // Profile level save
     document.getElementById('accountLevel').addEventListener('change', async (e) => {
       const level = e.target.value || null;
@@ -5186,12 +5337,12 @@
         safari: [
           'Open <strong>physiodle.up.railway.app</strong> in <strong>Safari</strong>.',
           'Tap the <span class="install-kbd">Share</span> button (the square with an arrow, bottom of the screen).',
-          'Scroll down and tap <span class="install-kbd">Add to Home Screen</span>.',
+          'Scroll down and tap <span class="install-kbd">Add to Home Screen</span>',
           'Tap <span class="install-kbd">Add</span>. The bone icon appears on your home screen.',
         ],
         other: [
           'Tap the <span class="install-kbd">Share</span> icon in the address bar (Chrome, Edge and Firefox on iPhone all have one).',
-          'Tap <span class="install-kbd">Add to Home Screen</span>, then <span class="install-kbd">Add</span>.',
+          'Tap <span class="install-kbd">Add to Home Screen</span>, then <span class="install-kbd">Add</span>',
           'If you don\'t see that option, open this page in <strong>Safari</strong> and use Share there.',
         ],
         note: 'Opens full-screen like an app, remembers your login, and keeps your streak in one tap.',
@@ -5255,6 +5406,10 @@
     }
 
     document.getElementById('installLinkBtn').addEventListener('click', openInstallModal);
+    document.getElementById('headerInstallBtn').addEventListener('click', openInstallModal);
+    document.getElementById('loveInstallBtn').addEventListener('click', openInstallModal);
+    document.getElementById('accountInstallBtn').addEventListener('click', () => { closeModal('accountModal'); openInstallModal(); });
+    if (isStandalone()) document.body.classList.add('standalone');
     document.getElementById('resultInstallBtn').addEventListener('click', () => {
       document.getElementById('resultOverlay').classList.remove('show');
       openInstallModal();

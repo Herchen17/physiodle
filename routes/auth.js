@@ -103,12 +103,21 @@ const crossVerifyLimiter = rateLimit({
   message: { error: 'Too many cross-verify requests.' },
 });
 
+const TERMS_VERSION = '2026-09-02';
+
 // POST /api/auth/signup
 // email is required for new accounts. username stays required for display
 // and as a backup identifier.
 router.post('/signup', signupLimiter, async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, marketingConsent, ref } = req.body;
+    const consent = marketingConsent ? 1 : 0;
+    // Referral attribution: ?ref=<code> stored by the client at first visit.
+    let referredBy = null;
+    if (typeof ref === 'string' && ref.length <= 24) {
+      const referrer = db.prepare('SELECT id, username FROM users WHERE referral_code = ?').get(ref.toLowerCase());
+      if (referrer && referrer.username.toLowerCase() !== String(username).toLowerCase()) referredBy = referrer.id;
+    }
 
     if (!username || !USERNAME_REGEX.test(username)) {
       return res.status(400).json({ error: 'Username must be 2-20 characters (letters, numbers, dots, hyphens, underscores).' });
@@ -123,8 +132,8 @@ router.post('/signup', signupLimiter, async (req, res) => {
     const passwordHash = await hashPassword(password);
 
     const result = db.prepare(
-      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)'
-    ).run(username, email, passwordHash);
+      'INSERT INTO users (username, email, password_hash, marketing_consent, consent_updated_at, terms_version, referral_code, referred_by) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)'
+    ).run(username, email, passwordHash, consent, TERMS_VERSION, String(username).toLowerCase(), referredBy);
     const token = generateToken(result.lastInsertRowid, username);
 
     crossRegister({ username, email, passwordHash });
@@ -310,7 +319,9 @@ router.post('/cross-verify', crossVerifyLimiter, async (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, username, email, created_at, profession_level FROM users WHERE id = ?').get(req.user.userId);
+  const user = db.prepare('SELECT id, username, email, created_at, profession_level, marketing_consent, referral_code FROM users WHERE id = ?').get(req.user.userId);
+  const referrals = db.prepare('SELECT COUNT(*) AS c FROM users WHERE referred_by = ?').get(user.id).c;
+  const referralsActive = db.prepare('SELECT COUNT(DISTINCT u.id) AS c FROM users u JOIN game_results gr ON gr.user_id = u.id WHERE u.referred_by = ?').get(user.id).c;
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -421,6 +432,10 @@ router.get('/me', requireAuth, (req, res) => {
     username: user.username,
     email: user.email || null,
     professionLevel: user.profession_level || null,
+    marketingConsent: !!user.marketing_consent,
+    referralCode: user.referral_code || user.username.toLowerCase(),
+    referrals,
+    referralsActive,
     createdAt: user.created_at,
     stats: {
       played: statsRow.played,
@@ -453,12 +468,22 @@ router.get('/me', requireAuth, (req, res) => {
 // PATCH /api/auth/profile { level } — profession level for profile completion.
 const PROFESSION_LEVELS = ['student', 'new_grad', 'physiotherapist', 'educator', 'other_health', 'other'];
 router.patch('/profile', requireAuth, (req, res) => {
-  const { level } = req.body || {};
-  if (level !== null && level !== undefined && !PROFESSION_LEVELS.includes(level)) {
-    return res.status(400).json({ error: 'Invalid level' });
+  const body = req.body || {};
+  const out = { success: true };
+  if ('level' in body) {
+    const { level } = body;
+    if (level !== null && level !== undefined && !PROFESSION_LEVELS.includes(level)) {
+      return res.status(400).json({ error: 'Invalid level' });
+    }
+    db.prepare('UPDATE users SET profession_level = ? WHERE id = ?').run(level || null, req.user.userId);
+    out.professionLevel = level || null;
   }
-  db.prepare('UPDATE users SET profession_level = ? WHERE id = ?').run(level || null, req.user.userId);
-  res.json({ success: true, professionLevel: level || null });
+  if ('marketingConsent' in body) {
+    const c = body.marketingConsent ? 1 : 0;
+    db.prepare('UPDATE users SET marketing_consent = ?, consent_updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(c, req.user.userId);
+    out.marketingConsent = !!c;
+  }
+  res.json(out);
 });
 
 module.exports = router;

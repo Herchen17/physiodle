@@ -136,6 +136,25 @@ if (!columnExists('users', 'profession_level')) {
   db.exec('ALTER TABLE users ADD COLUMN profession_level TEXT');
 }
 
+// 2026-09-02: consent + terms acceptance captured at signup.
+for (const [col, type] of [['marketing_consent', 'INTEGER NOT NULL DEFAULT 0'], ['consent_updated_at', 'DATETIME'], ['terms_version', 'TEXT']]) {
+  if (!columnExists('users', col)) {
+    console.log(`[migration] adding users.${col} column`);
+    db.exec(`ALTER TABLE users ADD COLUMN ${col} ${type}`);
+  }
+}
+
+// 2026-09-02: referrals. Every user gets a share code (their username, lower
+// case). Sign-ups that arrive via ?ref=<code> record who brought them in.
+if (!columnExists('users', 'referral_code')) {
+  console.log('[migration] adding users.referral_code / referred_by columns');
+  db.exec('ALTER TABLE users ADD COLUMN referral_code TEXT');
+  db.exec('ALTER TABLE users ADD COLUMN referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL');
+}
+db.exec("UPDATE users SET referral_code = LOWER(username) WHERE referral_code IS NULL");
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_users_referred_by ON users(referred_by)');
+
 // 2026-09-02: Web Push daily reminders. One row per browser subscription.
 // hour_local + tz let the scheduler fire at the player's wall-clock hour.
 db.exec(`
