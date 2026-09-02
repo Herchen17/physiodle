@@ -1918,6 +1918,7 @@
     .love-lead { font-size: 0.88rem; color: #374151; line-height: 1.5; text-align: center; margin-bottom: 0.8rem; }
     .love-actions { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.9rem; }
     .love-note { font-size: 0.75rem; color: #6b7280; line-height: 1.45; text-align: center; margin-top: 0.6rem; }
+    .love-saved { font-size: 0.78rem; color: #059669; font-weight: 600; text-align: center; }
 
     .settings-row { padding: 0.6rem 0; border-top: 1px solid #e5e7eb; }
     .settings-row:first-child { border-top: none; padding-top: 0.2rem; }
@@ -2197,25 +2198,25 @@
         <div class="stars" id="loveStars" role="group" aria-label="Rate Physiodle out of 5"></div>
         <div class="star-caption" id="loveCaption">Tap a star</div>
 
-        <!-- happy path -->
+        <!-- rating saved: confirmation + optional comment, shown for any rating -->
+        <div id="loveComment" style="display:none;">
+          <div class="love-saved" id="loveSavedNote">Rating saved, thank you.</div>
+          <div class="love-note" id="loveCommentPrompt" style="margin: 0.5rem 0 0.4rem;"></div>
+          <textarea id="loveText" class="fb-textarea" placeholder=""></textarea>
+          <button class="btn btn-primary btn-full" id="loveSendBtn" style="margin-top:0.4rem;">Send</button>
+          <div id="loveThanks" style="display:none;" class="love-saved" style="margin-top:0.5rem;">Thanks. Every message is read.</div>
+        </div>
+
+        <!-- 4-5 stars: the things that actually help -->
         <div id="loveHappy" style="display:none;">
-          <div class="love-note" style="color:#059669; font-weight:600;">Thank you. Three things that genuinely help:</div>
+          <div class="love-note" style="color:#059669; font-weight:600; margin-top:1rem;">Three things that genuinely help:</div>
           <div class="love-actions">
-            <button class="btn btn-primary btn-full" id="loveShareBtn">Send it to a classmate</button>
+            <button class="btn btn-primary btn-full" id="loveShareBtn">Send it to a friend</button>
             <button class="btn btn-secondary btn-full" id="loveInstallBtn2">Add it to your home screen</button>
             <button class="btn btn-secondary btn-full" id="loveRemindBtn">Turn on a daily reminder</button>
           </div>
           <div class="love-note">Word of mouth is the only way this grows. Sharing it with one person makes a real difference.</div>
         </div>
-
-        <!-- unhappy path -->
-        <div id="loveUnhappy" style="display:none;">
-          <div class="love-note" style="margin-bottom:0.4rem;">Sorry it's not landing. What would make it better?</div>
-          <textarea id="loveText" class="fb-textarea" placeholder="Anything at all. It goes straight to me."></textarea>
-          <button class="btn btn-primary btn-full" id="loveSendBtn" style="margin-top:0.4rem;">Send</button>
-        </div>
-
-        <div id="loveThanks" style="display:none;" class="love-note" style="color:#059669;">Thanks. Every message is read.</div>
       </div>
     </div>
   </div>
@@ -5808,15 +5809,37 @@
     function openLoveModal() {
       const caption = document.getElementById('loveCaption');
       document.getElementById('loveHappy').style.display = 'none';
-      document.getElementById('loveUnhappy').style.display = 'none';
+      document.getElementById('loveComment').style.display = 'none';
       document.getElementById('loveThanks').style.display = 'none';
       document.getElementById('loveText').value = '';
       caption.textContent = 'Tap a star';
+      const sendBtn = document.getElementById('loveSendBtn');
+      sendBtn.disabled = false; sendBtn.textContent = 'Send'; sendBtn.style.display = '';
+      document.getElementById('loveText').style.display = '';
+      document.getElementById('loveCommentPrompt').style.display = '';
+      document.getElementById('loveSavedNote').style.display = '';
       loveStarWidget = buildStars(document.getElementById('loveStars'), caption, (n) => {
         // Save the rating straight away, so it counts even if they close the card.
         sendRating(n, null, n >= 4 ? 'praise' : 'suggestion');
+        const prompts = {
+          5: 'What do you love about it, or what would you like to see next?',
+          4: 'What do you love about it, or what would you like to see next?',
+          3: 'What would make it better?',
+          2: 'What would make it better?',
+          1: 'What would make it better?',
+        };
+        const placeholders = {
+          5: 'Optional. Anything you\'d like to see next?',
+          4: 'Optional. Anything you\'d like to see next?',
+          3: 'Optional. It goes straight to me.',
+          2: 'Optional. It goes straight to me.',
+          1: 'Optional. It goes straight to me.',
+        };
+        document.getElementById('loveCommentPrompt').textContent = prompts[n];
+        document.getElementById('loveText').placeholder = placeholders[n];
+        document.getElementById('loveComment').style.display = '';
+        document.getElementById('loveThanks').style.display = 'none';
         document.getElementById('loveHappy').style.display = n >= 4 ? '' : 'none';
-        document.getElementById('loveUnhappy').style.display = n <= 3 ? '' : 'none';
         if (typeof trackEvent === 'function') trackEvent('love_rating', { stars: n });
       });
       showModal('loveModal');
@@ -5826,10 +5849,17 @@
     document.getElementById('loveInstallBtn2').addEventListener('click', () => { closeModal('loveModal'); openInstallModal(); });
     document.getElementById('loveRemindBtn').addEventListener('click', () => { closeModal('loveModal'); openInstallModal(); });
     document.getElementById('loveSendBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('loveSendBtn');
       const text = document.getElementById('loveText').value.trim();
       const stars = loveStarWidget ? loveStarWidget.value : 0;
-      if (text) await sendRating(stars || null, text, 'suggestion');
-      document.getElementById('loveUnhappy').style.display = 'none';
+      if (!text) { document.getElementById('loveText').focus(); return; }
+      btn.disabled = true; btn.textContent = 'Sending...';
+      // Same stars as the auto-save, so the server fills in that row rather than adding one.
+      await sendRating(stars || null, text, stars >= 4 ? 'praise' : 'suggestion');
+      document.getElementById('loveText').style.display = 'none';
+      btn.style.display = 'none';
+      document.getElementById('loveCommentPrompt').style.display = 'none';
+      document.getElementById('loveSavedNote').style.display = 'none'; // avoid two green lines
       document.getElementById('loveThanks').style.display = '';
     });
 
