@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Physiodle Admin v2</title>
+<meta name="robots" content="noindex,nofollow">
+<title>Physiodle Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
+
 :root {
   --bg: #0a0e1a; --surface: #111827; --surface2: #1a2235; --border: #1e293b;
   --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
@@ -90,11 +93,32 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 .feedback-rating { font-weight: 700; }
 
 /* Responsive */
-/* v2 additions */
+@media (max-width: 768px) {
+  .chart-grid, .col-2 { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 1.4rem; }
+  .container { padding: 0.75rem; }
+}
+
+/* ---- Control panel additions ---- */
+.tabs { display: flex; gap: 0.25rem; }
+.tab { background: none; border: none; color: var(--text2); font: inherit; font-size: 0.8rem; font-weight: 600; padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; }
+.tab.active { background: rgba(59,130,246,0.15); color: #fff; }
+.tab:hover { color: #fff; }
+.panel { display: none; } .panel.active { display: block; }
 .seg { display: inline-flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
 .seg button { background: none; border: none; color: var(--text2); font: inherit; font-size: 0.72rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .seg button.active { background: var(--blue); color: #fff; }
-.stat-spark { display: block; width: 100%; height: 26px; margin-top: 0.45rem; }
+.chart-tools { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.chart-tools .chart-title { margin: 0; flex: 1; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+th[data-key] { cursor: pointer; white-space: nowrap; }
+.cmp td, .cmp th { padding: 0.55rem 0.75rem; }
+.cmp .metric { font-weight: 600; color: #fff; }
+.cmp .prev { color: var(--text3); }
+.delta { font-weight: 700; font-variant-numeric: tabular-nums; }
+.delta.up { color: var(--green); } .delta.down { color: var(--red); } .delta.flat { color: var(--text3); }
+.spark { width: 120px; height: 26px; display: block; }
 .funnel { display: grid; grid-template-columns: repeat(4, 1fr); }
 .fstep { padding: 0.25rem 0.75rem; border-left: 1px solid var(--border); }
 .fstep:first-child { border-left: none; padding-left: 0; }
@@ -107,32 +131,45 @@ tr:hover td { background: rgba(59,130,246,0.04); }
 .note { font-size: 0.72rem; color: var(--text3); margin-top: 0.6rem; line-height: 1.45; }
 .tag { display: inline-block; font-size: 0.65rem; padding: 0.05rem 0.4rem; margin: 0 0.2rem 0.15rem 0; border-radius: 999px; background: rgba(20,184,166,0.15); color: #5eead4; white-space: nowrap; }
 .tag.warn { background: rgba(239,68,68,0.15); color: #fca5a5; }
-.flag { color: var(--amber); font-weight: 700; font-size: 0.7rem; margin-left: 0.3rem; }
-.flag.hard { color: var(--red); }
-th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
-th[data-key] { cursor: pointer; }
-.kv { display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 1rem; font-size: 0.82rem; padding: 0.25rem 0; }
+.tag.grey { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+.flag { color: var(--amber); font-weight: 700; font-size: 0.7rem; margin-left: 0.3rem; } .flag.hard { color: var(--red); }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 1rem; font-size: 0.82rem; padding: 0.25rem 0; }
 .kv .muted { color: var(--text3); }
 .scroll { overflow-x: auto; }
-
-@media (max-width: 768px) {
-  .chart-grid, .col-2 { grid-template-columns: 1fr; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .stat-value { font-size: 1.4rem; }
-  .container { padding: 0.75rem; }
-}
+.toolbar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.toolbar input, .toolbar select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 0.4rem 0.6rem; font: inherit; font-size: 0.8rem; }
+.toolbar input { min-width: 220px; }
+.btn.ghost { background: var(--surface2); border: 1px solid var(--border); }
+.btn.danger { background: var(--red); }
+.pager { display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end; padding: 0.5rem 0.75rem; font-size: 0.75rem; color: var(--text3); }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); background: var(--surface); border-left: 1px solid var(--border); box-shadow: -20px 0 40px rgba(0,0,0,0.4); transform: translateX(100%); transition: transform 0.2s; z-index: 200; overflow-y: auto; padding: 1.25rem; }
+.drawer.open { transform: translateX(0); }
+.drawer h3 { font-size: 1.05rem; color: #fff; margin-bottom: 0.25rem; }
+.drawer .close { position: absolute; top: 0.9rem; right: 1rem; background: none; border: none; color: var(--text3); font-size: 1.4rem; cursor: pointer; }
+.drawer .section { margin-top: 1rem; }
+.drawer .section h4 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 0.4rem; }
+.pill { display: inline-block; font-size: 0.65rem; padding: 0.1rem 0.45rem; border-radius: 999px; background: var(--surface2); color: var(--text2); margin-right: 0.25rem; }
+.pill.ok { background: rgba(34,197,94,0.15); color: #86efac; } .pill.bad { background: rgba(239,68,68,0.15); color: #fca5a5; } .pill.warn { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; }
+.status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem; }
+.status.ok { background: var(--green); } .status.bad { background: var(--red); } .status.warn { background: var(--amber); }
+.fb-row { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.5); display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.75rem; }
+.fb-row .who { font-size: 0.72rem; color: var(--text3); }
+.fb-row .body { font-size: 0.85rem; }
+.result-grid { display: grid; grid-template-columns: repeat(auto-fill, 26px); gap: 3px; }
+.rcell { width: 26px; height: 26px; border-radius: 4px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: #fff; }
+.rcell.w { background: rgba(34,197,94,0.6); } .rcell.l { background: rgba(239,68,68,0.55); }
+@media (max-width: 900px) { .funnel { grid-template-columns: 1fr 1fr; } .tabs { overflow-x: auto; } }
 </style>
 </head>
 <body>
-
-<!-- Login Screen -->
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;width:320px;text-align:center;">
     <div style="font-size:2.5rem;margin-bottom:0.5rem;">&#129468;</div>
     <h2 style="color:#fff;margin-bottom:0.25rem;">Physiodle Admin</h2>
     <p style="color:var(--text3);font-size:0.85rem;margin-bottom:1.25rem;">Enter your admin key to continue</p>
     <input type="password" id="adminKeyInput" placeholder="Admin key" style="width:100%;padding:0.6rem 0.75rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:#fff;font-size:0.9rem;margin-bottom:0.75rem;outline:none;" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn" style="width:100%;padding:0.6rem;" onclick="doLogin()">Unlock Dashboard</button>
+    <button class="btn" style="width:100%;padding:0.6rem;" onclick="doLogin()">Unlock</button>
     <p id="loginError" style="color:var(--red);font-size:0.8rem;margin-top:0.75rem;display:none;">Invalid admin key</p>
   </div>
 </div>
@@ -140,57 +177,84 @@ th[data-key] { cursor: pointer; }
 <nav class="nav" id="mainNav" style="display:none;">
   <div class="nav-left">
     <span class="nav-logo">&#129468;</span>
-    <span class="nav-title">Physiodle Admin <span style="color:var(--text3);font-weight:500;font-size:0.8rem">v2</span></span>
+    <span class="nav-title">Physiodle Admin</span>
     <span class="nav-badge">Live</span>
+    <div class="tabs" id="tabs" style="margin-left:1rem">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="growth">Growth</button>
+      <button class="tab" data-tab="puzzles">Puzzles</button>
+      <button class="tab" data-tab="players">Players</button>
+      <button class="tab" data-tab="feedback">Feedback</button>
+      <button class="tab" data-tab="health">Health</button>
+    </div>
   </div>
   <div class="nav-right">
-    <div class="seg" id="rangeSeg" title="Period for the comparison sections">
-      <button data-range="1">Today</button><button data-range="7">7d</button><button data-range="30" class="active">30d</button><button data-range="90">90d</button><button data-range="365">Year</button><button data-range="all">All</button>
-    </div>
     <span class="nav-time" id="clock"></span>
-    <button class="btn" onclick="loadData()">Refresh</button>
-    <a class="btn" href="/admin.html" style="text-decoration:none;background:var(--surface2)">v1</a>
+    <button class="btn" onclick="refreshCurrent()">Refresh</button>
+    <a class="btn ghost" href="/admin.html" style="text-decoration:none">v1</a>
+    <button class="btn ghost" onclick="doLogout()">Lock</button>
   </div>
 </nav>
 
 <div class="container" id="mainDash" style="display:none;">
-  <!-- KPI Row -->
+
+<!-- ================= OVERVIEW ================= -->
+<div class="panel active" id="panel-overview">
   <div class="stats-row" id="kpiRow"></div>
-
-  <!-- v2: arrival funnel -->
   <div class="chart-grid">
     <div class="chart-card full">
-      <div class="chart-title">Where people go &middot; people who first arrived in the selected period <span class="nav-time" id="rangeNote" style="text-transform:none;letter-spacing:0;margin-left:0.5rem"></span></div>
-      <div class="funnel" id="funnel"></div>
-    </div>
-  </div>
-
-  <!-- Charts Row 1: Traffic + Games -->
-  <div class="chart-grid">
-    <div class="chart-card full">
-      <div class="chart-title">Daily Traffic &amp; Games (30 Days)</div>
+      <div class="chart-tools">
+        <div class="chart-title">Traffic &amp; Games</div>
+        <div class="seg" id="seriesRange">
+          <button data-range="24h">24 h</button><button data-range="7d">7 days</button><button data-range="30d" class="active">Month</button><button data-range="6m">6 months</button><button data-range="1y">Year</button><button data-range="all">All time</button>
+        </div>
+        <div class="seg" id="seriesBucket" style="display:none">
+          <button data-bucket="day">Days</button><button data-bucket="week">Weeks</button><button data-bucket="month">Months</button>
+        </div>
+      </div>
       <div class="chart-wrap tall"><canvas id="trafficChart"></canvas></div>
+      <div class="note" id="seriesNote"></div>
     </div>
   </div>
-
-  <!-- Charts Row 2: Win Rate + Score Dist + Hourly + Devices -->
   <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-title">Win / Loss</div>
-      <div class="chart-wrap"><canvas id="winLossChart"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Score Distribution (Winners)</div>
-      <div class="chart-wrap"><canvas id="scoreChart"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Device Split</div>
-      <div class="chart-wrap"><canvas id="deviceChart"></canvas></div>
-    </div>
+    <div class="chart-card"><div class="chart-title">Win / Loss</div><div class="chart-wrap"><canvas id="winLossChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Score Distribution (Winners)</div><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Device Split</div><div class="chart-wrap"><canvas id="deviceChart"></canvas></div></div>
   </div>
+  <div class="section-header" style="margin-bottom:0.6rem"><span class="section-title">Hourly Breakdown Today (AEST)</span></div>
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-title">Page Views by Hour</div><div class="chart-wrap"><canvas id="hourlyChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Unique Visitors by Hour</div><div class="chart-wrap"><canvas id="hourlyVisitorsChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Games Played by Hour</div><div class="chart-wrap"><canvas id="hourlyGamesChart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Sign-ups by Hour</div><div class="chart-wrap"><canvas id="hourlySignupsChart"></canvas></div></div>
+  </div>
+  <div class="col-2">
+    <div><div class="section-header"><span class="section-title">Top Players (by points)</span></div><div class="table-card" id="topPlayersTable"></div></div>
+    <div><div class="section-header"><span class="section-title">Most Active</span></div><div class="table-card" id="activeTable"></div></div>
+  </div>
+  <div class="col-2">
+    <div><div class="section-header"><span class="section-title">Recent Sign-ups</span></div><div class="table-card" id="signupsTable"></div></div>
+    <div><div class="section-header"><span class="section-title">Recent Feedback</span></div><div class="table-card" id="feedbackPanel"></div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Leaderboard Tab Popularity</span></div>
+    <div class="stats-row" id="lbPop"></div>
+  </div>
+</div>
 
-  <!-- Hourly Breakdown Section -->  <!-- v2: retention -->
-  <div class="section-header" style="margin-bottom:0.6rem"><span class="section-title">Retention</span></div>
+<!-- ================= GROWTH ================= -->
+<div class="panel" id="panel-growth">
+  <div class="toolbar">
+    <span class="section-title">Compare</span>
+    <div class="seg" id="growthRange">
+      <button data-range="7">Last 7 days</button><button data-range="30" class="active">Last 30 days</button><button data-range="90">Last 90 days</button><button data-range="365">Last year</button>
+    </div>
+    <span class="nav-time" id="growthNote"></span>
+  </div>
+  <div class="table-card" style="margin-bottom:1.25rem"><table class="cmp" id="cmpTable"></table></div>
+  <div class="chart-grid">
+    <div class="chart-card full"><div class="chart-title">Where new arrivals go &middot; people who first visited in this period</div><div class="funnel" id="funnel"></div></div>
+  </div>
   <div class="chart-grid">
     <div class="chart-card">
       <div class="chart-title">Weekly sign-up cohorts &middot; share who played again</div>
@@ -203,115 +267,70 @@ th[data-key] { cursor: pointer; }
       <div class="note" id="streakNote"></div>
     </div>
   </div>
-
-
-  <div class="section-header" style="margin-bottom:0.6rem"><span class="section-title">Hourly Breakdown Today (AEST)</span></div>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-title">Page Views by Hour</div>
-      <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Unique Visitors by Hour</div>
-      <div class="chart-wrap"><canvas id="hourlyVisitorsChart"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Games Played by Hour</div>
-      <div class="chart-wrap"><canvas id="hourlyGamesChart"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Sign-ups by Hour</div>
-      <div class="chart-wrap"><canvas id="hourlySignupsChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Tables -->
-  <div class="col-2">
-    <div>
-      <div class="section-header"><span class="section-title">Top Players (by points)</span></div>
-      <div class="table-card" id="topPlayersTable"></div>
-    </div>
-    <div>
-      <div class="section-header"><span class="section-title">Most Active</span></div>
-      <div class="table-card" id="activeTable"></div>
-    </div>
-  </div>
-
-  <!-- v2: puzzle quality -->
-  <div class="section-header"><span class="section-title">Puzzle Quality (last 60 puzzles, on-the-day plays)</span></div>
-  <div class="table-card scroll" style="margin-bottom:1.25rem"><table id="puzzles"></table></div>
-  <div class="note" style="margin:-0.9rem 0 1.25rem">Flags: <span class="flag">easy</span> first-guess rate over 60%, <span class="flag hard">hard</span> solve rate under 35%. Tags come from the feedback form. Click a column header to sort.</div>
-
-  <div class="col-2">
-    <div>
-      <div class="section-header"><span class="section-title">Recent Sign-ups</span></div>
-      <div class="table-card" id="signupsTable"></div>
-    </div>
-    <div>
-      <div class="section-header"><span class="section-title">Recent Feedback</span></div>
-      <div class="table-card" id="feedbackPanel"></div>
-    </div>
-  </div>
-
-  <!-- Leaderboard Popularity -->
-  <div class="section">
-    <div class="section-header"><span class="section-title">Leaderboard Tab Popularity</span></div>
-    <div class="stats-row" id="lbPop"></div>
-  </div>
-
-  <!-- v2: growth signals + all time -->
-  <div class="section-header"><span class="section-title">Growth Signals (this period)</span></div>
   <div class="chart-grid" style="grid-template-columns:1fr 1fr 1fr">
-    <div class="chart-card"><div class="chart-title">Events</div><div class="kv" id="events"></div></div>
-    <div class="chart-card"><div class="chart-title">Referrals</div><div class="kv" id="referrals"></div></div>
-    <div class="chart-card"><div class="chart-title">Feedback by category</div><div class="kv" id="feedbackCats"></div></div>
-  </div>
-  <div class="section-header"><span class="section-title">All Time</span></div>
-  <div class="chart-grid" style="grid-template-columns:1fr 1fr 1fr">
-    <div class="chart-card"><div class="chart-title">Totals</div><div class="kv" id="alltime"></div></div>
-    <div class="chart-card"><div class="chart-title">Who plays</div><div class="kv" id="levels"></div></div>
-    <div class="chart-card"><div class="chart-title">Email and reminders</div><div class="kv" id="consent"></div></div>
+    <div class="chart-card"><div class="chart-title">Events in period</div><div class="kv" id="events"></div></div>
+    <div class="chart-card"><div class="chart-title">Referrals in period</div><div class="kv" id="referrals"></div></div>
+    <div class="chart-card"><div class="chart-title">Who plays (all time)</div><div class="kv" id="levels"></div></div>
   </div>
 </div>
 
-<script>
-let K = null; // admin key — stored in memory only, never in URL
-let charts = {};
-let range = localStorage.getItem('physiodle_admin_v2_range') || '30';
-document.getElementById('rangeSeg').addEventListener('click', (e) => {
-  const b = e.target.closest('button'); if (!b) return;
-  range = b.dataset.range; localStorage.setItem('physiodle_admin_v2_range', range);
-  document.querySelectorAll('#rangeSeg button').forEach(x => x.classList.toggle('active', x === b));
-  loadV2();
-});
-document.querySelectorAll('#rangeSeg button').forEach(x => x.classList.toggle('active', x.dataset.range === range));
-const fmtN = (n) => (n == null ? '\u2013' : Number(n).toLocaleString('en-AU'));
-const pct = (a, b) => (b ? Math.round(100 * a / b) + '%' : '\u2013');
-function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+<!-- ================= PUZZLES ================= -->
+<div class="panel" id="panel-puzzles">
+  <div class="section-header"><span class="section-title">Puzzle Quality &middot; last 60 puzzles, on-the-day plays</span></div>
+  <div class="table-card scroll"><table id="puzzles"></table></div>
+  <div class="note">Flags: <span class="flag">easy</span> first-guess rate over 60%, <span class="flag hard">hard</span> solve rate under 35%. Tags come from the feedback form. Click a column header to sort; click a row to see its feedback.</div>
+</div>
 
-async function doLogin() {
-  const input = document.getElementById('adminKeyInput');
-  const key = input.value.trim();
-  if (!key) return;
-  try {
-    const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': key } });
-    if (!r.ok) throw new Error('bad key');
-    K = key;
-    // Strip any key from URL (in case someone bookmarked the old URL)
-    if (window.location.search) history.replaceState(null, '', window.location.pathname);
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('mainNav').style.display = '';
-    document.getElementById('mainDash').style.display = '';
-    const d = await r.json();
-    renderAll(d);
-    loadV2();
-    setInterval(loadData, 30000);
-  } catch (e) {
-    document.getElementById('loginError').style.display = 'block';
-    input.value = '';
-    input.focus();
-  }
-}
+<!-- ================= PLAYERS ================= -->
+<div class="panel" id="panel-players">
+  <div class="toolbar">
+    <input id="userSearch" placeholder="Search username or email" onkeydown="if(event.key==='Enter')loadUsers(1)">
+    <select id="userSort"><option value="created">Newest</option><option value="last">Last played</option><option value="games">Most games</option><option value="points">Most points</option><option value="username">Username</option></select>
+    <button class="btn" onclick="loadUsers(1)">Search</button>
+    <span style="flex:1"></span>
+    <a class="btn ghost" id="csvTicked" href="#" style="text-decoration:none">CSV: ticked the box</a>
+    <a class="btn ghost" id="csvInferred" href="#" style="text-decoration:none">CSV: active 6 months</a>
+  </div>
+  <div class="table-card"><div class="scroll"><table id="usersTable"></table></div><div class="pager" id="usersPager"></div></div>
+</div>
+
+<!-- ================= FEEDBACK ================= -->
+<div class="panel" id="panel-feedback">
+  <div class="toolbar">
+    <input id="fbSearch" placeholder="Search comments or usernames" onkeydown="if(event.key==='Enter')loadFeedbackTab(0)">
+    <select id="fbCategory"><option value="">All categories</option><option value="puzzle_error">Puzzle error</option><option value="answer_matching">Answer matching</option><option value="suggestion">Suggestion</option><option value="site_bug">Site bug</option><option value="praise">Praise</option></select>
+    <input id="fbDay" placeholder="Day #" style="min-width:80px;width:80px">
+    <button class="btn" onclick="loadFeedbackTab(0)">Filter</button>
+    <span class="nav-time" id="fbCount"></span>
+  </div>
+  <div class="table-card" id="fbList"></div>
+  <div class="pager" id="fbPager"></div>
+</div>
+
+<!-- ================= HEALTH ================= -->
+<div class="panel" id="panel-health">
+  <div class="health-grid" id="healthGrid"></div>
+  <div class="chart-card" style="margin-top:0.75rem">
+    <div class="chart-title">Actions</div>
+    <div class="toolbar">
+      <input id="mailTestTo" placeholder="email to test" value="">
+      <button class="btn" onclick="runMailTest()">Send test email</button>
+      <button class="btn ghost" onclick="runSweep()">Run reminder sweep now</button>
+      <button class="btn ghost" onclick="loadHealth()">Recheck</button>
+    </div>
+    <pre id="actionOut" style="font-size:0.75rem;color:var(--text2);white-space:pre-wrap;margin-top:0.5rem"></pre>
+  </div>
+</div>
+
+</div>
+
+<!-- Player drawer -->
+<div class="drawer" id="drawer"><button class="close" onclick="closeDrawer()">&times;</button><div id="drawerBody"></div></div>
+
+<script>
+let K = null;
+let charts = {};
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 function updateClock() {
   const now = new Date();
@@ -322,7 +341,9 @@ setInterval(updateClock, 1000);
 updateClock();
 
 function toAEST(d) { return new Date(new Date(d).getTime() + 10 * 3600000); }
+
 function fmtDate(d) { if (!d) return '—'; const a = toAEST(d); return a.getUTCDate() + '/' + (a.getUTCMonth()+1) + '/' + a.getUTCFullYear(); }
+
 function fmtDateTime(d) { if (!d) return '—'; const a = toAEST(d); return a.toISOString().slice(0,16).replace('T',' ') + ' AEST'; }
 
 Chart.defaults.color = '#94a3b8';
@@ -334,159 +355,6 @@ Chart.defaults.plugins.legend.labels.boxWidth = 10;
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
 let lastV1 = null, lastV2 = null;
-function renderAll(d) {
-  lastV1 = d;
-  renderKPIs(d);
-  renderTrafficChart(d);
-  renderWinLoss(d);
-  renderScoreDist(d);
-  renderDevices(d);
-  renderHourlyAll(d);
-  renderTopPlayers(d.topPlayers);
-  renderMostActive(d.mostActive);
-  renderRecentSignups(d.recentSignups);
-  renderFeedback(d.feedback);
-  renderLbPop(d.leaderboardPopularity);
-}
-
-async function loadData() {
-  if (!K) return;
-  try {
-    const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': K } });
-    const d = await r.json();
-    renderAll(d);
-    loadV2();
-  } catch (e) { console.error('Dashboard refresh failed:', e); }
-}
-
-async function loadV2() {
-  if (!K) return;
-  try {
-    const r = await fetch('/api/analytics/v2?range=' + encodeURIComponent(range), { headers: { 'x-admin-key': K } });
-    if (!r.ok) return;
-    renderV2(await r.json());
-  } catch (e) { console.error('v2 refresh failed:', e); }
-}
-
-function spark(values, colour) {
-  if (!values.length) return '';
-  const w = 100, h = 26, max = Math.max(...values, 1);
-  const pts = values.map((v, i) => (i / Math.max(values.length - 1, 1)) * w + ',' + (h - (v / max) * (h - 2) - 1)).join(' ');
-  return '<svg class="stat-spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none"><polyline fill="none" stroke="' + colour + '" stroke-width="1.5" points="' + pts + '"/></svg>';
-}
-function periodDelta(cur, prev) {
-  if (prev == null) return '<div class="stat-sub">since launch</div>';
-  if (!prev) return '<div class="stat-sub">previous period: ' + fmtN(prev) + '</div>';
-  const ch = (cur - prev) / prev;
-  const cls = ch > 0.02 ? 'up' : ch < -0.02 ? 'down' : '';
-  return '<div class="stat-delta ' + cls + '">' + (ch > 0 ? '+' : '') + Math.round(ch * 100) + '% vs previous ' + fmtN(prev) + '</div>';
-}
-
-function renderV2(d) {
-  lastV2 = d;
-  if (lastV1) renderKPIs(lastV1);
-  document.getElementById('rangeNote').textContent = d.range.key === 'all' ? 'since launch' : d.range.days + ' day' + (d.range.days > 1 ? 's' : '') + ', vs the ' + d.range.days + ' before';
-
-  const f = d.funnel;
-  const steps = [['Visitors', f.visitors, null], ['Signed up', f.signups, f.visitors], ['Played a game', f.firstGame, f.signups], ['Came back later', f.returned, f.firstGame]];
-  document.getElementById('funnel').innerHTML = steps.map(([l, n, base]) =>
-    '<div class="fstep"><div class="l">' + l + '</div><div class="n">' + fmtN(n) + '</div><div class="r">' + (base ? pct(n, base) + ' of previous step' : '&nbsp;') + '</div><div class="mini-bar-bg" style="margin-top:0.4rem"><div class="mini-bar" style="width:' + (f.visitors ? Math.max(2, 100 * n / f.visitors) : 0) + '%;background:var(--cyan)"></div></div></div>').join('');
-
-  const heat = (v, ok) => ok ? '<span class="heat" style="background:rgba(6,182,212,' + Math.min(0.85, v / 100 + 0.05) + ')">' + v + '%</span>' : '<span class="heat" style="color:var(--text3)">\u2013</span>';
-  document.getElementById('cohorts').innerHTML = '<thead><tr><th>Week of</th><th class="num">Signed up</th><th class="num">Day 1</th><th class="num">Day 7</th><th class="num">Day 30</th></tr></thead><tbody>' +
-    d.cohorts.slice().reverse().map(c => '<tr><td>' + c.week + '</td><td class="num">' + fmtN(c.size) + '</td><td class="num">' + heat(c.d1, c.ageDays >= 1) + '</td><td class="num">' + heat(c.d7, c.ageDays >= 7) + '</td><td class="num">' + heat(c.d30, c.ageDays >= 30) + '</td></tr>').join('') + '</tbody>';
-
-  const b = d.streaks.buckets, maxB = Math.max(...Object.values(b), 1);
-  document.getElementById('streaks').innerHTML = Object.entries(b).map(([label, n]) => '<div>' + label + ' days</div><div class="bar" style="width:' + Math.max(1, 100 * n / maxB) + '%"></div><div class="num">' + fmtN(n) + '</div>').join('');
-  document.getElementById('streakNote').textContent = fmtN(d.streaks.activeStreaks) + ' players on a streak right now. ' + fmtN(d.streaks.brokeYesterday) + ' streaks broke yesterday.';
-
-  renderPuzzles(d.puzzles);
-
-  const kv = (rows) => rows.length ? rows.map(([a, v]) => '<div>' + a + '</div><div class="num">' + v + '</div>').join('') : '<div class="muted">nothing yet</div><div></div>';
-  document.getElementById('events').innerHTML = kv(d.events.map(e => [esc(e.event_type.replace(/_/g, ' ')), fmtN(e.c)]));
-  document.getElementById('referrals').innerHTML = kv([['Sign-ups via a link', fmtN(d.referrals.referredSignups)]].concat(d.referrals.top.map(r => ['&nbsp;&nbsp;' + esc(r.username), fmtN(r.c)])));
-  document.getElementById('feedbackCats').innerHTML = kv(d.feedbackByCategory.map(x => [esc((x.k || 'untagged').replace(/_/g, ' ')), fmtN(x.c)]));
-  const a = d.allTime;
-  document.getElementById('alltime').innerHTML = kv([['Players', fmtN(a.users)], ['Games', fmtN(a.games)], ['Visitors', fmtN(a.visitors)], ['Page views', fmtN(a.pageviews)], ['On a streak now', fmtN(a.playersWithStreak)], ['Tracking since', a.firstView ? a.firstView.slice(0, 10) : '\u2013']]);
-  document.getElementById('levels').innerHTML = kv(d.levels.map(l => [esc(l.k.replace(/_/g, ' ')), fmtN(l.c)]));
-  const c = d.consent;
-  document.getElementById('consent').innerHTML = kv([['With an email', fmtN(c.withEmail)], ['Email confirmed', fmtN(c.confirmed)], ['Ticked updates box', fmtN(c.ticked)], ['Active last 6 months', fmtN(c.activeSixMonths)], ['Reminder subscriptions', fmtN(d.pushSubs)]]);
-}
-
-let puzzleSort = { key: 'day', asc: false }, puzzleRows = [];
-function renderPuzzles(rows) {
-  puzzleRows = rows;
-  const cols = [['day', 'Day', true], ['answer', 'Answer', false], ['answerType', 'Type', false], ['plays', 'Plays', true], ['solveRate', 'Solved', true], ['firstGuessRate', '1st guess', true], ['avgGuesses', 'Avg guesses', true], ['reports', 'Reports', true]];
-  const sorted = rows.slice().sort((x, y) => {
-    let p = x[puzzleSort.key], q = y[puzzleSort.key];
-    if (typeof p === 'string') { p = p.toLowerCase(); q = (q || '').toLowerCase(); }
-    if (p == null) return 1; if (q == null) return -1;
-    return (p < q ? -1 : p > q ? 1 : 0) * (puzzleSort.asc ? 1 : -1);
-  });
-  const t = document.getElementById('puzzles');
-  t.innerHTML = '<thead><tr>' + cols.map(([k, l, num]) => '<th class="' + (num ? 'num' : '') + '" data-key="' + k + '">' + l + (puzzleSort.key === k ? (puzzleSort.asc ? ' \u25B2' : ' \u25BC') : '') + '</th>').join('') + '<th>Tags</th></tr></thead><tbody>' +
-    sorted.map(p => {
-      const flag = p.firstGuessRate > 60 ? '<span class="flag">easy</span>' : p.solveRate < 35 ? '<span class="flag hard">hard</span>' : '';
-      return '<tr><td class="num">' + p.day + '</td><td style="font-weight:600">' + esc(p.answer) + flag + '<div style="color:var(--text3);font-size:0.7rem;font-weight:400">' + esc(p.category) + '</div></td><td style="color:var(--text3)">' + p.answerType + '</td><td class="num">' + fmtN(p.plays) + '</td><td class="num">' + p.solveRate + '%</td><td class="num">' + p.firstGuessRate + '%</td><td class="num">' + (p.avgGuesses ?? '\u2013') + '</td><td class="num">' + (p.reports || '') + '</td><td>' + p.reportTags.map(x => '<span class="tag ' + (/inaccurate|spoiler|not_a_diagnosis/.test(x) ? 'warn' : '') + '">' + esc(x.replace(/_/g, ' ')) + '</span>').join('') + '</td></tr>';
-    }).join('') + '</tbody>';
-  t.querySelectorAll('th[data-key]').forEach(th => th.addEventListener('click', () => {
-    const k2 = th.dataset.key;
-    puzzleSort = { key: k2, asc: puzzleSort.key === k2 ? !puzzleSort.asc : k2 === 'answer' };
-    renderPuzzles(puzzleRows);
-  }));
-}
-
-function renderKPIs(d) {
-  const delta = (a, b) => { if (!b) return ''; const pct = Math.round(((a-b)/Math.max(b,1))*100); return '<div class="stat-delta ' + (pct>=0?'up':'down') + '">' + (pct>=0?'+':'') + pct + '% vs yesterday</div>'; };
-  // Period line: same card, third line, driven by the range control (v2 data).
-  const v2 = lastV2;
-  const label = v2 ? (v2.range.key === 'all' ? 'since launch' : 'last ' + v2.range.days + 'd') : '';
-  const period = (k, sk, col) => {
-    if (!v2) return '';
-    const v = v2.kpis[k];
-    let cmp = '';
-    if (v.previous != null && v.previous > 0) { const ch = (v.current - v.previous) / v.previous; cmp = ' <span class="' + (ch > 0.02 ? 'stat-delta up' : ch < -0.02 ? 'stat-delta down' : 'stat-sub') + '" style="display:inline">' + (ch > 0 ? '+' : '') + Math.round(ch * 100) + '% vs prior ' + v2.range.days + 'd</span>'; }
-    return '<div class="stat-sub" style="margin-top:0.35rem;border-top:1px solid var(--border);padding-top:0.35rem">' + label + ': <strong style="color:var(--text)">' + fmtN(v.current) + '</strong>' + cmp + '</div>' + spark(v2.series.map(r => r[sk]), col);
-  };
-  const cards = [
-    { label: 'Visitors Today', value: d.uniqueVisitors.today, sub: 'Total: ' + d.uniqueVisitors.total, color: 'blue', extra: delta(d.uniqueVisitors.today, d.uniqueVisitors.yesterday) + period('visitors', 'visitors', '#3b82f6') },
-    { label: 'Page Views Today', value: d.pageViews.today, sub: 'Total: ' + d.pageViews.total, color: 'cyan', extra: delta(d.pageViews.today, d.pageViews.yesterday) + period('pageviews', 'pageviews', '#06b6d4') },
-    { label: 'Sign-ups', value: d.signups.total, sub: 'Today: ' + d.signups.today + ' | Week: ' + d.signups.thisWeek, color: 'green', extra: period('signups', 'signups', '#22c55e') },
-    { label: 'Games Played', value: d.gamesPlayed.total, sub: 'Today: ' + d.gamesPlayed.today + ' | Week: ' + d.gamesPlayed.thisWeek, color: 'purple', extra: period('games', 'games', '#8b5cf6') },
-    { label: 'Active Players', value: v2 ? fmtN(v2.kpis.activePlayers.current) : '\u2013', sub: v2 ? (v2.range.key === 'all' ? 'since launch' : 'in the last ' + v2.range.days + ' days') : 'loading', color: 'amber', extra: v2 && v2.kpis.activePlayers.previous ? period('activePlayers', 'activePlayers', '#f59e0b') : '' },
-    { label: 'Win Rate', value: d.winLoss.winRate + '%', sub: d.winLoss.wins + 'W / ' + d.winLoss.losses + 'L', color: 'amber', extra: v2 ? '<div class="stat-sub">' + label + ': ' + pct(v2.kpis.wins.current, v2.kpis.games.current) + (v2.kpis.wins.previous != null ? ' (prior ' + pct(v2.kpis.wins.previous, v2.kpis.games.previous) + ')' : '') + '</div>' : '' },
-    { label: 'Avg Score', value: d.averageScore, sub: 'Lower is better (1-5)', color: 'pink' },
-    { label: 'Conversion', value: d.conversionRate + '%', sub: 'Visitors \u2192 Sign-ups', color: 'green', extra: v2 ? '<div class="stat-sub">' + label + ': ' + pct(v2.funnel.signups, v2.funnel.visitors) + '</div>' : '' },
-    { label: 'Games / User', value: d.gamesPerUser, sub: d.social.totalFriendships + ' friendships', color: 'cyan' },
-  ];
-  document.getElementById('kpiRow').innerHTML = cards.map(c =>
-    '<div class="stat-card ' + c.color + '"><div class="stat-label">' + c.label + '</div><div class="stat-value">' + c.value + '</div><div class="stat-sub">' + c.sub + '</div>' + (c.extra||'') + '</div>'
-  ).join('');
-}
-
-function renderTrafficChart(d) {
-  destroyChart('traffic');
-  const labels = d.dailyBreakdown.map(r => r.day.slice(5));
-  const signupMap = {};
-  (d.dailySignups || []).forEach(r => { signupMap[r.day] = r.count; });
-  const gameMap = {};
-  (d.dailyGames || []).forEach(r => { gameMap[r.day] = r.total; });
-
-  charts.traffic = new Chart(document.getElementById('trafficChart'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Page Views', data: d.dailyBreakdown.map(r => r.views), backgroundColor: '#3b82f640', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 4, order: 2 },
-        { label: 'Unique Visitors', data: d.dailyBreakdown.map(r => r.unique_visitors), type: 'line', borderColor: '#06b6d4', backgroundColor: '#06b6d420', pointRadius: 2, tension: 0.3, fill: true, order: 1 },
-        { label: 'Games', data: d.dailyBreakdown.map(r => gameMap[r.day] || 0), type: 'line', borderColor: '#8b5cf6', pointRadius: 2, tension: 0.3, borderDash: [4,2], order: 0 },
-        { label: 'Sign-ups', data: d.dailyBreakdown.map(r => signupMap[r.day] || 0), type: 'line', borderColor: '#22c55e', pointRadius: 2, tension: 0.3, borderDash: [2,2], order: 0 },
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-      scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
-  });
-}
 
 function renderWinLoss(d) {
   destroyChart('winLoss');
@@ -528,6 +396,7 @@ function _hourlyBar(canvasId, chartKey, hourlyData, color) {
       scales: { y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { maxTicksLimit: 5 } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } } } }
   });
 }
+
 function renderHourlyAll(d) {
   _hourlyBar('hourlyChart', 'hourly', d.hourlyToday, '#3b82f6');
   _hourlyBar('hourlyVisitorsChart', 'hourlyVisitors', d.hourlyVisitors, '#06b6d4');
@@ -615,6 +484,301 @@ function renderLbPop(rows) {
   } else {
     document.getElementById('adminKeyInput').focus();
   }
+})();
+
+
+// ---------------- auth ----------------
+async function doLogin() {
+  K = document.getElementById('adminKeyInput').value.trim();
+  if (!K) return;
+  const r = await fetch('/api/analytics/dashboard', { headers: { 'x-admin-key': K } });
+  if (r.status === 401 || r.status === 403) { document.getElementById('loginError').style.display = 'block'; K = null; return; }
+  if (!r.ok) { document.getElementById('loginError').textContent = 'Server error'; document.getElementById('loginError').style.display = 'block'; return; }
+  sessionStorage.setItem('physiodle_admin_key', K);
+  if (window.location.search) history.replaceState(null, '', window.location.pathname);
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainNav').style.display = 'flex';
+  document.getElementById('mainDash').style.display = 'block';
+  updateClock(); setInterval(updateClock, 1000);
+  renderAll(await r.json());
+  loadSeries();
+  setInterval(loadData, 30000);
+}
+function doLogout() { sessionStorage.removeItem('physiodle_admin_key'); location.reload(); }
+async function api(path, opts) {
+  const r = await fetch(path, { ...(opts || {}), headers: { 'x-admin-key': K, 'Content-Type': 'application/json', ...((opts && opts.headers) || {}) } });
+  if (!r.ok) throw new Error((await r.text()).slice(0, 200));
+  return r.json();
+}
+
+// ---------------- tabs ----------------
+let currentTab = 'overview';
+const loaded = {};
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('.tab'); if (!b) return;
+  showTab(b.dataset.tab);
+});
+function showTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  location.hash = name;
+  if (!loaded[name]) refreshCurrent();
+}
+function refreshCurrent() {
+  loaded[currentTab] = true;
+  ({ overview: () => { loadData(); loadSeries(); }, growth: loadGrowth, puzzles: loadPuzzlesTab, players: () => loadUsers(1), feedback: () => loadFeedbackTab(0), health: loadHealth })[currentTab]();
+}
+
+// ---------------- overview ----------------
+function renderAll(d) {
+  renderKPIs(d); renderWinLoss(d); renderScoreDist(d); renderHourlyAll(d); renderDevices(d);
+  renderTopPlayers(d.topPlayers); renderMostActive(d.mostActive); renderRecentSignups(d.recentSignups);
+  renderFeedback(d.feedback); renderLbPop(d.leaderboardPopularity);
+}
+async function loadData() {
+  if (!K || currentTab !== 'overview') return;
+  try { renderAll(await api('/api/analytics/dashboard')); } catch (e) { console.error(e); }
+}
+function delta(cur, prev) {
+  if (!prev) return '';
+  const ch = Math.round(((cur - prev) / prev) * 100);
+  return `<div class="stat-delta ${ch >= 0 ? 'up' : 'down'}">${ch >= 0 ? '+' : ''}${ch}% vs yesterday</div>`;
+}
+function renderKPIs(d) {
+  const cards = [
+    { label: 'Visitors Today', value: d.uniqueVisitors.today, sub: 'Total: ' + d.uniqueVisitors.total.toLocaleString(), color: 'blue', extra: delta(d.uniqueVisitors.today, d.uniqueVisitors.yesterday) },
+    { label: 'Page Views Today', value: d.pageViews.today, sub: 'Total: ' + d.pageViews.total.toLocaleString(), color: 'cyan', extra: delta(d.pageViews.today, d.pageViews.yesterday) },
+    { label: 'Sign-ups', value: d.signups.total.toLocaleString(), sub: 'Today: ' + d.signups.today + ' | Week: ' + d.signups.thisWeek, color: 'green' },
+    { label: 'Games Played', value: d.gamesPlayed.total.toLocaleString(), sub: 'Today: ' + d.gamesPlayed.today + ' | Week: ' + d.gamesPlayed.thisWeek, color: 'purple' },
+    { label: 'Win Rate', value: d.winLoss.winRate + '%', sub: d.winLoss.wins.toLocaleString() + 'W / ' + d.winLoss.losses.toLocaleString() + 'L', color: 'amber' },
+    { label: 'Avg Score', value: d.averageScore, sub: 'Lower is better (1-5)', color: 'pink' },
+    { label: 'Conversion', value: d.conversionRate + '%', sub: 'Visitors → Sign-ups', color: 'green' },
+    { label: 'Games / User', value: d.gamesPerUser, sub: d.social.totalFriendships + ' friendships', color: 'cyan' },
+  ];
+  document.getElementById('kpiRow').innerHTML = cards.map(c =>
+    '<div class="stat-card ' + c.color + '"><div class="stat-label">' + c.label + '</div><div class="stat-value">' + c.value + '</div><div class="stat-sub">' + c.sub + '</div>' + (c.extra || '') + '</div>').join('');
+}
+
+// Traffic chart with range + bucket
+let seriesRange = localStorage.getItem('pa_series_range') || '30d';
+let seriesBucket = localStorage.getItem('pa_series_bucket') || '';
+const BUCKET_OPTIONS = { '6m': ['day', 'week'], '1y': ['week', 'month'], 'all': ['week', 'month'] };
+document.getElementById('seriesRange').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  seriesRange = b.dataset.range; seriesBucket = ''; localStorage.setItem('pa_series_range', seriesRange); localStorage.removeItem('pa_series_bucket');
+  loadSeries();
+});
+document.getElementById('seriesBucket').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  seriesBucket = b.dataset.bucket; localStorage.setItem('pa_series_bucket', seriesBucket);
+  loadSeries();
+});
+function fmtBucket(b, bucket) {
+  if (bucket === 'hour') return b.slice(11, 16);
+  if (bucket === 'halfday') return b.slice(5, 10) + (b.endsWith('12:00') ? ' pm' : ' am');
+  if (bucket === 'month') return b.slice(0, 7);
+  return b.slice(5, 10);
+}
+async function loadSeries() {
+  if (!K) return;
+  document.querySelectorAll('#seriesRange button').forEach(x => x.classList.toggle('active', x.dataset.range === seriesRange));
+  const opts = BUCKET_OPTIONS[seriesRange];
+  const bucketSeg = document.getElementById('seriesBucket');
+  bucketSeg.style.display = opts ? '' : 'none';
+  try {
+    const d = await api('/api/analytics/v2/series?range=' + seriesRange + (seriesBucket ? '&bucket=' + seriesBucket : ''));
+    if (opts) bucketSeg.querySelectorAll('button').forEach(x => { x.style.display = opts.includes(x.dataset.bucket) ? '' : 'none'; x.classList.toggle('active', x.dataset.bucket === d.bucket); });
+    destroyChart('traffic');
+    const labels = d.rows.map(r => fmtBucket(r.bucket, d.bucket));
+    charts.traffic = new Chart(document.getElementById('trafficChart'), {
+      type: 'bar',
+      data: { labels, datasets: [
+        { label: 'Page Views', data: d.rows.map(r => r.pageviews), backgroundColor: '#3b82f640', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 3, order: 2 },
+        { label: 'Unique Visitors', data: d.rows.map(r => r.visitors), type: 'line', borderColor: '#06b6d4', backgroundColor: '#06b6d420', pointRadius: d.rows.length > 60 ? 0 : 2, tension: 0.3, fill: true, order: 1 },
+        { label: 'Games', data: d.rows.map(r => r.games), type: 'line', borderColor: '#8b5cf6', pointRadius: d.rows.length > 60 ? 0 : 2, tension: 0.3, borderDash: [4,2], order: 0 },
+        { label: 'Sign-ups', data: d.rows.map(r => r.signups), type: 'line', borderColor: '#22c55e', pointRadius: d.rows.length > 60 ? 0 : 2, tension: 0.3, borderDash: [2,2], order: 0, yAxisID: 'y2' },
+      ] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+        scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, y2: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { color: '#22c55e' } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 16 } } } }
+    });
+    const bucketWord = { hour: 'hourly', halfday: '12-hour', day: 'daily', week: 'weekly', month: 'monthly' }[d.bucket];
+    document.getElementById('seriesNote').textContent = `${d.rows.length} ${bucketWord} buckets, AEST. Sign-ups on the right axis.`;
+  } catch (e) { console.error(e); }
+}
+
+// ---------------- growth ----------------
+let growthRange = localStorage.getItem('pa_growth_range') || '30';
+document.getElementById('growthRange').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  growthRange = b.dataset.range; localStorage.setItem('pa_growth_range', growthRange); loadGrowth();
+});
+const fmtN = (n) => (n == null ? '–' : Number(n).toLocaleString('en-AU'));
+const pct = (a, b) => (b ? Math.round(100 * a / b) + '%' : '–');
+function sparkSvg(values, colour) {
+  if (!values.length) return '';
+  const w = 120, h = 26, max = Math.max(...values, 1);
+  const pts = values.map((v, i) => (i / Math.max(values.length - 1, 1)) * w + ',' + (h - (v / max) * (h - 2) - 1)).join(' ');
+  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none"><polyline fill="none" stroke="' + colour + '" stroke-width="1.5" points="' + pts + '"/></svg>';
+}
+function deltaCell(cur, prev, invert) {
+  if (prev == null || prev === 0) return '<span class="delta flat">–</span>';
+  const ch = (cur - prev) / prev;
+  const good = invert ? ch < 0 : ch > 0;
+  const cls = Math.abs(ch) < 0.02 ? 'flat' : good ? 'up' : 'down';
+  return '<span class="delta ' + cls + '">' + (ch > 0 ? '+' : '') + Math.round(ch * 100) + '%</span>';
+}
+async function loadGrowth() {
+  if (!K) return;
+  document.querySelectorAll('#growthRange button').forEach(x => x.classList.toggle('active', x.dataset.range === growthRange));
+  let d; try { d = await api('/api/analytics/v2?range=' + growthRange); } catch (e) { console.error(e); return; }
+  const k = d.kpis, s = d.series;
+  document.getElementById('growthNote').textContent = `${d.range.days} days ending today, against the ${d.range.days} days before`;
+  const rows = [
+    ['Visitors', k.visitors.current, k.visitors.previous, s.map(r => r.visitors), '#06b6d4'],
+    ['Page views', k.pageviews.current, k.pageviews.previous, s.map(r => r.pageviews), '#3b82f6'],
+    ['Sign-ups', k.signups.current, k.signups.previous, s.map(r => r.signups), '#22c55e'],
+    ['Games played', k.games.current, k.games.previous, s.map(r => r.games), '#8b5cf6'],
+    ['Active players', k.activePlayers.current, k.activePlayers.previous, s.map(r => r.activePlayers), '#f59e0b'],
+  ];
+  const ratioRows = [
+    ['Win rate', k.wins.current, k.games.current, k.wins.previous, k.games.previous],
+    ['Visitor → sign-up', k.signups.current, k.visitors.current, k.signups.previous, k.visitors.previous],
+  ];
+  document.getElementById('cmpTable').innerHTML = '<thead><tr><th>Metric</th><th class="num">This period</th><th class="num">Previous</th><th class="num">Change</th><th>Trend</th></tr></thead><tbody>' +
+    rows.map(([l, c, p, ser, col]) => `<tr><td class="metric">${l}</td><td class="num">${fmtN(c)}</td><td class="num prev">${fmtN(p)}</td><td class="num">${deltaCell(c, p)}</td><td>${sparkSvg(ser, col)}</td></tr>`).join('') +
+    ratioRows.map(([l, a, b, pa, pb]) => { const cur = b ? a / b : 0, prev = pb ? pa / pb : 0; return `<tr><td class="metric">${l}</td><td class="num">${pct(a, b)}</td><td class="num prev">${pct(pa, pb)}</td><td class="num">${prev ? deltaCell(cur, prev) : '<span class="delta flat">–</span>'}</td><td></td></tr>`; }).join('') + '</tbody>';
+
+  const f = d.funnel;
+  const steps = [['Visitors', f.visitors, null], ['Signed up', f.signups, f.visitors], ['Played a game', f.firstGame, f.signups], ['Came back later', f.returned, f.firstGame]];
+  document.getElementById('funnel').innerHTML = steps.map(([l, n, base]) => '<div class="fstep"><div class="l">' + l + '</div><div class="n">' + fmtN(n) + '</div><div class="r">' + (base ? pct(n, base) + ' of previous step' : '&nbsp;') + '</div><div class="mini-bar-bg" style="margin-top:0.4rem"><div class="mini-bar" style="width:' + (f.visitors ? Math.max(2, 100 * n / f.visitors) : 0) + '%;background:var(--cyan)"></div></div></div>').join('');
+
+  const heat = (v, ok) => ok ? '<span class="heat" style="background:rgba(6,182,212,' + Math.min(0.85, v / 100 + 0.05) + ')">' + v + '%</span>' : '<span class="heat" style="color:var(--text3)">–</span>';
+  document.getElementById('cohorts').innerHTML = '<thead><tr><th>Week of</th><th class="num">Signed up</th><th class="num">Day 1</th><th class="num">Day 7</th><th class="num">Day 30</th></tr></thead><tbody>' +
+    d.cohorts.slice().reverse().map(c => '<tr><td>' + c.week + '</td><td class="num">' + fmtN(c.size) + '</td><td class="num">' + heat(c.d1, c.ageDays >= 1) + '</td><td class="num">' + heat(c.d7, c.ageDays >= 7) + '</td><td class="num">' + heat(c.d30, c.ageDays >= 30) + '</td></tr>').join('') + '</tbody>';
+
+  const b = d.streaks.buckets, maxB = Math.max(...Object.values(b), 1);
+  document.getElementById('streaks').innerHTML = Object.entries(b).map(([label, n]) => '<div>' + label + ' days</div><div class="bar" style="width:' + Math.max(1, 100 * n / maxB) + '%"></div><div class="num">' + fmtN(n) + '</div>').join('');
+  document.getElementById('streakNote').textContent = fmtN(d.streaks.activeStreaks) + ' players on a streak right now. ' + fmtN(d.streaks.brokeYesterday) + ' streaks broke yesterday.';
+
+  const kv = (rows) => rows.length ? rows.map(([a, v]) => '<div>' + a + '</div><div class="num">' + v + '</div>').join('') : '<div class="muted">nothing yet</div><div></div>';
+  document.getElementById('events').innerHTML = kv(d.events.map(e => [esc(e.event_type.replace(/_/g, ' ')), fmtN(e.c)]));
+  document.getElementById('referrals').innerHTML = kv([['Sign-ups via a link', fmtN(d.referrals.referredSignups)]].concat(d.referrals.top.map(r => ['&nbsp;&nbsp;' + esc(r.username), fmtN(r.c)])));
+  document.getElementById('levels').innerHTML = kv(d.levels.map(l => [esc(l.k.replace(/_/g, ' ')), fmtN(l.c)]));
+}
+
+// ---------------- puzzles ----------------
+let puzzleSort = { key: 'day', asc: false }, puzzleRows = [];
+async function loadPuzzlesTab() { try { const d = await api('/api/analytics/v2?range=7'); renderPuzzles(d.puzzles); } catch (e) { console.error(e); } }
+function renderPuzzles(rows) {
+  puzzleRows = rows;
+  const cols = [['day', 'Day', true], ['answer', 'Answer', false], ['answerType', 'Type', false], ['plays', 'Plays', true], ['solveRate', 'Solved', true], ['firstGuessRate', '1st guess', true], ['avgGuesses', 'Avg guesses', true], ['reports', 'Reports', true]];
+  const sorted = rows.slice().sort((x, y) => {
+    let p = x[puzzleSort.key], q = y[puzzleSort.key];
+    if (typeof p === 'string') { p = p.toLowerCase(); q = (q || '').toLowerCase(); }
+    if (p == null) return 1; if (q == null) return -1;
+    return (p < q ? -1 : p > q ? 1 : 0) * (puzzleSort.asc ? 1 : -1);
+  });
+  const t = document.getElementById('puzzles');
+  t.innerHTML = '<thead><tr>' + cols.map(([k, l, num]) => '<th class="' + (num ? 'num' : '') + '" data-key="' + k + '">' + l + (puzzleSort.key === k ? (puzzleSort.asc ? ' ▲' : ' ▼') : '') + '</th>').join('') + '<th>Tags</th></tr></thead><tbody>' +
+    sorted.map(p => {
+      const flag = p.firstGuessRate > 60 ? '<span class="flag">easy</span>' : p.solveRate < 35 ? '<span class="flag hard">hard</span>' : '';
+      return '<tr data-day="' + p.day + '" style="cursor:pointer"><td class="num">' + p.day + '</td><td style="font-weight:600">' + esc(p.answer) + flag + '<div style="color:var(--text3);font-size:0.7rem;font-weight:400">' + esc(p.category) + '</div></td><td style="color:var(--text3)">' + p.answerType + '</td><td class="num">' + fmtN(p.plays) + '</td><td class="num">' + p.solveRate + '%</td><td class="num">' + p.firstGuessRate + '%</td><td class="num">' + (p.avgGuesses ?? '–') + '</td><td class="num">' + (p.reports || '') + '</td><td>' + p.reportTags.map(x => '<span class="tag ' + (/inaccurate|spoiler|not_a_diagnosis/.test(x) ? 'warn' : '') + '">' + esc(x.replace(/_/g, ' ')) + '</span>').join('') + '</td></tr>';
+    }).join('') + '</tbody>';
+  t.querySelectorAll('th[data-key]').forEach(th => th.addEventListener('click', () => { const k2 = th.dataset.key; puzzleSort = { key: k2, asc: puzzleSort.key === k2 ? !puzzleSort.asc : k2 === 'answer' }; renderPuzzles(puzzleRows); }));
+  t.querySelectorAll('tr[data-day]').forEach(tr => tr.addEventListener('click', () => { document.getElementById('fbDay').value = tr.dataset.day; showTab('feedback'); loadFeedbackTab(0); }));
+}
+
+// ---------------- players ----------------
+let usersPage = 1;
+async function loadUsers(page) {
+  usersPage = page || 1;
+  const q = document.getElementById('userSearch').value.trim();
+  const sort = document.getElementById('userSort').value;
+  document.getElementById('csvTicked').href = '/api/analytics/v2/emails.csv?basis=ticked&key=' + encodeURIComponent(K);
+  document.getElementById('csvInferred').href = '/api/analytics/v2/emails.csv?basis=inferred&activeDays=180&key=' + encodeURIComponent(K);
+  let d; try { d = await api('/api/analytics/v2/users?page=' + usersPage + '&limit=50&sort=' + sort + '&q=' + encodeURIComponent(q)); } catch (e) { console.error(e); return; }
+  document.getElementById('usersTable').innerHTML = '<thead><tr><th>Player</th><th>Email</th><th>Level</th><th class="num">Games</th><th class="num">Win %</th><th class="num">Points</th><th>Joined</th><th>Last played</th><th></th></tr></thead><tbody>' +
+    d.users.map(u => `<tr><td style="font-weight:600;color:#fff">${esc(u.username)}${u.referred ? ' <span class="pill">ref</span>' : ''}</td><td>${u.email ? esc(u.email) + (u.emailConfirmed ? ' <span class="pill ok">✓</span>' : ' <span class="pill warn">unconfirmed</span>') : '<span class="pill">none</span>'}${u.consent ? ' <span class="pill ok">updates</span>' : ''}</td><td style="color:var(--text3)">${esc((u.level || '').replace(/_/g, ' '))}</td><td class="num">${fmtN(u.games)}</td><td class="num">${u.games ? Math.round(100 * u.wins / u.games) + '%' : '–'}</td><td class="num">${fmtN(u.points)}</td><td style="color:var(--text3)">${fmtDate(u.createdAt)}</td><td style="color:var(--text3)">${u.lastGame ? fmtDate(u.lastGame) : '–'}</td><td><button class="btn btn-sm ghost" onclick="openUser(${u.id})">Open</button></td></tr>`).join('') + '</tbody>';
+  document.getElementById('usersPager').innerHTML = `${fmtN(d.total)} players &middot; page ${d.page} of ${d.totalPages} <button class="btn btn-sm ghost" ${d.page <= 1 ? 'disabled' : ''} onclick="loadUsers(${d.page - 1})">Prev</button> <button class="btn btn-sm ghost" ${d.page >= d.totalPages ? 'disabled' : ''} onclick="loadUsers(${d.page + 1})">Next</button>`;
+}
+async function openUser(id) {
+  let d; try { d = await api('/api/analytics/v2/users/' + id); } catch (e) { alert(e.message); return; }
+  const u = d.user, t = d.totals || {};
+  document.getElementById('drawerBody').innerHTML = `
+    <h3>${esc(u.username)} <span class="pill">#${u.id}</span></h3>
+    <div style="font-size:0.8rem;color:var(--text3)">Joined ${fmtDateTime(u.createdAt)}${d.referrer ? ' &middot; referred by ' + esc(d.referrer.username) : ''}</div>
+    <div class="section"><h4>Account</h4><div class="kv">
+      <div>Email</div><div>${u.email ? esc(u.email) : '<span class="muted">none</span>'}</div>
+      <div>Email confirmed</div><div>${u.emailConfirmed ? '<span class="pill ok">yes</span> ' + fmtDate(u.emailConfirmedAt) : '<span class="pill warn">no</span>'}</div>
+      <div>Email updates</div><div>${u.consent ? '<span class="pill ok">ticked</span>' : '<span class="pill">not ticked</span>'}${u.consentAt ? ' <span class="muted">' + fmtDate(u.consentAt) + '</span>' : ''}</div>
+      <div>Level</div><div>${esc((u.level || '').replace(/_/g, ' ')) || '<span class="muted">unset</span>'}</div>
+      <div>Terms version</div><div>${u.termsVersion || '<span class="muted">pre-terms</span>'}</div>
+      <div>Reminder subscriptions</div><div>${d.pushSubscriptions}</div>
+      <div>Referral link</div><div>?ref=${esc(u.referralCode || '')} &middot; ${d.referrals.length} joined</div>
+    </div></div>
+    <div class="section"><h4>Play</h4><div class="kv"><div>Games</div><div>${fmtN(t.games)}</div><div>Wins</div><div>${fmtN(t.wins)}</div><div>Points</div><div>${fmtN(t.points)}</div><div>Friends</div><div>${d.friends.length}</div></div>
+      <div class="result-grid" style="margin-top:0.5rem">${d.results.map(r => `<div class="rcell ${r.won ? 'w' : 'l'}" title="Day ${r.day}: ${r.won ? 'solved on guess ' + r.score : 'missed'}">${r.day % 100}</div>`).join('')}</div>
+      <div class="note">Last 60 days played, newest first. Green = solved.</div></div>
+    ${d.feedback.length ? '<div class="section"><h4>Feedback</h4>' + d.feedback.map(f => `<div class="fb-row"><div class="who">Day ${f.day_number}<br>${fmtDate(f.created_at)}</div><div class="body">${f.category ? '<span class="tag">' + esc(f.category.replace(/_/g, ' ')) + '</span>' : ''}${f.issue_type ? '<span class="tag warn">' + esc(f.issue_type.replace(/_/g, ' ')) + '</span>' : ''}${esc(f.comment || '')}</div></div>`).join('') + '</div>' : ''}
+    <div class="section"><h4>Actions</h4><div class="toolbar">
+      ${u.email && !u.emailConfirmed ? `<button class="btn ghost btn-sm" onclick="userAction(${u.id}, 'resend')">Resend confirmation</button>` : ''}
+      <button class="btn ghost btn-sm" onclick="userAction(${u.id}, 'consent', ${u.consent ? 'false' : 'true'})">${u.consent ? 'Withdraw email updates' : 'Mark email updates on'}</button>
+      <button class="btn danger btn-sm" onclick="userAction(${u.id}, 'delete', '${esc(u.username)}')">Delete account</button>
+    </div><pre id="userActionOut" style="font-size:0.75rem;color:var(--text2);white-space:pre-wrap"></pre></div>`;
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
+async function userAction(id, action, arg) {
+  const out = document.getElementById('userActionOut');
+  try {
+    if (action === 'resend') { const r = await api('/api/analytics/v2/users/' + id + '/resend-confirmation', { method: 'POST' }); out.textContent = r.alreadyConfirmed ? 'Already confirmed.' : 'Confirmation email sent.'; }
+    if (action === 'consent') { await api('/api/analytics/v2/users/' + id, { method: 'PATCH', body: JSON.stringify({ consent: arg }) }); out.textContent = 'Saved.'; openUser(id); }
+    if (action === 'delete') { if (!confirm('Delete ' + arg + ' and all their results? This cannot be undone.')) return; const r = await fetch('/api/admin/users/' + id, { method: 'DELETE', headers: { 'x-admin-key': K } }); out.textContent = (await r.json()).message || 'Deleted'; loadUsers(usersPage); setTimeout(closeDrawer, 800); }
+  } catch (e) { out.textContent = 'Failed: ' + e.message; }
+}
+
+// ---------------- feedback ----------------
+let fbOffset = 0;
+async function loadFeedbackTab(offset) {
+  fbOffset = offset || 0;
+  const q = document.getElementById('fbSearch').value.trim(), cat = document.getElementById('fbCategory').value, day = document.getElementById('fbDay').value.trim();
+  let d; try { d = await api('/api/analytics/v2/feedback?limit=100&offset=' + fbOffset + '&q=' + encodeURIComponent(q) + '&category=' + cat + '&day=' + day); } catch (e) { console.error(e); return; }
+  document.getElementById('fbCount').textContent = fmtN(d.total) + ' entries';
+  document.getElementById('fbList').innerHTML = d.rows.length ? d.rows.map(r => `<div class="fb-row"><div class="who"><strong style="color:var(--text2)">${esc(r.username || 'Anon')}</strong><br>Day ${r.day_number}<br>${fmtDate(r.created_at)}${r.platform ? '<br>' + esc(r.platform) : ''}</div><div class="body"><div style="margin-bottom:0.2rem">${r.category ? '<span class="tag">' + esc(r.category.replace(/_/g, ' ')) + '</span>' : '<span class="tag grey">untagged</span>'}${r.scope ? '<span class="tag grey">' + esc(r.scope.startsWith('clue:') ? 'clue ' + (parseInt(r.scope.slice(5), 10) + 1) : r.scope) + '</span>' : ''}${r.issue_type ? '<span class="tag warn">' + esc(r.issue_type.replace(/_/g, ' ')) + '</span>' : ''}${r.guess ? '<span class="tag">guess: ' + esc(r.guess) + '</span>' : ''}<span class="tag grey">${esc(r.answer || '')}</span></div>${esc(r.comment || '')}</div></div>`).join('') : '<p style="padding:1rem;color:var(--text3)">No feedback matches.</p>';
+  document.getElementById('fbPager').innerHTML = `<button class="btn btn-sm ghost" ${fbOffset <= 0 ? 'disabled' : ''} onclick="loadFeedbackTab(${Math.max(0, fbOffset - 100)})">Prev</button> <button class="btn btn-sm ghost" ${fbOffset + 100 >= d.total ? 'disabled' : ''} onclick="loadFeedbackTab(${fbOffset + 100})">Next</button>`;
+}
+
+// ---------------- health ----------------
+async function loadHealth() {
+  let h; try { h = await api('/api/analytics/v2/health'); } catch (e) { document.getElementById('healthGrid').innerHTML = '<div class="chart-card">Health endpoint failed: ' + esc(e.message) + '</div>'; return; }
+  const up = h.uptimeSec, upStr = up > 86400 ? Math.floor(up / 86400) + 'd ' + Math.floor((up % 86400) / 3600) + 'h' : Math.floor(up / 3600) + 'h ' + Math.floor((up % 3600) / 60) + 'm';
+  const card = (title, rows) => '<div class="chart-card"><div class="chart-title">' + title + '</div><div class="kv">' + rows.map(([a, b]) => '<div>' + a + '</div><div class="num">' + b + '</div>').join('') + '</div></div>';
+  const dot = (ok, warn) => '<span class="status ' + (ok ? 'ok' : warn ? 'warn' : 'bad') + '"></span>';
+  document.getElementById('healthGrid').innerHTML =
+    card('Server', [['Status', dot(true) + 'up ' + upStr], ['Node', h.node], ['Memory (rss / heap)', h.memoryMb.rss + ' / ' + h.memoryMb.heap + ' MB'], ['Commit', h.commit ? h.commit.slice(0, 7) : '–'], ['Region', h.region || '–'], ['Checked', new Date(h.now).toLocaleTimeString('en-AU')]]) +
+    card('Database', [['File', h.db.path], ['Size', h.db.bytes ? (h.db.bytes / 1048576).toFixed(1) + ' MB' : '–'], ['Players', fmtN(h.db.users)], ['Games', fmtN(h.db.games)], ['Page views', fmtN(h.db.pageViews)], ['Events', fmtN(h.db.events)], ['Feedback', fmtN(h.db.feedback)], ['Live reset/confirm tokens', fmtN(h.db.tokens)]]) +
+    card('Email', [['Transport', dot(h.mail.mode === 'brevo' || h.mail.mode === 'smtp', h.mail.mode === 'log') + h.mail.mode], ['From', h.mail.from || '–'], ['Brevo key', h.mail.brevoKey ? 'set' : 'missing']]) +
+    card('Reminders', [['Push keys', dot(h.push.vapid) + (h.push.vapid ? 'present' : 'missing')], ['Subscriptions', fmtN(h.push.subscriptions)], ['Failing', fmtN(h.push.failing)], ['Last sent for day', h.push.lastSentDay ?? '–'], ['Today is day', h.puzzles.day]]) +
+    card('Content', [['Puzzles', fmtN(h.puzzles.total)], ['Autocomplete entries', fmtN(h.puzzles.conditions)], ['Current day', h.puzzles.day]]) +
+    card('Config', [['Admin key custom', dot(h.env.adminKeyCustom) + (h.env.adminKeyCustom ? 'yes' : 'default!')], ['JWT secret set', dot(h.env.jwtSecretSet) + (h.env.jwtSecretSet ? 'yes' : 'default!')], ['Sibling app', h.env.siblingUrl ? 'linked' : 'none'], ['App URL', h.env.appUrl]]);
+  if (!document.getElementById('mailTestTo').value) document.getElementById('mailTestTo').value = h.mail.from || '';
+}
+async function runMailTest() {
+  const to = document.getElementById('mailTestTo').value.trim(); const out = document.getElementById('actionOut');
+  out.textContent = 'Sending...';
+  try { const r = await fetch('/api/admin/mail-test?to=' + encodeURIComponent(to), { headers: { 'x-admin-key': K } }); out.textContent = JSON.stringify(await r.json(), null, 2); } catch (e) { out.textContent = e.message; }
+}
+async function runSweep() {
+  const out = document.getElementById('actionOut'); out.textContent = 'Running...';
+  try { out.textContent = JSON.stringify(await api('/api/analytics/v2/reminder-sweep', { method: 'POST' }), null, 2); } catch (e) { out.textContent = e.message; }
+}
+
+// ---------------- boot ----------------
+(function boot() {
+  const urlKey = new URLSearchParams(window.location.search).get('key');
+  const saved = sessionStorage.getItem('physiodle_admin_key');
+  if (urlKey || saved) { document.getElementById('adminKeyInput').value = urlKey || saved; doLogin().then(() => { const h = location.hash.replace('#', ''); if (h && document.getElementById('panel-' + h)) showTab(h); }); }
 })();
 </script>
 </body>

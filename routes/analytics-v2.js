@@ -192,4 +192,161 @@ router.get('/', requireAdmin, (req, res) => {
   });
 });
 
+
+// ============================================================================
+// Chart series with selectable range and bucket (Overview tab)
+// ============================================================================
+const SERIES_RANGES = { '24h': 1, '7d': 7, '30d': 30, '6m': 183, '1y': 365, 'all': null };
+const BUCKET_EXPR = {
+  hour: (c) => `strftime('%Y-%m-%d %H:00', ${c}, '+10 hours')`,
+  halfday: (c) => `strftime('%Y-%m-%d', ${c}, '+10 hours') || CASE WHEN strftime('%H', ${c}, '+10 hours') < '12' THEN ' 00:00' ELSE ' 12:00' END`,
+  day: (c) => `DATE(${c}, '+10 hours')`,
+  week: (c) => `DATE(${c}, '+10 hours', 'weekday 1', '-7 days')`,
+  month: (c) => `strftime('%Y-%m-01', ${c}, '+10 hours')`,
+};
+const DEFAULT_BUCKET = { '24h': 'hour', '7d': 'halfday', '30d': 'day', '6m': 'week', '1y': 'week', 'all': 'month' };
+
+router.get('/series', requireAdmin, (req, res) => {
+  const rangeKey = SERIES_RANGES.hasOwnProperty(req.query.range) ? req.query.range : '30d';
+  let bucketKey = BUCKET_EXPR[req.query.bucket] ? req.query.bucket : DEFAULT_BUCKET[rangeKey];
+  if (rangeKey === '24h') bucketKey = 'hour';
+  if (rangeKey === '7d' && !['hour', 'halfday', 'day'].includes(bucketKey)) bucketKey = 'halfday';
+  const days = SERIES_RANGES[rangeKey];
+  const from = rangeKey === '24h'
+    ? new Date(Date.now() - 24 * 3600000).toISOString().replace('T', ' ').replace(/\.\d+Z$/, '')
+    : days ? aestMidnightUtc(days - 1) : '2026-03-01 00:00:00';
+  const b = BUCKET_EXPR[bucketKey];
+  const map = {};
+  const put = (rows, key) => rows.forEach(r => { map[r.b] = map[r.b] || { bucket: r.b }; map[r.b][key] = r.c; });
+  put(safe(() => db.prepare(`SELECT ${b('created_at')} AS b, COUNT(*) AS c FROM page_views WHERE created_at >= ? GROUP BY b`).all(from), []), 'pageviews');
+  put(safe(() => db.prepare(`SELECT ${b('created_at')} AS b, COUNT(DISTINCT visitor_id) AS c FROM page_views WHERE created_at >= ? GROUP BY b`).all(from), []), 'visitors');
+  put(safe(() => db.prepare(`SELECT ${b('completed_at')} AS b, COUNT(*) AS c FROM game_results WHERE completed_at >= ? GROUP BY b`).all(from), []), 'games');
+  put(safe(() => db.prepare(`SELECT ${b('created_at')} AS b, COUNT(*) AS c FROM users WHERE created_at >= ? GROUP BY b`).all(from), []), 'signups');
+  const rows = Object.values(map).sort((x, y) => x.bucket.localeCompare(y.bucket))
+    .map(r => ({ bucket: r.bucket, pageviews: r.pageviews || 0, visitors: r.visitors || 0, games: r.games || 0, signups: r.signups || 0 }));
+  res.json({ range: rangeKey, bucket: bucketKey, from, rows });
+});
+
+// ============================================================================
+// Feedback list with filters (Feedback tab)
+// ============================================================================
+router.get('/feedback', requireAdmin, (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+  const where = []; const params = [];
+  if (req.query.category) { where.push('f.category = ?'); params.push(String(req.query.category)); }
+  if (req.query.day) { where.push('f.day_number = ?'); params.push(parseInt(req.query.day, 10)); }
+  if (req.query.q) { where.push('(f.comment LIKE ? OR u.username LIKE ?)'); params.push(`%${req.query.q}%`, `%${req.query.q}%`); }
+  const w = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const total = safe(() => db.prepare(`SELECT COUNT(*) AS c FROM feedback f LEFT JOIN users u ON f.user_id = u.id ${w}`).get(...params).c, 0);
+  const rows = safe(() => db.prepare(`
+    SELECT f.id, f.day_number, f.rating, f.comment, f.category, f.scope, f.issue_type, f.guess, f.platform, f.created_at, u.username, u.id AS user_id
+    FROM feedback f LEFT JOIN users u ON f.user_id = u.id ${w}
+    ORDER BY f.created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset), []);
+  const puzzle = (d) => { const p = pm.getPuzzleForDay(d); return p ? p.answer : null; };
+  res.json({ total, limit, offset, rows: rows.map(r => ({ ...r, answer: puzzle(r.day_number) })) });
+});
+
+// ============================================================================
+// Players (Players tab): search, detail, actions
+// ============================================================================
+router.get('/users', requireAdmin, (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 50));
+  const offset = (page - 1) * limit;
+  const q = (req.query.q || '').trim();
+  const sortKey = { created: 'u.created_at', games: 'games', points: 'points', username: 'u.username COLLATE NOCASE', last: 'last_game' }[req.query.sort] || 'u.created_at';
+  const dir = req.query.dir === 'asc' ? 'ASC' : 'DESC';
+  const where = q ? 'WHERE u.username LIKE ? OR u.email LIKE ?' : '';
+  const params = q ? [`%${q}%`, `%${q}%`] : [];
+  const total = safe(() => db.prepare(`SELECT COUNT(*) AS c FROM users u ${where}`).get(...params).c, 0);
+  const rows = safe(() => db.prepare(`
+    SELECT u.id, u.username, u.email, u.created_at, u.profession_level, u.marketing_consent, u.email_confirmed_at, u.referred_by,
+           COUNT(gr.id) AS games, SUM(CASE WHEN gr.won = 1 THEN 1 ELSE 0 END) AS wins,
+           SUM(CASE WHEN gr.won = 1 THEN 6 - gr.score ELSE 0 END) AS points, MAX(gr.completed_at) AS last_game
+    FROM users u LEFT JOIN game_results gr ON gr.user_id = u.id ${where}
+    GROUP BY u.id ORDER BY ${sortKey} ${dir} LIMIT ? OFFSET ?`).all(...params, limit, offset), []);
+  res.json({ total, page, totalPages: Math.ceil(total / limit), users: rows.map(u => ({
+    id: u.id, username: u.username, email: u.email, createdAt: u.created_at, level: u.profession_level, consent: !!u.marketing_consent,
+    emailConfirmed: !!u.email_confirmed_at, referred: !!u.referred_by, games: u.games || 0, wins: u.wins || 0, points: u.points || 0, lastGame: u.last_game,
+  })) });
+});
+
+router.get('/users/:id', requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const u = safe(() => db.prepare('SELECT * FROM users WHERE id = ?').get(id), null);
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  const results = safe(() => db.prepare('SELECT day_number, won, score, completed_at FROM game_results WHERE user_id = ? ORDER BY day_number DESC LIMIT 60').all(id), []);
+  const friends = safe(() => db.prepare('SELECT u.id, u.username FROM friendships f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ?').all(id), []);
+  const feedback = safe(() => db.prepare('SELECT day_number, comment, category, issue_type, created_at FROM feedback WHERE user_id = ? ORDER BY created_at DESC LIMIT 20').all(id), []);
+  const referrals = safe(() => db.prepare('SELECT id, username, created_at FROM users WHERE referred_by = ? ORDER BY created_at DESC').all(id), []);
+  const referrer = u.referred_by ? safe(() => db.prepare('SELECT id, username FROM users WHERE id = ?').get(u.referred_by), null) : null;
+  const push = safe(() => db.prepare('SELECT COUNT(*) AS c FROM push_subscriptions WHERE user_id = ?').get(id).c, 0);
+  const totals = safe(() => db.prepare('SELECT COUNT(*) AS games, SUM(won) AS wins, SUM(CASE WHEN won = 1 THEN 6 - score ELSE 0 END) AS points FROM game_results WHERE user_id = ?').get(id), {});
+  res.json({
+    user: { id: u.id, username: u.username, email: u.email, createdAt: u.created_at, level: u.profession_level, consent: !!u.marketing_consent, consentAt: u.consent_updated_at, termsVersion: u.terms_version, emailConfirmed: !!u.email_confirmed_at, emailConfirmedAt: u.email_confirmed_at, referralCode: u.referral_code },
+    totals, results: results.map(r => ({ day: r.day_number, won: !!r.won, score: r.score, at: r.completed_at })), friends, feedback, referrals, referrer, pushSubscriptions: push,
+  });
+});
+
+router.post('/users/:id/resend-confirmation', requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const u = safe(() => db.prepare('SELECT id, username, email, email_confirmed_at FROM users WHERE id = ?').get(id), null);
+  if (!u || !u.email) return res.status(400).json({ error: 'No email on this account' });
+  if (u.email_confirmed_at) return res.json({ success: true, alreadyConfirmed: true });
+  const crypto = require('crypto'); const mailer = require('../mailer');
+  const raw = crypto.randomBytes(32).toString('base64url');
+  const hash = crypto.createHash('sha256').update(raw).digest('hex');
+  db.prepare("UPDATE auth_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND purpose = 'confirm' AND used_at IS NULL").run(id);
+  db.prepare("INSERT INTO auth_tokens (user_id, purpose, token_hash, expires_at) VALUES (?, 'confirm', ?, DATETIME('now', '+7 days'))").run(id, hash);
+  mailer.sendEmailConfirmation({ to: u.email, username: u.username, token: raw }).then(() => res.json({ success: true })).catch(e => res.status(502).json({ error: e.message }));
+});
+
+router.patch('/users/:id', requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const b = req.body || {};
+  if ('consent' in b) db.prepare('UPDATE users SET marketing_consent = ?, consent_updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(b.consent ? 1 : 0, id);
+  if ('emailConfirmed' in b) db.prepare('UPDATE users SET email_confirmed_at = ? WHERE id = ?').run(b.emailConfirmed ? new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, '') : null, id);
+  res.json({ success: true });
+});
+
+// CSV of emails for a future newsletter: consented, or inferred-consent (active in N days)
+router.get('/emails.csv', requireAdmin, (req, res) => {
+  const basis = req.query.basis === 'inferred' ? 'inferred' : 'ticked';
+  const activeDays = Math.max(1, parseInt(req.query.activeDays, 10) || 180);
+  const rows = basis === 'ticked'
+    ? safe(() => db.prepare('SELECT username, email, created_at FROM users WHERE email IS NOT NULL AND marketing_consent = 1 ORDER BY created_at').all(), [])
+    : safe(() => db.prepare(`SELECT u.username, u.email, u.created_at FROM users u WHERE u.email IS NOT NULL AND EXISTS (SELECT 1 FROM game_results g WHERE g.user_id = u.id AND g.completed_at >= DATETIME('now', ?)) ORDER BY u.created_at`).all(`-${activeDays} days`), []);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="physiodle-emails-${basis}.csv"`);
+  res.send('username,email,joined,basis\n' + rows.map(r => `${JSON.stringify(r.username)},${r.email},${r.created_at},${basis}`).join('\n') + '\n');
+});
+
+// ============================================================================
+// Health (Health tab)
+// ============================================================================
+router.get('/health', requireAdmin, (req, res) => {
+  const fs = require('fs'); const mailer = require('../mailer');
+  const dbPath = process.env.DATABASE_PATH || 'physiodle.db';
+  let dbBytes = null; try { dbBytes = fs.statSync(dbPath).size; } catch (e) { /* ignore */ }
+  const mem = process.memoryUsage();
+  const count = (sql) => safe(() => db.prepare(sql).get().c, null);
+  const lastSweep = safe(() => db.prepare('SELECT MAX(last_sent_day) AS d FROM push_subscriptions').get().d, null);
+  res.json({
+    now: new Date().toISOString(), uptimeSec: Math.round(process.uptime()), node: process.version,
+    memoryMb: { rss: Math.round(mem.rss / 1048576), heap: Math.round(mem.heapUsed / 1048576) },
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA || null, branch: process.env.RAILWAY_GIT_BRANCH || null, deployId: process.env.RAILWAY_DEPLOYMENT_ID || null, region: process.env.RAILWAY_REPLICA_REGION || null,
+    db: { path: dbPath, bytes: dbBytes, users: count('SELECT COUNT(*) AS c FROM users'), games: count('SELECT COUNT(*) AS c FROM game_results'), pageViews: count('SELECT COUNT(*) AS c FROM page_views'), events: count('SELECT COUNT(*) AS c FROM analytics_events'), feedback: count('SELECT COUNT(*) AS c FROM feedback'), tokens: count("SELECT COUNT(*) AS c FROM auth_tokens WHERE used_at IS NULL AND expires_at > DATETIME('now')") },
+    puzzles: { total: pm.getTotalPuzzles(), day: pm.getCurrentDayNumber(), conditions: pm.getConditionNames().length },
+    mail: { mode: mailer.MODE, from: process.env.MAIL_FROM || process.env.MAIL_USER || null, brevoKey: !!process.env.BREVO_API_KEY },
+    push: { subscriptions: count('SELECT COUNT(*) AS c FROM push_subscriptions'), lastSentDay: lastSweep, vapid: !!safe(() => db.prepare("SELECT 1 FROM app_settings WHERE key = 'vapid'").get(), null) || !!process.env.VAPID_PUBLIC_KEY, failing: count('SELECT COUNT(*) AS c FROM push_subscriptions WHERE failures > 0') },
+    env: { adminKeyCustom: !!process.env.ADMIN_KEY, jwtSecretSet: !!process.env.JWT_SECRET, siblingUrl: process.env.SIBLING_APP_URLS || process.env.SIBLING_APP_URL || null, appUrl: mailer.APP_URL },
+  });
+});
+
+router.post('/reminder-sweep', requireAdmin, async (req, res) => {
+  try { const sent = await require('./push').runReminderSweep(); res.json({ success: true, sent }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
