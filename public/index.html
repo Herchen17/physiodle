@@ -376,7 +376,7 @@
     .guess-section {
       margin-bottom: 1rem;
       position: sticky;
-      top: 52px; /* below header */
+      top: calc(52px + env(safe-area-inset-top, 0px)); /* below header */
       z-index: 50;
       background: #e6f5f0;
       padding: 0.75rem 0;
@@ -1358,7 +1358,9 @@
     /* RESPONSIVE */
     @media (max-width: 640px) {
       header {
-        padding: 0.4rem max(0.5rem, env(safe-area-inset-left));
+        /* shorthand must keep the top inset, or the notch / Dynamic Island
+           overlaps the header when running from the home screen */
+        padding: max(0.4rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) 0.4rem max(0.5rem, env(safe-area-inset-left));
       }
 
       .header-top {
@@ -1395,7 +1397,7 @@
       }
 
       .guess-section {
-        top: 42px; /* smaller header */
+        top: calc(42px + env(safe-area-inset-top, 0px)); /* smaller header + notch */
         padding: 0.5rem 0;
       }
 
@@ -1888,7 +1890,7 @@
     .header-btn-install { gap: 0.35rem; background: transparent; border-color: #d1fae5; color: #6b7280; font-weight: 500; }
     .header-btn-install:hover { background: #f0fdf4; border-color: #0d9488; color: #0d9488; }
     .header-btn-install .app-icon { width: 16px; height: 16px; }
-    @media (max-width: 640px) { .header-btn-install-text { display: none; } .header-btn-install { padding: 0.35rem 0.45rem; } }
+    @media (max-width: 640px) { .header-btn-install { display: none; } }
     .result-install-btn { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.78rem; color: #6b7280; text-decoration: none; }
     .result-install-btn:hover { color: #0d9488; }
     .result-install-btn .app-icon { width: 16px; height: 16px; }
