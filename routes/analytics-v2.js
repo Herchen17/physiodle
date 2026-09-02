@@ -222,9 +222,17 @@ router.get('/series', requireAdmin, (req, res) => {
   put(safe(() => db.prepare(`SELECT ${b('created_at')} AS b, COUNT(DISTINCT visitor_id) AS c FROM page_views WHERE created_at >= ? GROUP BY b`).all(from), []), 'visitors');
   put(safe(() => db.prepare(`SELECT ${b('completed_at')} AS b, COUNT(*) AS c FROM game_results WHERE completed_at >= ? GROUP BY b`).all(from), []), 'games');
   put(safe(() => db.prepare(`SELECT ${b('created_at')} AS b, COUNT(*) AS c FROM users WHERE created_at >= ? GROUP BY b`).all(from), []), 'signups');
+  // Page-view tracking started after launch (first row 11 Mar 2026). Buckets
+  // before that have real sign-ups and games but no views; report views as
+  // null so the chart shows a gap instead of a misleading zero.
+  const trackingSince = safe(() => db.prepare("SELECT MIN(created_at) AS m FROM page_views").get().m, null);
+  const sinceBucket = trackingSince ? safe(() => db.prepare(`SELECT ${b('?')} AS b`).get(trackingSince).b, null) : null;
   const rows = Object.values(map).sort((x, y) => x.bucket.localeCompare(y.bucket))
-    .map(r => ({ bucket: r.bucket, pageviews: r.pageviews || 0, visitors: r.visitors || 0, games: r.games || 0, signups: r.signups || 0 }));
-  res.json({ range: rangeKey, bucket: bucketKey, from, rows });
+    .map(r => {
+      const tracked = !sinceBucket || r.bucket >= sinceBucket;
+      return { bucket: r.bucket, pageviews: tracked ? (r.pageviews || 0) : null, visitors: tracked ? (r.visitors || 0) : null, games: r.games || 0, signups: r.signups || 0 };
+    });
+  res.json({ range: rangeKey, bucket: bucketKey, from, rows, trackingSince });
 });
 
 // ============================================================================
