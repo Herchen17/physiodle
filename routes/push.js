@@ -31,17 +31,26 @@ const VALID_TZ = (tz) => { try { Intl.DateTimeFormat('en-AU', { timeZone: tz });
 // "Surprise me": stored as -1, delivered at a different hour each day between
 // SURPRISE_FROM and SURPRISE_TO (local time).
 const SURPRISE = -1;
-const SURPRISE_FROM = 7;   // 7am
-const SURPRISE_TO = 21;    // 9pm, so the last one lands before 10pm
+const SURPRISE_FROM_MIN = 7 * 60;        // 7:00am
+const SURPRISE_TO_MIN = 21 * 60 + 30;    // 9:30pm
+// How late a reminder may still be sent, so a restart or a slow sweep catches up
+// instead of skipping the day entirely.
+const GRACE_MIN = 45;
 
-// Stable per subscription per day, so the sweep can't fire twice or drift.
-function surpriseHour(id, day) {
+// Seeded by the DAY ONLY, so every "surprise me" player shares the same moment:
+// same local wall-clock time for everyone, a different time each day.
+function surpriseMinutes(day) {
   // Math.imul keeps the multiply in 32 bits, and the final >>> 0 makes it
-  // unsigned: plain ^ returns a SIGNED int32 and would give negative hours.
-  let x = Math.imul(id, 2654435761) ^ Math.imul(day, 40503);
+  // unsigned: plain ^ returns a SIGNED int32 and would give negative values.
+  let x = Math.imul(day + 1, 2654435761);
   x = Math.imul(x ^ (x >>> 15), 2246822507);
   x = (x ^ (x >>> 13)) >>> 0;
-  return SURPRISE_FROM + (x % (SURPRISE_TO - SURPRISE_FROM + 1));
+  return SURPRISE_FROM_MIN + (x % (SURPRISE_TO_MIN - SURPRISE_FROM_MIN + 1));
+}
+function fmtMinutes(m) {
+  const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0');
+  const ampm = h < 12 ? 'am' : 'pm';
+  return `${((h + 11) % 12) + 1}:${mm}${ampm}`;
 }
 
 // Rotating copy so the daily nudge doesn't read like the same robot every morning.
@@ -132,7 +141,13 @@ router.get('/status', (req, res) => {
   const row = req.query.endpoint
     ? db.prepare('SELECT hour_local, tz FROM push_subscriptions WHERE endpoint = ?').get(req.query.endpoint)
     : null;
-  res.json({ subscribed: !!row, hour: row ? row.hour_local : null, tz: row ? row.tz : null });
+  const day = pm.getCurrentDayNumber();
+  res.json({
+    subscribed: !!row,
+    hour: row ? row.hour_local : null,
+    tz: row ? row.tz : null,
+    surpriseToday: fmtMinutes(surpriseMinutes(day)),
+  });
 });
 
 // POST /api/push/test — sends a notification to this endpoint now (sandbox/QA aid).
@@ -170,9 +185,11 @@ async function sendTo(row, payload) {
 // ---- Scheduler: every 10 minutes, find subscriptions whose local hour is now
 // and who haven't been reminded for today's puzzle (in their timezone), and
 // who haven't already played it. One notification per puzzle per device.
-function localHourAndDay(tz) {
-  const hour = parseInt(new Intl.DateTimeFormat('en-AU', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10) % 24;
-  return { hour, day: pm.getDayNumberForTimezone(tz) };
+function localMinutesAndDay(tz) {
+  const parts = new Intl.DateTimeFormat('en-AU', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false })
+    .formatToParts(new Date());
+  const get = (t) => parseInt(parts.find(p => p.type === t).value, 10);
+  return { minutes: (get('hour') % 24) * 60 + get('minute'), day: pm.getDayNumberForTimezone(tz) };
 }
 
 async function runReminderSweep() {
@@ -180,10 +197,13 @@ async function runReminderSweep() {
   let sent = 0;
   for (const row of rows) {
     let lh;
-    try { lh = localHourAndDay(row.tz); } catch (e) { continue; }
+    try { lh = localMinutesAndDay(row.tz); } catch (e) { continue; }
     if (lh.day < 1 || row.last_sent_day === lh.day) continue;
-    const targetHour = row.hour_local === SURPRISE ? surpriseHour(row.id, lh.day) : row.hour_local;
-    if (lh.hour !== targetHour) continue;
+    const target = row.hour_local === SURPRISE ? surpriseMinutes(lh.day) : row.hour_local * 60;
+    // Fire from the target moment until the grace window closes, rather than on an
+    // exact match: an exact match would be missed whenever the sweep or the server
+    // hiccups at that minute.
+    if (lh.minutes < target || lh.minutes >= target + GRACE_MIN) continue;
     if (row.user_id) {
       const played = db.prepare('SELECT 1 FROM game_results WHERE user_id = ? AND day_number = ?').get(row.user_id, lh.day);
       if (played) { db.prepare('UPDATE push_subscriptions SET last_sent_day = ? WHERE id = ?').run(lh.day, row.id); continue; }
@@ -202,7 +222,7 @@ async function runReminderSweep() {
 let sweepTimer = null;
 function startScheduler() {
   if (sweepTimer) return;
-  sweepTimer = setInterval(() => runReminderSweep().catch(() => {}), 10 * 60 * 1000);
+  sweepTimer = setInterval(() => runReminderSweep().catch(() => {}), 60 * 1000);
   if (sweepTimer.unref) sweepTimer.unref();
 }
 

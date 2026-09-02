@@ -254,7 +254,7 @@ router.get('/feedback', requireAdmin, (req, res) => {
   const w = where.length ? 'WHERE ' + where.join(' AND ') : '';
   const total = safe(() => db.prepare(`SELECT COUNT(*) AS c FROM feedback f LEFT JOIN users u ON f.user_id = u.id ${w}`).get(...params).c, 0);
   const rows = safe(() => db.prepare(`
-    SELECT f.id, f.day_number, f.rating, f.comment, f.category, f.scope, f.issue_type, f.guess, f.platform, f.created_at, u.username, u.id AS user_id
+    SELECT f.id, f.day_number, f.rating, f.comment, f.category, f.scope, f.issue_type, f.guess, f.platform, f.stars, f.created_at, u.username, u.id AS user_id
     FROM feedback f LEFT JOIN users u ON f.user_id = u.id ${w}
     ORDER BY f.created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset), []);
   const puzzle = (d) => { const p = pm.getPuzzleForDay(d); return p ? p.answer : null; };

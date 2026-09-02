@@ -199,6 +199,12 @@ db.exec(`
   );
 `);
 
+// 2026-09-03: star rating (1-5) from the feedback form and the Love Physiodle card.
+if (!columnExists('feedback', 'stars')) {
+  console.log('[migration] adding feedback.stars column');
+  db.exec('ALTER TABLE feedback ADD COLUMN stars INTEGER');
+}
+
 for (const col of ['category', 'scope', 'issue_type', 'guess', 'platform']) {
   if (!columnExists('feedback', col)) {
     console.log(`[migration] adding feedback.${col} column`);

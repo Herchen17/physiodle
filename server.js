@@ -105,7 +105,7 @@ const FEEDBACK_PLATFORMS = ['ios', 'android', 'desktop', 'other'];
 const FEEDBACK_SCOPE_RE = /^(whole|answer|explanation|clue:[0-4])$/;
 
 app.post('/api/feedback', optionalAuth, (req, res) => {
-  const { dayNumber, rating, comment, category, scope, issueType, guess, platform } = req.body;
+  const { dayNumber, rating, comment, category, scope, issueType, guess, platform, stars } = req.body;
   if (!dayNumber || !rating) return res.status(400).json({ error: 'dayNumber and rating required' });
   const validRatings = ['love', 'good', 'ok', 'hard', 'easy', 'comment'];
   if (!validRatings.includes(rating)) return res.status(400).json({ error: 'Invalid rating' });
@@ -121,8 +121,9 @@ app.post('/api/feedback', optionalAuth, (req, res) => {
   if (pl && !FEEDBACK_PLATFORMS.includes(pl)) return res.status(400).json({ error: 'Invalid platform' });
   const text = clean(comment, 500);
   const g = clean(guess, 120);
-  // A tagged report is useful even without prose; an untagged one is not.
-  if (!text && !cat) return res.status(400).json({ error: 'comment or category required' });
+  const st = Number.isFinite(parseInt(stars, 10)) ? Math.min(Math.max(parseInt(stars, 10), 1), 5) : null;
+  // A tagged report or a star rating is useful even without prose; nothing at all is not.
+  if (!text && !cat && !st) return res.status(400).json({ error: 'comment, category or stars required' });
 
   const userId = req.user ? req.user.userId : null;
 
@@ -132,15 +133,34 @@ app.post('/api/feedback', optionalAuth, (req, res) => {
     SELECT id FROM feedback
     WHERE day_number = ? AND IFNULL(user_id, -1) = IFNULL(?, -1)
       AND IFNULL(comment, '') = IFNULL(?, '') AND IFNULL(category, '') = IFNULL(?, '')
+      AND IFNULL(stars, 0) = IFNULL(?, 0)
       AND created_at >= DATETIME('now', '-2 minutes')
     LIMIT 1
-  `).get(dayNumber, userId, text, cat);
+  `).get(dayNumber, userId, text, cat, st);
   if (dup) return res.json({ success: true, deduped: true });
 
+  // The Love card saves the star rating the moment it's tapped, so a rating still
+  // counts if the person closes the card. If they then add a comment, fill in the
+  // row we already wrote instead of leaving two rows for one interaction.
+  if (text) {
+    const bare = db.prepare(`
+      SELECT id FROM feedback
+      WHERE day_number = ? AND IFNULL(user_id, -1) = IFNULL(?, -1)
+        AND stars IS NOT NULL AND IFNULL(stars, 0) = IFNULL(?, 0)
+        AND comment IS NULL
+        AND created_at >= DATETIME('now', '-10 minutes')
+      ORDER BY id DESC LIMIT 1
+    `).get(dayNumber, userId, st);
+    if (bare) {
+      db.prepare('UPDATE feedback SET comment = ?, category = COALESCE(?, category) WHERE id = ?').run(text, cat, bare.id);
+      return res.json({ success: true, updated: true });
+    }
+  }
+
   db.prepare(`
-    INSERT INTO feedback (user_id, day_number, rating, comment, category, scope, issue_type, guess, platform)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(userId, dayNumber, rating, text, cat, sc, it, g, pl);
+    INSERT INTO feedback (user_id, day_number, rating, comment, category, scope, issue_type, guess, platform, stars)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(userId, dayNumber, rating, text, cat, sc, it, g, pl, st);
   res.json({ success: true });
 });
 
