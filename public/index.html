@@ -2325,11 +2325,58 @@
             <div class="form-error" id="loginPasswordError"></div>
           </div>
           <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+          <div style="text-align:center; margin-top: 0.6rem;">
+            <button type="button" class="btn-link" id="forgotPasswordBtn" style="font-size: 0.8rem;">Forgot your password?</button>
+          </div>
         </form>
         <div class="auth-link">
           <span>Don't have an account?</span>
           <button type="button" onclick="showModal('signupModal'); closeModal('loginModal')">Sign Up</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Reset your password</h2>
+        <button class="modal-close" onclick="closeModal('forgotModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="forgotForm">
+          <div class="form-group">
+            <label class="form-label">Email or username</label>
+            <input type="text" class="form-input" id="forgotIdentifier" placeholder="you@example.com" autocomplete="username">
+            <div class="form-hint">We'll email a link that works for 30 minutes.</div>
+            <div class="form-error" id="forgotError"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="forgotSubmitBtn">Send reset link</button>
+        </form>
+        <div id="forgotDone" style="display:none; font-size: 0.85rem; color: #374151; line-height: 1.5;">
+          If that account has an email address, a reset link is on its way. Check spam if it hasn't arrived in a couple of minutes.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESET PASSWORD MODAL (opened from the emailed link) -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Choose a new password</h2>
+        <button class="modal-close" onclick="closeModal('resetModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="resetForm">
+          <div class="form-group">
+            <label class="form-label">New password</label>
+            <input type="password" class="form-input" id="resetPassword" placeholder="At least 6 characters" autocomplete="new-password">
+            <div class="form-error" id="resetError"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="resetSubmitBtn">Set password and sign in</button>
+        </form>
       </div>
     </div>
   </div>
@@ -2410,6 +2457,7 @@
           <div>
             <div id="accountUsername" style="font-weight: 700; font-size: 1.2rem;"></div>
             <div id="accountJoined" style="font-size: 0.8rem; color: #9ca3af;"></div>
+            <div id="accountEmailLine" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.15rem;"></div>
           </div>
           <div id="accountRankBadge" style="margin-left: auto; text-align: center; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 0.5rem; padding: 0.35rem 0.65rem;">
             <div id="accountRank" style="font-size: 1.1rem; font-weight: 800; color: #0d9488;">#-</div>
@@ -4641,6 +4689,7 @@
           renderReferralLevel(user.referrals || 0);
           document.getElementById('accountInstallWrap').style.display = isStandalone() ? 'none' : '';
           document.getElementById('accountLevel').value = user.professionLevel || '';
+          renderAccountEmail(user);
           document.getElementById('accountLevelSaved').textContent = '';
           updateStreakPill(s.currentStreak || 0, false);
 
@@ -5417,6 +5466,83 @@
       add('Close all', closeAll);
       document.body.appendChild(panel);
     }
+
+    // ---- Password reset + email confirmation ----
+    document.getElementById('forgotPasswordBtn').addEventListener('click', () => {
+      closeModal('loginModal');
+      document.getElementById('forgotForm').style.display = '';
+      document.getElementById('forgotDone').style.display = 'none';
+      document.getElementById('forgotError').textContent = '';
+      const id = document.getElementById('loginUsername').value.trim();
+      if (id) document.getElementById('forgotIdentifier').value = id;
+      showModal('forgotModal');
+    });
+    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const identifier = document.getElementById('forgotIdentifier').value.trim();
+      const err = document.getElementById('forgotError');
+      if (!identifier) { err.textContent = 'Enter your email or username.'; return; }
+      const btn = document.getElementById('forgotSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        await apiCall('/auth/forgot', { method: 'POST', body: JSON.stringify({ identifier }) });
+        document.getElementById('forgotForm').style.display = 'none';
+        document.getElementById('forgotDone').style.display = '';
+      } catch (e2) {
+        err.textContent = 'Could not send right now. Try again in a minute.';
+      }
+      btn.disabled = false; btn.textContent = 'Send reset link';
+    });
+
+    let pendingResetToken = null;
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('resetPassword').value;
+      const err = document.getElementById('resetError');
+      err.textContent = '';
+      if (!password || password.length < 6) { err.textContent = 'At least 6 characters.'; return; }
+      const btn = document.getElementById('resetSubmitBtn');
+      btn.disabled = true;
+      try {
+        const data = await apiCall('/auth/reset', { method: 'POST', body: JSON.stringify({ token: pendingResetToken, password }) });
+        gameState.userToken = data.token; gameState.userId = data.userId; gameState.username = data.username;
+        localStorage.setItem('physiodle_token', data.token);
+        localStorage.setItem('physiodle_userId', data.userId);
+        localStorage.setItem('physiodle_username', data.username);
+        showToast('Password updated. You\'re signed in.', 'success');
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => location.reload(), 600);
+      } catch (e2) {
+        err.textContent = (e2.message || '').replace(/^API error:\s*\d+\s*-?\s*/, '') || 'That link is invalid or expired.';
+        btn.disabled = false;
+      }
+    });
+
+    function renderAccountEmail(user) {
+      const el = document.getElementById('accountEmailLine');
+      if (!user.email) { el.textContent = 'No email on this account'; return; }
+      if (user.emailConfirmed) { el.innerHTML = `${escapeText(user.email)} <span style="color:#059669">&#10003; confirmed</span>`; return; }
+      el.innerHTML = `${escapeText(user.email)} <span style="color:#b45309">not confirmed</span> &middot; <button type="button" class="btn-link" id="resendConfirmBtn" style="font-size:0.75rem">Resend confirmation</button>`;
+      document.getElementById('resendConfirmBtn').addEventListener('click', async (e) => {
+        e.target.disabled = true;
+        try { await apiCall('/auth/send-confirmation', { method: 'POST' }); showToast('Confirmation email sent', 'success'); }
+        catch (e2) { showToast((e2.message || '').replace(/^API error:\s*\d+\s*-?\s*/, '') || 'Could not send', 'error'); }
+      });
+    }
+    function escapeText(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    // URL hooks from emailed links
+    (function handleEmailLinks() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('reset')) {
+        pendingResetToken = params.get('reset');
+        setTimeout(() => { document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show')); showModal('resetModal'); }, 300);
+      }
+      if (params.has('confirmed')) {
+        setTimeout(() => showToast(params.get('confirmed') === '1' ? 'Email confirmed. Thanks!' : 'That confirmation link is invalid or expired.', params.get('confirmed') === '1' ? 'success' : 'error'), 600);
+        history.replaceState(null, '', location.pathname);
+      }
+    })();
 
     // Profile level save
     document.getElementById('accountLevel').addEventListener('change', async (e) => {

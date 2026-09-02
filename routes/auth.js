@@ -104,6 +104,31 @@ const crossVerifyLimiter = rateLimit({
 });
 
 const TERMS_VERSION = '2026-09-02';
+const crypto = require('crypto');
+const mailer = require('../mailer');
+
+// ---- Tokens for reset / confirm links ----
+function issueToken(userId, purpose, minutes) {
+  const raw = crypto.randomBytes(32).toString('base64url');
+  const hash = crypto.createHash('sha256').update(raw).digest('hex');
+  // One live token per purpose per user: invalidate earlier unused ones.
+  db.prepare('UPDATE auth_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND purpose = ? AND used_at IS NULL').run(userId, purpose);
+  db.prepare(`INSERT INTO auth_tokens (user_id, purpose, token_hash, expires_at) VALUES (?, ?, ?, DATETIME('now', '+${minutes} minutes'))`).run(userId, purpose, hash);
+  return raw;
+}
+function consumeToken(raw, purpose) {
+  if (typeof raw !== 'string' || raw.length < 20 || raw.length > 200) return null;
+  const hash = crypto.createHash('sha256').update(raw).digest('hex');
+  const row = db.prepare(`SELECT id, user_id FROM auth_tokens WHERE token_hash = ? AND purpose = ? AND used_at IS NULL AND expires_at > DATETIME('now')`).get(hash, purpose);
+  if (!row) return null;
+  db.prepare('UPDATE auth_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = ?').run(row.id);
+  return row.user_id;
+}
+function sendConfirmation(user) {
+  if (!user.email) return;
+  const token = issueToken(user.id, 'confirm', 60 * 24 * 7);
+  mailer.sendEmailConfirmation({ to: user.email, username: user.username, token }).catch(e => console.error('[mail] confirm failed:', e.message));
+}
 
 // POST /api/auth/signup
 // email is required for new accounts. username stays required for display
@@ -137,6 +162,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
     const token = generateToken(result.lastInsertRowid, username);
 
     crossRegister({ username, email, passwordHash });
+    sendConfirmation({ id: result.lastInsertRowid, username, email });
 
     res.status(201).json({
       userId: result.lastInsertRowid,
@@ -319,7 +345,7 @@ router.post('/cross-verify', crossVerifyLimiter, async (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, username, email, created_at, profession_level, marketing_consent, referral_code FROM users WHERE id = ?').get(req.user.userId);
+  const user = db.prepare('SELECT id, username, email, created_at, profession_level, marketing_consent, referral_code, email_confirmed_at FROM users WHERE id = ?').get(req.user.userId);
   const referrals = db.prepare('SELECT COUNT(*) AS c FROM users WHERE referred_by = ?').get(user.id).c;
   // "Still playing" = referred players with at least one game in the last 14 days.
   const referralsActive = db.prepare(`
@@ -437,6 +463,8 @@ router.get('/me', requireAuth, (req, res) => {
     email: user.email || null,
     professionLevel: user.profession_level || null,
     marketingConsent: !!user.marketing_consent,
+    emailConfirmed: !!user.email_confirmed_at,
+    mailEnabled: mailer.MODE !== 'log',
     referralCode: user.referral_code || user.username.toLowerCase(),
     referrals,
     referralsActive,
@@ -467,6 +495,57 @@ router.get('/me', requireAuth, (req, res) => {
       totalPlayers: totalPlayers.cnt,
     }
   });
+});
+
+// ---- Password reset ----
+// POST /api/auth/forgot { identifier } — always 200 so it can't be used to probe accounts.
+router.post('/forgot', async (req, res) => {
+  const { identifier } = req.body || {};
+  if (!identifier || typeof identifier !== 'string') return res.status(400).json({ error: 'identifier required' });
+  const user = findUserByIdentifier(identifier.trim());
+  if (user && user.email) {
+    const token = issueToken(user.id, 'reset', 30);
+    try { await mailer.sendPasswordReset({ to: user.email, username: user.username, token }); }
+    catch (e) { console.error('[mail] reset failed:', e.message); }
+  }
+  res.json({ success: true, message: 'If that account has an email address, a reset link is on its way.' });
+});
+
+// POST /api/auth/reset { token, password }
+router.post('/reset', async (req, res) => {
+  const { token, password } = req.body || {};
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+  const userId = consumeToken(token, 'reset');
+  if (!userId) return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
+  const passwordHash = await hashPassword(password);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, userId);
+  const user = db.prepare('SELECT id, username, email FROM users WHERE id = ?').get(userId);
+  // A reset link proves control of the inbox, so treat the email as confirmed.
+  if (user.email && !db.prepare('SELECT email_confirmed_at FROM users WHERE id = ?').get(userId).email_confirmed_at) {
+    db.prepare('UPDATE users SET email_confirmed_at = CURRENT_TIMESTAMP WHERE id = ?').run(userId);
+  }
+  const jwt = generateToken(user.id, user.username);
+  res.json({ success: true, userId: user.id, username: user.username, email: user.email, token: jwt });
+});
+
+// ---- Email confirmation (soft: nothing is gated, it just enables reset) ----
+router.post('/send-confirmation', requireAuth, (req, res) => {
+  const user = db.prepare('SELECT id, username, email, email_confirmed_at FROM users WHERE id = ?').get(req.user.userId);
+  if (!user || !user.email) return res.status(400).json({ error: 'No email address on this account.' });
+  if (user.email_confirmed_at) return res.json({ success: true, alreadyConfirmed: true });
+  // Throttle: one confirmation email per 10 minutes per user.
+  const recent = db.prepare(`SELECT 1 FROM auth_tokens WHERE user_id = ? AND purpose = 'confirm' AND created_at > DATETIME('now', '-10 minutes')`).get(user.id);
+  if (recent) return res.status(429).json({ error: 'A confirmation email was sent recently. Check your inbox and spam folder.' });
+  sendConfirmation(user);
+  res.json({ success: true });
+});
+
+// GET /api/auth/confirm?token=... — link target from the email; lands back on the game.
+router.get('/confirm', (req, res) => {
+  const userId = consumeToken(req.query.token, 'confirm');
+  if (!userId) return res.redirect('/?confirmed=0');
+  db.prepare('UPDATE users SET email_confirmed_at = COALESCE(email_confirmed_at, CURRENT_TIMESTAMP) WHERE id = ?').run(userId);
+  res.redirect('/?confirmed=1');
 });
 
 // PATCH /api/auth/profile { level } — profession level for profile completion.

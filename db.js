@@ -155,6 +155,26 @@ db.exec("UPDATE users SET referral_code = LOWER(username) WHERE referral_code IS
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_users_referred_by ON users(referred_by)');
 
+// 2026-09-03: password reset + email confirmation tokens. Only a SHA-256 of
+// the token is stored; the raw token lives in the email link only.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS auth_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    purpose TEXT NOT NULL CHECK(purpose IN ('reset','confirm')),
+    token_hash TEXT UNIQUE NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_auth_tokens_user ON auth_tokens(user_id, purpose);
+`);
+if (!columnExists('users', 'email_confirmed_at')) {
+  console.log('[migration] adding users.email_confirmed_at column');
+  db.exec('ALTER TABLE users ADD COLUMN email_confirmed_at DATETIME');
+}
+
 // 2026-09-02: Web Push daily reminders. One row per browser subscription.
 // hour_local + tz let the scheduler fire at the player's wall-clock hour.
 db.exec(`
