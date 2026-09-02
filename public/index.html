@@ -13,6 +13,7 @@
   <meta name="description" content="Physiodle is a daily physiotherapy case puzzle. Five clues, five guesses, one diagnosis a day. Free to play, used by physio students worldwide.">
   <link rel="canonical" href="https://physiodle.up.railway.app/">
 
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
   <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
   <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
@@ -1765,16 +1766,24 @@
     .streak-flame { display: inline-block; font-size: 0.9rem; transform-origin: 50% 90%; }
     .streak-pill.extend .streak-flame { animation: flameFlicker 1.6s ease-in-out 3; }
     .streak-pill.extend { animation: streakPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    /* Tiers: 1 = 1-2 days, 2 = 3-6, 3 = 7-29, 4 = 30-99, 5 = 100+ */
-    .streak-pill.streak-t2 { border-color: #f59e0b; }
-    .streak-pill.streak-t3 { background: #fff7ed; border-color: #f97316; color: #c2410c; }
-    .streak-pill.streak-t4 { background: linear-gradient(135deg, #fff7ed, #fee2e2); border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
-    .streak-pill.streak-t5 { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #d97706; color: #92400e; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
-    .streak-pill.streak-t3.extend .streak-flame { animation: flameFlicker 1.2s ease-in-out 5; }
-    .streak-pill.streak-t4.extend { animation: streakPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulse 1.2s ease-out 4; }
-    .streak-pill.streak-t4.extend .streak-flame { animation: flameFlicker 1s ease-in-out 6; }
-    .streak-pill.streak-t5 .streak-flame { animation: flameFlicker 2.4s ease-in-out infinite; }
-    .streak-pill.streak-t5.extend { animation: streakPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulseGold 1s ease-out 6; }
+    /* Streak ladder: l0 = under 3 days, l1 = 3+, l2 = 7+, l3 = 14+, l4 = 30+, l5 = 50+, l6 = 100+, l7 = 365+ */
+    .streak-pill.streak-l1 { border-color: #f59e0b; }
+    .streak-pill.streak-l2 { background: #fff7ed; border-color: #fb923c; color: #c2410c; }
+    .streak-pill.streak-l3 { background: #fff7ed; border-color: #f97316; color: #c2410c; box-shadow: 0 0 6px rgba(249,115,22,0.35); }
+    .streak-pill.streak-l4 { background: linear-gradient(135deg, #fff7ed, #fee2e2); border-color: #ef4444; color: #b91c1c; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+    .streak-pill.streak-l5 { background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #dc2626; color: #991b1b; box-shadow: 0 0 10px rgba(220,38,38,0.5); }
+    .streak-pill.streak-l6 { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #d97706; color: #92400e; box-shadow: 0 0 12px rgba(245,158,11,0.55); }
+    .streak-pill.streak-l7 { background: linear-gradient(135deg, #fde68a, #fbbf24); border-color: #b45309; color: #78350f; box-shadow: 0 0 16px rgba(245,158,11,0.75), inset 0 0 6px rgba(255,255,255,0.6); }
+    .streak-pill.streak-l1.extend .streak-flame { animation: flameFlicker 1.4s ease-in-out 4; }
+    .streak-pill.streak-l2.extend .streak-flame, .streak-pill.streak-l3.extend .streak-flame { animation: flameFlicker 1.2s ease-in-out 5; }
+    .streak-pill.streak-l3.extend { animation: streakPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulseOrange 1.3s ease-out 3; }
+    .streak-pill.streak-l4.extend { animation: streakPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulse 1.2s ease-out 4; }
+    .streak-pill.streak-l4.extend .streak-flame, .streak-pill.streak-l5.extend .streak-flame { animation: flameFlicker 1s ease-in-out 6; }
+    .streak-pill.streak-l5.extend { animation: streakPop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulse 1s ease-out 6; }
+    .streak-pill.streak-l6 .streak-flame, .streak-pill.streak-l7 .streak-flame { animation: flameFlicker 2.4s ease-in-out infinite; }
+    .streak-pill.streak-l6.extend { animation: streakPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulseGold 1s ease-out 6; }
+    .streak-pill.streak-l7.extend { animation: streakPop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1), glowPulseGold 0.8s ease-out 9; }
+    @keyframes glowPulseOrange { 0% { box-shadow: 0 0 0 0 rgba(249,115,22,0.5); } 100% { box-shadow: 0 0 0 12px rgba(249,115,22,0); } }
     @keyframes glowPulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 100% { box-shadow: 0 0 0 16px rgba(239,68,68,0); } }
     @keyframes glowPulseGold { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); } 100% { box-shadow: 0 0 0 22px rgba(245,158,11,0); } }
     .ember {
@@ -1787,23 +1796,36 @@
       15% { opacity: 1; }
       100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); opacity: 0; }
     }
-    .milestone-overlay.milestone-t4 { background: rgba(69, 10, 10, 0.72); }
-    .milestone-overlay.milestone-t5 { background: radial-gradient(circle at 50% 45%, rgba(120, 53, 15, 0.85), rgba(17, 24, 39, 0.92)); }
-    .milestone-t3 .milestone-flame { font-size: 4rem; }
-    .milestone-t4 .milestone-flame { font-size: 4.5rem; animation-duration: 1s; }
-    .milestone-t5 .milestone-flame { font-size: 5rem; animation-duration: 0.8s; filter: drop-shadow(0 0 18px rgba(245,158,11,0.9)); }
-    .milestone-t4 .milestone-card { box-shadow: 0 0 60px rgba(249,115,22,0.55), 0 20px 40px rgba(0,0,0,0.3); }
-    .milestone-t5 .milestone-card { box-shadow: 0 0 90px rgba(245,158,11,0.8), 0 20px 40px rgba(0,0,0,0.3); border: 2px solid #f59e0b; }
-    .milestone-t5 .milestone-title { background: linear-gradient(90deg, #b45309, #f59e0b, #b45309); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 1.6rem; }
+    /* Milestone show per rung */
+    .milestone-l2 .milestone-flame { font-size: 3.8rem; }
+    .milestone-l3 { background: rgba(67, 20, 7, 0.62); }
+    .milestone-l3 .milestone-flame { font-size: 4.1rem; animation-duration: 1.2s; }
+    .milestone-l4 { background: rgba(69, 10, 10, 0.72); }
+    .milestone-l4 .milestone-flame { font-size: 4.4rem; animation-duration: 1s; }
+    .milestone-l4 .milestone-card { box-shadow: 0 0 60px rgba(249,115,22,0.55), 0 20px 40px rgba(0,0,0,0.3); }
+    .milestone-l5 { background: rgba(60, 5, 5, 0.8); }
+    .milestone-l5 .milestone-flame { font-size: 4.7rem; animation-duration: 0.9s; filter: drop-shadow(0 0 12px rgba(239,68,68,0.8)); }
+    .milestone-l5 .milestone-card { box-shadow: 0 0 80px rgba(239,68,68,0.6), 0 20px 40px rgba(0,0,0,0.3); border: 2px solid #ef4444; }
+    .milestone-l6 { background: radial-gradient(circle at 50% 45%, rgba(120, 53, 15, 0.85), rgba(17, 24, 39, 0.92)); }
+    .milestone-l6 .milestone-flame { font-size: 5.2rem; animation-duration: 0.8s; filter: drop-shadow(0 0 18px rgba(245,158,11,0.9)); }
+    .milestone-l6 .milestone-card { box-shadow: 0 0 90px rgba(245,158,11,0.8), 0 20px 40px rgba(0,0,0,0.3); border: 2px solid #f59e0b; }
+    .milestone-l6 .milestone-title, .milestone-l7 .milestone-title { background: linear-gradient(90deg, #b45309, #f59e0b, #b45309); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 1.6rem; }
+    .milestone-l7 { background: radial-gradient(circle at 50% 45%, rgba(146, 64, 14, 0.9), rgba(17, 24, 39, 0.95)); }
+    .milestone-l7 .milestone-flame { font-size: 5.8rem; animation-duration: 0.7s; filter: drop-shadow(0 0 26px rgba(253,224,71,1)); }
+    .milestone-l7 .milestone-card { box-shadow: 0 0 120px rgba(253,224,71,0.9), 0 20px 40px rgba(0,0,0,0.3); border: 3px solid #fbbf24; background: linear-gradient(180deg, #fffbeb, #ffffff); }
+    .milestone-l7 .milestone-title { font-size: 1.85rem; }
     .milestone-ring {
       position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; border-radius: 50%; pointer-events: none;
       border: 3px solid rgba(251, 191, 36, 0.9); transform: translate(-50%, -50%) scale(0.5); opacity: 0;
       animation: ringOut 1.6s ease-out forwards;
     }
-    .milestone-t5 .milestone-ring { animation-iteration-count: infinite; animation-duration: 2.2s; }
+    .milestone-l6 .milestone-ring, .milestone-l7 .milestone-ring { animation-iteration-count: infinite; animation-duration: 2.2s; }
+    .milestone-l7 .milestone-ring { border-width: 4px; }
     @keyframes ringOut { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.9; } 100% { transform: translate(-50%, -50%) scale(7); opacity: 0; } }
     @keyframes cardShake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, -1px); } 80% { transform: translate(3px, 1px); } }
-    .milestone-t4 .milestone-card, .milestone-t5 .milestone-card { animation: resultPopIn 0.35s ease-out, cardShake 0.5s ease-in-out 0.35s 2; }
+    .milestone-l4 .milestone-card, .milestone-l5 .milestone-card { animation: resultPopIn 0.35s ease-out, cardShake 0.5s ease-in-out 0.35s 2; }
+    .milestone-l6 .milestone-card { animation: resultPopIn 0.35s ease-out, cardShake 0.5s ease-in-out 0.35s 3; }
+    .milestone-l7 .milestone-card { animation: resultPopIn 0.35s ease-out, cardShake 0.45s ease-in-out 0.35s 5; }
     @keyframes flameFlicker {
       0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
       20% { transform: scale(1.35) rotate(-6deg); filter: brightness(1.3); }
@@ -1861,6 +1883,7 @@
     .referral-row .form-input { flex: 1; font-size: 0.8rem; padding: 0.45rem 0.5rem; }
     .love-block { margin-top: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
     .love-text { font-size: 0.85rem; font-weight: 600; color: #374151; }
+    .logo-icon-img { width: 28px; height: 28px; border-radius: 7px; display: inline-block; vertical-align: middle; }
     .app-icon { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; flex: 0 0 auto; }
     .header-btn-install { gap: 0.35rem; background: transparent; border-color: #d1fae5; color: #6b7280; font-weight: 500; }
     .header-btn-install:hover { background: #f0fdf4; border-color: #0d9488; color: #0d9488; }
@@ -1892,7 +1915,7 @@
   <header>
     <div class="header-top">
       <div class="header-left">
-        <span class="logo-icon">🦴</span>
+        <img class="logo-icon logo-icon-img" src="/favicon-96.png" alt="" width="28" height="28">
         <span class="logo-text">Physiodle</span>
         <span class="day-indicator" id="dayIndicator"></span>
         <button class="streak-pill" id="streakPill" title="Current streak" style="display:none;" aria-label="Current streak">
@@ -5234,45 +5257,65 @@
     };
     let lastKnownStreak = null;
 
-    // Tiers: the longer the streak, the hotter the pill and the bigger the show.
-    function streakTier(n) { return n >= 100 ? 5 : n >= 30 ? 4 : n >= 7 ? 3 : n >= 3 ? 2 : 1; }
-    const TIER_FLAMES = { 1: 1, 2: 1, 3: 2, 4: 3, 5: 3 };
+    // One ladder for everything streak-related. Level = how many milestones
+    // the streak has passed. The pill's colour, flames and glow, the burst when
+    // it extends, and the milestone celebration all step up together.
+    const STREAK_LADDER = [3, 7, 14, 30, 50, 100, 365];
+    function streakLevel(n) { let l = 0; for (const m of STREAK_LADDER) if (n >= m) l++; return l; }
+    // Per level: flames on the pill, embers when it extends, and the milestone show.
+    const LEVEL_FX = {
+      0: { flames: 1, embers: 0,   sparks: 24,  reach: 100, rings: 0, screenEmbers: 0,   shake: false },
+      1: { flames: 1, embers: 8,   sparks: 32,  reach: 120, rings: 0, screenEmbers: 0,   shake: false },
+      2: { flames: 2, embers: 14,  sparks: 46,  reach: 150, rings: 0, screenEmbers: 24,  shake: false },
+      3: { flames: 2, embers: 22,  sparks: 62,  reach: 180, rings: 1, screenEmbers: 40,  shake: false },
+      4: { flames: 3, embers: 32,  sparks: 84,  reach: 220, rings: 2, screenEmbers: 70,  shake: true },
+      5: { flames: 3, embers: 44,  sparks: 104, reach: 260, rings: 3, screenEmbers: 100, shake: true },
+      6: { flames: 3, embers: 60,  sparks: 136, reach: 310, rings: 4, screenEmbers: 140, shake: true },
+      7: { flames: 3, embers: 90,  sparks: 190, reach: 380, rings: 6, screenEmbers: 220, shake: true },
+    };
 
     function updateStreakPill(streak, animate) {
       const pill = document.getElementById('streakPill');
       const count = document.getElementById('streakCount');
       if (!gameState.userToken || !streak) { pill.style.display = 'none'; lastKnownStreak = streak || 0; return; }
-      const tier = streakTier(streak);
+      const level = streakLevel(streak);
       count.textContent = streak;
-      pill.querySelector('.streak-flame').textContent = '\u{1F525}'.repeat(TIER_FLAMES[tier]);
-      pill.className = `streak-pill streak-t${tier}`;
+      pill.querySelector('.streak-flame').textContent = '\u{1F525}'.repeat(LEVEL_FX[level].flames);
+      pill.className = `streak-pill streak-l${level}`;
       pill.style.display = '';
-      pill.title = `${streak}-day streak`;
-      if (animate) {
-        void pill.offsetWidth; // restart animation
-        pill.classList.add('extend');
-        if (tier >= 3) emberBurst(pill, tier);
-        setTimeout(() => pill.classList.remove('extend'), 6000);
-      }
+      pill.title = `${streak}-day streak. Tap to celebrate.`;
+      pill.dataset.streak = streak;
+      if (animate) playPillAnimation();
       lastKnownStreak = streak;
     }
 
-    // Embers rising from the pill (tier 3+), more and higher with each tier.
-    function emberBurst(anchor, tier) {
+    function playPillAnimation() {
+      const pill = document.getElementById('streakPill');
+      const streak = parseInt(pill.dataset.streak, 10) || 0;
+      const level = streakLevel(streak);
+      pill.classList.remove('extend');
+      void pill.offsetWidth; // restart animation
+      pill.classList.add('extend');
+      if (LEVEL_FX[level].embers) emberBurst(pill, LEVEL_FX[level].embers, level);
+      setTimeout(() => pill.classList.remove('extend'), 6000);
+    }
+
+    // Embers rising from the pill; count and height grow with the level.
+    function emberBurst(anchor, n, level) {
       const rect = anchor.getBoundingClientRect();
-      const n = { 3: 10, 4: 22, 5: 40 }[tier] || 10;
+      const height = 50 + level * 22;
       for (let i = 0; i < n; i++) {
         const e = document.createElement('span');
         e.className = 'ember';
         e.style.left = `${rect.left + Math.random() * rect.width}px`;
         e.style.top = `${rect.top + rect.height / 2}px`;
-        e.style.setProperty('--dx', `${(Math.random() - 0.5) * 60}px`);
-        e.style.setProperty('--dy', `${-(40 + Math.random() * (tier === 5 ? 160 : tier === 4 ? 110 : 70))}px`);
-        e.style.setProperty('--s', `${0.5 + Math.random() * (tier >= 4 ? 1.2 : 0.7)}`);
-        e.style.animationDelay = `${Math.random() * 0.8}s`;
-        e.style.background = ['#f59e0b', '#f97316', '#ef4444', '#fbbf24'][i % 4];
+        e.style.setProperty('--dx', `${(Math.random() - 0.5) * (40 + level * 12)}px`);
+        e.style.setProperty('--dy', `${-(height * 0.6 + Math.random() * height)}px`);
+        e.style.setProperty('--s', `${0.5 + Math.random() * (0.5 + level * 0.15)}`);
+        e.style.animationDelay = `${Math.random() * 0.9}s`;
+        e.style.background = (level >= 6 ? ['#f59e0b', '#fde68a', '#f97316', '#ffffff'] : ['#f59e0b', '#f97316', '#ef4444', '#fbbf24'])[i % 4];
         document.body.appendChild(e);
-        setTimeout(() => e.remove(), 2600);
+        setTimeout(() => e.remove(), 2800);
       }
     }
 
@@ -5290,66 +5333,57 @@
 
     function showMilestone(streak) {
       const [title, sub] = STREAK_MILESTONES[streak] || [`${streak} day streak`, 'Keep it going.'];
-      const tier = streakTier(streak);
+      const level = Math.max(1, streakLevel(streak));
+      const fx = LEVEL_FX[level];
       document.getElementById('milestoneTitle').textContent = title;
       document.getElementById('milestoneSub').textContent = sub;
       const overlay = document.getElementById('milestoneOverlay');
       const card = document.getElementById('milestoneCard');
-      overlay.className = `milestone-overlay milestone-t${tier}`;
+      overlay.className = `milestone-overlay milestone-l${level}`;
       card.querySelectorAll('.spark').forEach(x => x.remove());
       overlay.querySelectorAll('.ember, .milestone-ring').forEach(x => x.remove());
-      document.getElementById('milestoneFlame').textContent = '\u{1F525}'.repeat(TIER_FLAMES[tier]);
+      document.getElementById('milestoneFlame').textContent = '\u{1F525}'.repeat(fx.flames);
 
-      // Sparks from the card: 28 -> 48 -> 80 -> 140, flying further each tier.
-      const sparks = { 1: 28, 2: 28, 3: 48, 4: 80, 5: 140 }[tier];
-      const reach = { 1: 110, 2: 110, 3: 150, 4: 220, 5: 320 }[tier];
-      const colours = tier >= 4 ? ['#f59e0b', '#fbbf24', '#f97316', '#ef4444', '#fde68a', '#ffffff'] : ['#f59e0b', '#fbbf24', '#0d9488', '#ef4444', '#fcd34d'];
-      for (let i = 0; i < sparks; i++) {
+      const colours = level >= 6 ? ['#f59e0b', '#fbbf24', '#f97316', '#ef4444', '#fde68a', '#ffffff']
+                    : level >= 4 ? ['#f59e0b', '#fbbf24', '#f97316', '#ef4444', '#fcd34d']
+                    : ['#f59e0b', '#fbbf24', '#0d9488', '#ef4444', '#fcd34d'];
+      for (let i = 0; i < fx.sparks; i++) {
         const sp = document.createElement('span');
         sp.className = 'spark';
-        const angle = (Math.PI * 2 * i) / sparks + Math.random() * 0.3;
-        const dist = reach * 0.6 + Math.random() * reach * 0.8;
+        const angle = (Math.PI * 2 * i) / fx.sparks + Math.random() * 0.3;
+        const dist = fx.reach * 0.6 + Math.random() * fx.reach * 0.8;
         sp.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
         sp.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
         sp.style.background = colours[i % colours.length];
-        sp.style.animationDelay = `${Math.random() * (tier >= 4 ? 0.6 : 0.15)}s`;
-        sp.style.animationDuration = `${1.1 + Math.random() * (tier >= 4 ? 1.2 : 0.3)}s`;
+        sp.style.animationDelay = `${Math.random() * (0.1 + level * 0.08)}s`;
+        sp.style.animationDuration = `${1.1 + Math.random() * (0.3 + level * 0.15)}s`;
         card.appendChild(sp);
       }
-      // Tier 4+: shockwave rings. Tier 5: rings keep coming.
-      if (tier >= 4) {
-        const rings = tier === 5 ? 4 : 2;
-        for (let i = 0; i < rings; i++) {
-          const ring = document.createElement('span');
-          ring.className = 'milestone-ring';
-          ring.style.animationDelay = `${i * 0.45}s`;
-          overlay.appendChild(ring);
-        }
+      for (let i = 0; i < fx.rings; i++) {
+        const ring = document.createElement('span');
+        ring.className = 'milestone-ring';
+        ring.style.animationDelay = `${i * 0.45}s`;
+        overlay.appendChild(ring);
       }
-      // Tier 3+: embers rising across the whole screen behind the card.
-      if (tier >= 3) {
-        const n = { 3: 30, 4: 70, 5: 140 }[tier];
-        for (let i = 0; i < n; i++) {
-          const e = document.createElement('span');
-          e.className = 'ember ember-screen';
-          e.style.left = `${Math.random() * 100}vw`;
-          e.style.top = `${60 + Math.random() * 50}vh`;
-          e.style.setProperty('--dx', `${(Math.random() - 0.5) * 80}px`);
-          e.style.setProperty('--dy', `${-(200 + Math.random() * 500)}px`);
-          e.style.setProperty('--s', `${0.6 + Math.random() * (tier === 5 ? 1.8 : 1.1)}`);
-          e.style.animationDelay = `${Math.random() * 2.5}s`;
-          e.style.animationDuration = `${2 + Math.random() * 2}s`;
-          e.style.background = colours[i % colours.length];
-          overlay.appendChild(e);
-        }
+      for (let i = 0; i < fx.screenEmbers; i++) {
+        const e = document.createElement('span');
+        e.className = 'ember ember-screen';
+        e.style.left = `${Math.random() * 100}vw`;
+        e.style.top = `${60 + Math.random() * 50}vh`;
+        e.style.setProperty('--dx', `${(Math.random() - 0.5) * 80}px`);
+        e.style.setProperty('--dy', `${-(200 + Math.random() * (300 + level * 60))}px`);
+        e.style.setProperty('--s', `${0.6 + Math.random() * (0.6 + level * 0.2)}`);
+        e.style.animationDelay = `${Math.random() * 2.5}s`;
+        e.style.animationDuration = `${2 + Math.random() * 2}s`;
+        e.style.background = colours[i % colours.length];
+        overlay.appendChild(e);
       }
-      // Milestone shows after the result popup has had its moment.
       setTimeout(() => overlay.classList.add('show'), 900);
       if (typeof trackEvent === 'function') trackEvent('streak_milestone', { streak });
     }
     document.getElementById('milestoneCloseBtn').addEventListener('click', () => document.getElementById('milestoneOverlay').classList.remove('show'));
     document.getElementById('milestoneOverlay').addEventListener('click', (e) => { if (e.target.id === 'milestoneOverlay') e.currentTarget.classList.remove('show'); });
-    document.getElementById('streakPill').addEventListener('click', loadAccountModal);
+    document.getElementById('streakPill').addEventListener('click', playPillAnimation);
 
     // Referral levels: named after what a good study group does.
     const REFERRAL_LEVELS = [[0, 'Player'], [1, 'Scout'], [3, 'Recruiter'], [10, 'Ambassador'], [25, 'Champion'], [50, 'Legend']];
@@ -5372,9 +5406,9 @@
       panel.innerHTML = '<h4>Sandbox demo</h4>';
       const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', fn); panel.appendChild(b); };
       const closeAll = () => document.querySelectorAll('.modal-overlay.show, .result-overlay.show, .milestone-overlay.show').forEach(el => el.classList.remove('show'));
-      [1, 7, 30, 100, 365].forEach(n => add(`Streak ${n}`, () => { const t = gameState.userToken; gameState.userToken = t || 'demo'; updateStreakPill(n, true); gameState.userToken = t; }));
+      [1, 3, 7, 14, 30, 50, 100, 365].forEach(n => add(`Streak ${n}`, () => { const t = gameState.userToken; gameState.userToken = t || 'demo'; updateStreakPill(n, true); gameState.userToken = t; }));
       add('Streak +1', () => { const n = (parseInt(document.getElementById('streakCount').textContent, 10) || 0) + 1; const t = gameState.userToken; gameState.userToken = t || 'demo'; updateStreakPill(n, true); gameState.userToken = t; });
-      [3, 7, 30, 100, 365].forEach(n => add(`Milestone ${n}`, () => { closeAll(); showMilestone(n); }));
+      [3, 7, 14, 30, 50, 100, 365].forEach(n => add(`Milestone ${n}`, () => { closeAll(); showMilestone(n); }));
       add('Win popup', () => { closeAll(); showResult(true, { answer: (gameState.puzzle && gameState.puzzle.answer) || 'Demo answer', explanation: (gameState.puzzle && gameState.puzzle.explanation) || '' }); });
       add('Loss popup', () => { closeAll(); showResult(false, { answer: (gameState.puzzle && gameState.puzzle.answer) || 'Demo answer', explanation: '' }); });
       add('Install guide', () => { closeAll(); openInstallModal(); });
