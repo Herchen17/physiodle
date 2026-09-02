@@ -2159,6 +2159,7 @@
               <option value="21">9:00 pm</option>
             </select>
             <button class="btn btn-primary btn-small" id="reminderOnBtn">Turn on reminders</button>
+            <button class="btn btn-secondary btn-small" id="reminderTestBtn" style="display:none;">Send a test</button>
             <button class="btn btn-secondary btn-small" id="reminderOffBtn" style="display:none;">Turn off</button>
           </div>
           <div class="install-note" id="reminderStatus" style="margin-top: 0.4rem;"></div>
@@ -2557,7 +2558,6 @@
               <div class="account-stat-label">Longest<br>losing run</div>
             </div>
           </div>
-          <div class="account-stat-note" id="accountTrend" style="display:none;"></div>
         </div>
 
         <!-- Invite friends -->
@@ -4735,17 +4735,6 @@
           document.getElementById('accountFirstGuessRun').textContent = s.bestFirstGuessRun || 0;
           document.getElementById('accountWorstRun').textContent = s.worstRun || 0;
           document.getElementById('accountAvgGuesses').textContent = s.avgGuesses != null ? s.avgGuesses.toFixed(1) : '-';
-          // Trend only appears once there are 60 games to compare; otherwise nothing.
-          const trendEl = document.getElementById('accountTrend');
-          if (s.recentAvgPoints != null && s.priorAvgPoints != null) {
-            const diff = s.recentAvgPoints - s.priorAvgPoints;
-            const word = diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'level';
-            trendEl.textContent = `Trend: ${s.recentAvgPoints.toFixed(1)} points per game over your last 30, ${word}${word === 'level' ? '' : ' ' + Math.abs(diff).toFixed(1)} on the 30 before.`;
-            trendEl.className = 'account-stat-note ' + (word === 'up' ? 'account-trend-up' : word === 'down' ? 'account-trend-down' : '');
-            trendEl.style.display = '';
-          } else {
-            trendEl.style.display = 'none';
-          }
           document.getElementById('accountFriendsInline').textContent = s.friendCount || 0;
           myReferralCode = user.referralCode || null;
           document.getElementById('accountReferrals').textContent = user.referrals || 0;
@@ -5835,8 +5824,22 @@
     let swRegistration = null;
     if (swSupported) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(r => { swRegistration = r; }).catch(() => {});
+        navigator.serviceWorker.register('/sw.js')
+          .then(r => { swRegistration = r; })
+          .catch(e => { console.error('[sw] registration failed', e); });
       });
+    }
+
+    // navigator.serviceWorker.ready never rejects: if registration failed it hangs
+    // forever, which made the reminder button look dead. Always race a timeout.
+    async function readyRegistration() {
+      if (swRegistration) return swRegistration;
+      const reg = await Promise.race([
+        navigator.serviceWorker.register('/sw.js').then(() => navigator.serviceWorker.ready),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('The service worker did not start. Close Physiodle completely and reopen it from the home-screen icon.')), 10000)),
+      ]);
+      swRegistration = reg;
+      return reg;
     }
 
     function pushSupported() {
@@ -5891,13 +5894,16 @@
             document.getElementById('reminderHour').value = String(d.hour);
             onBtn.textContent = 'Update time';
             offBtn.style.display = '';
-            status.textContent = `Reminders are on. You\'ll get one at ${formatHour(d.hour)} each day.`;
+            document.getElementById('reminderTestBtn').style.display = '';
+            status.style.color = '';
+            status.textContent = `Reminders are on. You'll get one at ${formatHour(d.hour)} each day, unless you've already played that day's puzzle.`;
             return;
           }
         } catch (e) { /* fall through */ }
       }
       onBtn.textContent = 'Turn on reminders';
       offBtn.style.display = 'none';
+      document.getElementById('reminderTestBtn').style.display = 'none';
     }
 
     function formatHour(h) {
@@ -5905,13 +5911,33 @@
       return d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
     }
 
+    // Turn a thrown error into something a person can act on.
+    function reminderErrorText(e) {
+      const name = (e && e.name) || '';
+      const msg = (e && e.message) || String(e);
+      if (name === 'NotAllowedError') return 'iOS blocked the request. Open Settings, Notifications, Physiodle and allow notifications, then try again.';
+      if (name === 'AbortError') return 'Apple\'s push service refused the subscription. Close Physiodle completely, reopen it from the home-screen icon and try again.';
+      if (name === 'NotSupportedError') return 'This install can\'t receive notifications. Remove the home-screen icon, add it again from Safari, then try again.';
+      return msg;
+    }
+
     async function enableReminder() {
       const status = document.getElementById('reminderStatus');
       const hour = parseInt(document.getElementById('reminderHour').value, 10);
+      const btn = document.getElementById('reminderOnBtn');
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Working...';
+      status.style.color = ''; status.textContent = '';
       try {
         const perm = await Notification.requestPermission();
-        if (perm !== 'granted') { status.textContent = 'Permission not granted.'; return; }
-        const reg = swRegistration || await navigator.serviceWorker.ready;
+        if (perm !== 'granted') {
+          status.style.color = '#dc2626';
+          status.textContent = perm === 'denied'
+            ? 'Notifications are blocked. Open Settings, Notifications, Physiodle and allow them, then try again.'
+            : 'The permission prompt was dismissed. Tap the button again and choose Allow.';
+          return;
+        }
+        const reg = await readyRegistration();
         let sub = await reg.pushManager.getSubscription();
         if (!sub) {
           const keyRes = await fetch('/api/push/vapid-public-key');
@@ -5924,11 +5950,39 @@
           headers: { 'Content-Type': 'application/json', ...(gameState.userToken && { 'Authorization': `Bearer ${gameState.userToken}` }) },
           body: JSON.stringify({ subscription: sub.toJSON(), hour, tz, platform: detectPlatform() }),
         });
-        if (!r.ok) throw new Error('subscribe failed');
+        if (!r.ok) throw new Error('The server rejected the subscription (' + r.status + ').');
         if (typeof trackEvent === 'function') trackEvent('reminder_on', { hour, platform: detectPlatform() });
         await updateReminderUI();
+        // Prove it works now rather than making them wait until tomorrow.
+        await sendTestReminder(true);
       } catch (e) {
-        status.textContent = 'Couldn\'t turn on reminders. Try again, or check notification settings.';
+        console.error('[push] enable failed', e);
+        status.style.color = '#dc2626';
+        status.textContent = reminderErrorText(e);
+      } finally {
+        btn.disabled = false;
+        if (btn.textContent === 'Working...') btn.textContent = original;
+      }
+    }
+
+    // Fires a notification immediately through the real push pipeline.
+    async function sendTestReminder(afterEnable) {
+      const status = document.getElementById('reminderStatus');
+      try {
+        const sub = await getPushSubscription();
+        if (!sub) throw new Error('Not subscribed yet.');
+        const r = await fetch('/api/push/test', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        });
+        if (!r.ok) throw new Error('Test send failed (' + r.status + ').');
+        status.style.color = '#059669';
+        status.textContent = afterEnable
+          ? 'Reminders are on. A test notification is on its way now.'
+          : 'Test notification sent. It should appear within a few seconds.';
+      } catch (e) {
+        status.style.color = '#dc2626';
+        status.textContent = 'Couldn\'t send the test: ' + ((e && e.message) || e);
       }
     }
 
@@ -5945,6 +5999,7 @@
     }
 
     document.getElementById('reminderOnBtn').addEventListener('click', enableReminder);
+    document.getElementById('reminderTestBtn').addEventListener('click', () => sendTestReminder(false));
     document.getElementById('reminderOffBtn').addEventListener('click', disableReminder);
 
     // ============================================================================
