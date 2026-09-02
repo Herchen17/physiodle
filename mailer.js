@@ -93,16 +93,24 @@ function escapeHtml(s) {
 }
 
 // Diagnostic: try a real send with a hard 20 s cap and report the outcome.
-async function selfTest(to) {
+async function selfTest(to, override) {
   const started = Date.now();
+  // Optional port/secure override so different SMTP ports can be probed
+  // without redeploying (Railway may block some outbound ports).
+  const port = (override && parseInt(override.port, 10)) || parseInt(process.env.MAIL_PORT, 10) || 465;
+  const secure = override && override.secure != null ? override.secure === 'true' : (process.env.MAIL_SECURE || 'true') !== 'false';
+  const t = override ? nodemailer.createTransport({ host: process.env.MAIL_HOST || 'smtp.gmail.com', port, secure, auth: { user: MAIL_USER, pass: MAIL_PASS }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000 }) : null;
   try {
+    const send = t
+      ? t.sendMail({ from: fromAddress(), to, subject: `Physiodle mail test (port ${port})`, text: 'Outbound email from the server works on this port.' }).then(i => ({ id: i.messageId }))
+      : sendMail({ to, subject: 'Physiodle mail test', text: 'If you can read this, outbound email from the server works.', html: '<p>If you can read this, outbound email from the server works.</p>' });
     const r = await Promise.race([
-      sendMail({ to, subject: 'Physiodle mail test', text: 'If you can read this, outbound email from the server works.', html: '<p>If you can read this, outbound email from the server works.</p>' }),
+      send,
       new Promise((_, rej) => setTimeout(() => rej(new Error('timed out after 20 s (SMTP port probably blocked or unreachable)')), 20000)),
     ]);
-    return { ok: true, mode: MODE, host: process.env.MAIL_HOST || 'smtp.gmail.com', port: parseInt(process.env.MAIL_PORT, 10) || 465, ms: Date.now() - started, id: r.id };
+    return { ok: true, mode: MODE, host: process.env.MAIL_HOST || 'smtp.gmail.com', port, secure, ms: Date.now() - started, id: r.id };
   } catch (e) {
-    return { ok: false, mode: MODE, host: process.env.MAIL_HOST || 'smtp.gmail.com', port: parseInt(process.env.MAIL_PORT, 10) || 465, ms: Date.now() - started, error: e.message, code: e.code || null, response: e.response || null };
+    return { ok: false, mode: MODE, host: process.env.MAIL_HOST || 'smtp.gmail.com', port, secure, ms: Date.now() - started, error: e.message, code: e.code || null, response: e.response || null };
   }
 }
 

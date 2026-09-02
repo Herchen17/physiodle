@@ -150,7 +150,8 @@ app.get('/api/admin/mail-test', async (req, res) => {
   if (!key || key !== (process.env.ADMIN_KEY || 'physiodle-admin-2026')) return res.status(401).json({ error: 'Invalid admin key' });
   const to = String(req.query.to || process.env.MAIL_USER || '');
   if (!/^[^@\s]+@[^@\s]+$/.test(to)) return res.status(400).json({ error: 'to required' });
-  res.json(await require('./mailer').selfTest(to));
+  const override = (req.query.port || req.query.secure) ? { port: req.query.port, secure: req.query.secure } : null;
+  res.json(await require('./mailer').selfTest(to, override));
 });
 
 // Health check
