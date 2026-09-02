@@ -164,7 +164,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve static frontend
-app.use(express.static(path.join(__dirname, 'public')));
+// Static assets: long cache for images/fonts/css; never cache the HTML shell,
+// the service worker or the manifest, so a deploy is picked up on next load.
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '7d',
+  etag: true,
+  setHeaders: (res, filePath) => {
+    if (/\.(html)$|sw\.js$|manifest\.webmanifest$/.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
 
 // SPA fallback — serve index.html for all non-API routes
 app.get('*', (req, res) => {

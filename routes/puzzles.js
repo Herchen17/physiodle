@@ -49,6 +49,7 @@ router.get('/today', optionalAuth, (req, res) => {
 //  - rows: [{display, search}] — one row per puzzle, used by the new client
 //  - conditions: [name, ...] — flat list (back-compat for older cached clients)
 router.get('/conditions', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
   res.json({
     conditions: pm.getConditionNames(),
     rows: pm.getConditionRows ? pm.getConditionRows() : undefined,

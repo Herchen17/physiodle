@@ -4803,11 +4803,10 @@
     async function initGame() {
       try {
         // Load conditions once
-        gameState.allConditions = await getConditions();
+        // Conditions and today's puzzle don't depend on each other: fetch together.
+        const [conds, todayData] = await Promise.all([getConditions(), getTodaysPuzzle()]);
+        gameState.allConditions = conds;
         _buildAbbrMap(); // Build abbreviation map for answer matching
-
-        // Load today's puzzle
-        const todayData = await getTodaysPuzzle();
         gameState.currentDay = todayData.dayNumber;
         gameState.todayDay = todayData.dayNumber; // Never changes — used for archive limits
         gameState.puzzle = todayData.puzzle;

@@ -62,7 +62,13 @@ function safeGet(fn, fallback) {
 // ============================================================================
 // ADMIN API — /api/analytics/dashboard (JSON)
 // ============================================================================
+const _dashCache = new Map(); // key -> { at, body }
 router.get('/dashboard', requireAdmin, (req, res) => {
+  const cacheKey = String(req.query.feedbackLimit || 10);
+  const hit = _dashCache.get(cacheKey);
+  if (hit && Date.now() - hit.at < 60000) { res.setHeader('X-Cache', 'hit'); return res.json(hit.body); }
+  const _origJson = res.json.bind(res);
+  res.json = (body) => { _dashCache.set(cacheKey, { at: Date.now(), body }); res.setHeader('X-Cache', 'miss'); return _origJson(body); };
   const today = aestDaysAgo(0);
   const yesterday = aestDaysAgo(1);
   const weekAgo = aestDaysAgo(7);

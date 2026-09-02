@@ -502,7 +502,7 @@ async function doLogin() {
   updateClock(); setInterval(updateClock, 1000);
   renderAll(await r.json());
   loadSeries();
-  setInterval(loadData, 30000);
+  setInterval(loadData, 60000);
 }
 function doLogout() { sessionStorage.removeItem('physiodle_admin_key'); location.reload(); }
 async function api(path, opts) {
@@ -563,7 +563,7 @@ function renderKPIs(d) {
 // Traffic chart with range + bucket
 let seriesRange = localStorage.getItem('pa_series_range') || '30d';
 let seriesBucket = localStorage.getItem('pa_series_bucket') || '';
-const BUCKET_OPTIONS = { '6m': ['day', 'week'], '1y': ['week', 'month'], 'all': ['week', 'month'] };
+const BUCKET_OPTIONS = { '6m': ['day', 'week'], '1y': ['day', 'week', 'month'], 'all': ['day', 'week', 'month'] };
 document.getElementById('seriesRange').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   seriesRange = b.dataset.range; seriesBucket = ''; localStorage.setItem('pa_series_range', seriesRange); localStorage.removeItem('pa_series_bucket');
