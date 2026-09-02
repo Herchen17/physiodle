@@ -172,7 +172,7 @@ router.get('/', requireAdmin, (req, res) => {
     mobile: count(`SELECT COUNT(DISTINCT visitor_id) AS c FROM page_views WHERE created_at >= ? AND created_at < ? AND (user_agent LIKE '%Mobile%' OR user_agent LIKE '%Android%' OR user_agent LIKE '%iPhone%')`, from, to),
     total: kpis.visitors.current,
   };
-  const levels = safe(() => db.prepare('SELECT COALESCE(profession_level, "unset") AS k, COUNT(*) AS c FROM users GROUP BY k ORDER BY c DESC').all(), []);
+  const levels = safe(() => db.prepare("SELECT COALESCE(profession_level, 'unset') AS k, COUNT(*) AS c FROM users GROUP BY k ORDER BY c DESC").all(), []);
   const consent = {
     ticked: count('SELECT COUNT(*) AS c FROM users WHERE marketing_consent = 1'),
     withEmail: count('SELECT COUNT(*) AS c FROM users WHERE email IS NOT NULL'),
