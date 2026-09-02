@@ -2191,8 +2191,8 @@
           <div id="loveThanks" style="display:none;" class="love-saved" style="margin-top:0.5rem;">Thanks. Every message is read.</div>
         </div>
 
-        <!-- 4-5 stars: the things that actually help -->
-        <div id="loveHappy" style="display:none;">
+        <!-- Always visible: the things that actually help -->
+        <div id="loveHelp">
           <div class="love-note" style="color:#059669; font-weight:600; margin-top:1rem;">Three things that genuinely help:</div>
           <div class="love-actions">
             <button class="btn btn-primary btn-full" id="loveShareBtn">Send it to a friend</button>
@@ -5791,7 +5791,6 @@
     let loveStarWidget = null;
     function openLoveModal() {
       const caption = document.getElementById('loveCaption');
-      document.getElementById('loveHappy').style.display = 'none';
       document.getElementById('loveComment').style.display = 'none';
       document.getElementById('loveThanks').style.display = 'none';
       document.getElementById('loveText').value = '';
@@ -5822,7 +5821,6 @@
         document.getElementById('loveText').placeholder = placeholders[n];
         document.getElementById('loveComment').style.display = '';
         document.getElementById('loveThanks').style.display = 'none';
-        document.getElementById('loveHappy').style.display = n >= 4 ? '' : 'none';
         if (typeof trackEvent === 'function') trackEvent('love_rating', { stars: n });
       });
       showModal('loveModal');
