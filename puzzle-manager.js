@@ -9,6 +9,12 @@ const LAUNCH_DATE = 4;
 
 let puzzles = [];
 let conditionNames = [];
+// Distractor vocabulary: real conditions that are NOT answers to any puzzle.
+// Shown in the autocomplete so the dropdown no longer leaks the answer set
+// (feedback: "the search should include as many options as possible, not
+// just the correct answers"). Built from a Wikipedia category crawl and
+// de-duplicated against the live matcher; see data/distractors.json.
+let distractors = [];
 
 function loadPuzzles() {
   const filePath = path.join(__dirname, 'data', 'puzzles.json');
@@ -22,7 +28,13 @@ function loadPuzzles() {
   });
   conditionNames = Array.from(nameSet).sort();
 
-  console.log(`Loaded ${puzzles.length} puzzles, ${conditionNames.length} autocomplete conditions`);
+  try {
+    const d = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'distractors.json'), 'utf8'));
+    const lower = new Set(conditionNames.map(n => n.toLowerCase()));
+    distractors = (d.terms || []).filter(t => !lower.has(t.toLowerCase()));
+  } catch (e) { distractors = []; }
+
+  console.log(`Loaded ${puzzles.length} puzzles, ${conditionNames.length} autocomplete conditions, ${distractors.length} distractors`);
 }
 
 /**
@@ -128,7 +140,7 @@ function getTotalPuzzles() {
 }
 
 function getConditionNames() {
-  return conditionNames;
+  return conditionNames.concat(distractors).sort();
 }
 
 // Returns one row per puzzle for the autocomplete dropdown. `display` is the
@@ -148,6 +160,7 @@ function getConditionRows() {
     if (Array.isArray(p.acceptable_alternatives)) search.push(...p.acceptable_alternatives);
     rows.push({ display: p.answer, search });
   });
+  distractors.forEach(t => rows.push({ display: t, search: [t] }));
   rows.sort((a, b) => a.display.localeCompare(b.display));
   return rows;
 }

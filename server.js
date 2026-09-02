@@ -90,6 +90,7 @@ app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/analytics/v2', require('./routes/analytics-v2'));
 app.use('/api/admin', require('./routes/admin-user-stats'));
 const push = require('./routes/push');
 app.use('/api/push', push.router);
