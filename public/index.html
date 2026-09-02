@@ -1881,6 +1881,9 @@
     .account-section .account-stat-label { color: #6b7280; text-transform: none; letter-spacing: 0; font-size: 0.7rem; line-height: 1.25; }
     .account-stat-card-streak .account-stat-value { color: #b45309; }
     .account-stat-note { font-size: 0.72rem; color: #6b7280; margin-top: 0.5rem; line-height: 1.4; }
+    .email-prompt { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.5rem; padding: 0.8rem 0.9rem; margin-bottom: 1rem; }
+    .email-prompt-title { font-size: 0.85rem; font-weight: 700; color: #92400e; margin-bottom: 0.2rem; }
+    .email-prompt-text { font-size: 0.75rem; color: #78350f; line-height: 1.45; margin-bottom: 0.5rem; }
     .settings-row { padding: 0.6rem 0; border-top: 1px solid #e5e7eb; }
     .settings-row:first-child { border-top: none; padding-top: 0.2rem; }
     .settings-label { display: block; font-size: 0.82rem; font-weight: 600; color: #1f2937; margin-bottom: 0.2rem; }
@@ -2468,6 +2471,17 @@
         <button class="modal-close" onclick="closeModal('accountModal')">×</button>
       </div>
       <div class="modal-body" style="padding: 1.25rem;">
+        <!-- No-email prompt: shown every time the profile opens until an address is added -->
+        <div id="accountEmailPrompt" class="email-prompt" style="display:none;">
+          <div class="email-prompt-title">Add an email to your account</div>
+          <div class="email-prompt-text">Your account has no email address, so there's no way to reset your password if you forget it. Add one now; you can confirm it any time later.</div>
+          <div class="settings-inline">
+            <input type="email" class="form-input" id="promptEmail" placeholder="you@example.com" autocomplete="email">
+            <button type="button" class="btn btn-primary btn-small" id="promptEmailSave">Add</button>
+          </div>
+          <div class="settings-msg" id="promptEmailMsg"></div>
+        </div>
+
         <!-- User header -->
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
           <div class="user-avatar" id="accountAvatar" style="width: 56px; height: 56px; font-size: 1.4rem; flex-shrink: 0;"></div>
@@ -4745,8 +4759,9 @@
           document.getElementById('settingsEmailMsg').textContent = '';
           document.getElementById('settingsPwMsg').textContent = '';
           document.getElementById('settingsCurrentPw').value = ''; document.getElementById('settingsNewPw').value = '';
-          // No email on the account (sign-ups before email was required): open Settings so it's obvious.
-          if (!user.email) { document.getElementById('settingsBody').style.display = ''; document.getElementById('settingsToggle').textContent = 'Hide'; document.getElementById('settingsEmailHint').textContent = 'Your account has no email yet. Add one so you can reset your password if you ever forget it.'; }
+          // Sign-ups from before email was required: prompt every time the profile opens until one is added.
+          document.getElementById('accountEmailPrompt').style.display = user.email ? 'none' : '';
+          document.getElementById('promptEmailMsg').textContent = '';
           document.getElementById('accountLevelSaved').textContent = '';
           updateStreakPill(s.currentStreak || 0, false);
 
@@ -5622,6 +5637,23 @@
       e.target.textContent = open ? 'Hide' : 'Show';
     });
     document.getElementById('settingsReminderBtn').addEventListener('click', () => { closeModal('accountModal'); openInstallModal(); });
+    document.getElementById('promptEmailSave').addEventListener('click', async () => {
+      const msg = document.getElementById('promptEmailMsg');
+      const email = document.getElementById('promptEmail').value.trim();
+      msg.className = 'settings-msg';
+      if (!email) { msg.className = 'settings-msg error'; msg.textContent = 'Enter an email address.'; return; }
+      try {
+        await apiCall('/auth/profile', { method: 'PATCH', body: JSON.stringify({ email }) });
+        localStorage.setItem('physiodle_email', email);
+        showToast('Email added. A confirmation link is on its way.', 'success');
+        document.getElementById('accountEmailPrompt').style.display = 'none';
+        document.getElementById('settingsEmail').value = email;
+        const user = await getCurrentUser(); if (user) renderAccountEmail(user);
+      } catch (err) {
+        msg.className = 'settings-msg error';
+        msg.textContent = (err.message || '').replace(/^API error:\s*\d+\s*-?\s*/, '') || 'Could not save.';
+      }
+    });
     document.getElementById('settingsEmailSave').addEventListener('click', async () => {
       const msg = document.getElementById('settingsEmailMsg');
       const email = document.getElementById('settingsEmail').value.trim();
