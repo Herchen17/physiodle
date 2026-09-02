@@ -31,7 +31,9 @@ function loadPuzzles() {
   try {
     const d = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'distractors.json'), 'utf8'));
     const lower = new Set(conditionNames.map(n => n.toLowerCase()));
-    distractors = (d.terms || []).filter(t => !lower.has(t.toLowerCase()));
+    // Match the answers' Title Case exactly. A casing difference between
+    // answers and distractors would tell players which rows are real.
+    distractors = (d.terms || []).map(titleCase).filter(t => !lower.has(t.toLowerCase()));
   } catch (e) { distractors = []; }
 
   console.log(`Loaded ${puzzles.length} puzzles, ${conditionNames.length} autocomplete conditions, ${distractors.length} distractors`);
@@ -46,6 +48,16 @@ function loadPuzzles() {
  *                         Defaults to 'Australia/Sydney' (AEST/AEDT) if not provided or invalid.
  * @returns {number} Day number (1 = launch day). -1 if before launch.
  */
+const SMALL_WORDS = new Set(['of', 'and', 'the', 'in', 'on', 'with', 'to', 'for', 'at', 'by', 'or', 'a', 'an', 'du', 'de', 'von', 'van']);
+function titleCase(str) {
+  return str.split(' ').map((w, i) => {
+    if (i > 0 && SMALL_WORDS.has(w.toLowerCase())) return w.toLowerCase();
+    if (/^[A-Z0-9]{2,}$/.test(w) || /[A-Z].*[A-Z]/.test(w)) return w; // keep acronyms like ACL, COPD, MCL
+    // Capitalise the first letter of each hyphenated / apostrophe part start
+    return w.replace(/(^|[-–/])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase());
+  }).join(' ');
+}
+
 function getDayNumberForTimezone(tz) {
   const now = new Date(); // Server UTC clock — cannot be manipulated by client
 
