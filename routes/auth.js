@@ -562,12 +562,40 @@ router.patch('/profile', requireAuth, (req, res) => {
     db.prepare('UPDATE users SET profession_level = ? WHERE id = ?').run(level || null, req.user.userId);
     out.professionLevel = level || null;
   }
+  if ('email' in body) {
+    const email = String(body.email || '').trim().toLowerCase();
+    if (!EMAIL_REGEX.test(email)) return res.status(400).json({ error: 'A valid email address is required.' });
+    const taken = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, req.user.userId);
+    if (taken) return res.status(409).json({ error: 'That email is already on another account.' });
+    const me = db.prepare('SELECT id, username, email FROM users WHERE id = ?').get(req.user.userId);
+    if (me.email !== email) {
+      // New address: unconfirmed until the link in the email is clicked.
+      db.prepare('UPDATE users SET email = ?, email_confirmed_at = NULL WHERE id = ?').run(email, me.id);
+      sendConfirmation({ id: me.id, username: me.username, email });
+      const hashRow = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(me.id);
+      crossRegister({ username: me.username, email, passwordHash: hashRow.password_hash });
+    }
+    out.email = email;
+  }
   if ('marketingConsent' in body) {
     const c = body.marketingConsent ? 1 : 0;
     db.prepare('UPDATE users SET marketing_consent = ?, consent_updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(c, req.user.userId);
     out.marketingConsent = !!c;
   }
   res.json(out);
+});
+
+// POST /api/auth/change-password { currentPassword, newPassword }
+router.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+  const user = db.prepare('SELECT id, username, email, password_hash FROM users WHERE id = ?').get(req.user.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const ok = await verifyPassword(currentPassword || '', user.password_hash);
+  if (!ok) return res.status(401).json({ error: 'Current password is incorrect.' });
+  const passwordHash = await hashPassword(newPassword);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, user.id);
+  res.json({ success: true });
 });
 
 module.exports = router;

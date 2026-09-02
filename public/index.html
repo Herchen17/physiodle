@@ -1881,6 +1881,14 @@
     .account-section .account-stat-label { color: #6b7280; text-transform: none; letter-spacing: 0; font-size: 0.7rem; line-height: 1.25; }
     .account-stat-card-streak .account-stat-value { color: #b45309; }
     .account-stat-note { font-size: 0.72rem; color: #6b7280; margin-top: 0.5rem; line-height: 1.4; }
+    .settings-row { padding: 0.6rem 0; border-top: 1px solid #e5e7eb; }
+    .settings-row:first-child { border-top: none; padding-top: 0.2rem; }
+    .settings-label { display: block; font-size: 0.82rem; font-weight: 600; color: #1f2937; margin-bottom: 0.2rem; }
+    .settings-hint { font-size: 0.72rem; color: #6b7280; margin-bottom: 0.4rem; line-height: 1.4; }
+    .settings-inline { display: flex; gap: 0.4rem; }
+    .settings-inline .form-input { flex: 1; min-width: 0; font-size: 0.85rem; padding: 0.45rem 0.55rem; }
+    .settings-msg { font-size: 0.72rem; margin-top: 0.3rem; min-height: 1em; color: #059669; }
+    .settings-msg.error { color: #dc2626; }
     .account-stat-note.account-trend-up { color: #059669; }
     .account-stat-note.account-trend-down { color: #dc2626; }
     @media (max-width: 480px) {
@@ -2579,6 +2587,39 @@
           <div class="account-stat-note" style="margin-top: 0.5rem;">Friends: <strong id="accountFriendsInline">0</strong></div>
           <div id="accountInstallWrap" style="margin-top: 0.75rem;">
             <button class="btn-link" id="accountInstallBtn"><img class="app-icon" src="/favicon-32.png" alt="" width="16" height="16"><span>Put Physiodle on your home screen</span></button>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="account-section">
+          <div class="account-section-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Settings</span>
+            <button type="button" class="btn-link" id="settingsToggle" style="font-size: 0.75rem; text-transform: none; letter-spacing: 0;">Show</button>
+          </div>
+          <div id="settingsBody" style="display:none;">
+            <div class="settings-row">
+              <label class="settings-label" for="settingsEmail">Email address</label>
+              <div class="settings-hint" id="settingsEmailHint">Used to sign in and to reset your password. We'll send a link to confirm it.</div>
+              <div class="settings-inline">
+                <input type="email" class="form-input" id="settingsEmail" placeholder="you@example.com" autocomplete="email">
+                <button type="button" class="btn btn-primary btn-small" id="settingsEmailSave">Save</button>
+              </div>
+              <div class="settings-msg" id="settingsEmailMsg"></div>
+            </div>
+            <div class="settings-row">
+              <label class="settings-label" for="settingsCurrentPw">Change password</label>
+              <input type="password" class="form-input" id="settingsCurrentPw" placeholder="Current password" autocomplete="current-password" style="margin-bottom: 0.35rem;">
+              <div class="settings-inline">
+                <input type="password" class="form-input" id="settingsNewPw" placeholder="New password (6+ characters)" autocomplete="new-password">
+                <button type="button" class="btn btn-secondary btn-small" id="settingsPwSave">Update</button>
+              </div>
+              <div class="settings-msg" id="settingsPwMsg"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">Daily reminder</div>
+              <div class="settings-hint">One notification a day when the new puzzle is out.</div>
+              <button type="button" class="btn btn-secondary btn-small" id="settingsReminderBtn">Reminder settings</button>
+            </div>
           </div>
         </div>
 
@@ -4700,6 +4741,12 @@
           document.getElementById('accountInstallWrap').style.display = '';
           document.getElementById('accountLevel').value = user.professionLevel || '';
           renderAccountEmail(user);
+          document.getElementById('settingsEmail').value = user.email || '';
+          document.getElementById('settingsEmailMsg').textContent = '';
+          document.getElementById('settingsPwMsg').textContent = '';
+          document.getElementById('settingsCurrentPw').value = ''; document.getElementById('settingsNewPw').value = '';
+          // No email on the account (sign-ups before email was required): open Settings so it's obvious.
+          if (!user.email) { document.getElementById('settingsBody').style.display = ''; document.getElementById('settingsToggle').textContent = 'Hide'; document.getElementById('settingsEmailHint').textContent = 'Your account has no email yet. Add one so you can reset your password if you ever forget it.'; }
           document.getElementById('accountLevelSaved').textContent = '';
           updateStreakPill(s.currentStreak || 0, false);
 
@@ -5566,6 +5613,45 @@
         history.replaceState(null, '', location.pathname);
       }
     })();
+
+    // ---- Settings ----
+    document.getElementById('settingsToggle').addEventListener('click', (e) => {
+      const body = document.getElementById('settingsBody');
+      const open = body.style.display === 'none';
+      body.style.display = open ? '' : 'none';
+      e.target.textContent = open ? 'Hide' : 'Show';
+    });
+    document.getElementById('settingsReminderBtn').addEventListener('click', () => { closeModal('accountModal'); openInstallModal(); });
+    document.getElementById('settingsEmailSave').addEventListener('click', async () => {
+      const msg = document.getElementById('settingsEmailMsg');
+      const email = document.getElementById('settingsEmail').value.trim();
+      msg.className = 'settings-msg';
+      if (!email) { msg.className = 'settings-msg error'; msg.textContent = 'Enter an email address.'; return; }
+      try {
+        await apiCall('/auth/profile', { method: 'PATCH', body: JSON.stringify({ email }) });
+        localStorage.setItem('physiodle_email', email);
+        msg.textContent = 'Saved. Check your inbox for a confirmation link.';
+        const user = await getCurrentUser(); if (user) renderAccountEmail(user);
+      } catch (err) {
+        msg.className = 'settings-msg error';
+        msg.textContent = (err.message || '').replace(/^API error:\s*\d+\s*-?\s*/, '') || 'Could not save.';
+      }
+    });
+    document.getElementById('settingsPwSave').addEventListener('click', async () => {
+      const msg = document.getElementById('settingsPwMsg');
+      const currentPassword = document.getElementById('settingsCurrentPw').value;
+      const newPassword = document.getElementById('settingsNewPw').value;
+      msg.className = 'settings-msg';
+      if (!currentPassword || newPassword.length < 6) { msg.className = 'settings-msg error'; msg.textContent = 'Enter your current password and a new one of at least 6 characters.'; return; }
+      try {
+        await apiCall('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+        msg.textContent = 'Password updated.';
+        document.getElementById('settingsCurrentPw').value = ''; document.getElementById('settingsNewPw').value = '';
+      } catch (err) {
+        msg.className = 'settings-msg error';
+        msg.textContent = (err.message || '').replace(/^API error:\s*\d+\s*-?\s*/, '') || 'Could not update.';
+      }
+    });
 
     // Profile level save
     document.getElementById('accountLevel').addEventListener('change', async (e) => {
