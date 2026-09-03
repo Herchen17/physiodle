@@ -8,14 +8,15 @@ const { optionalAuth } = require('../auth');
 // ============================================================================
 
 router.post('/pageview', optionalAuth, (req, res) => {
-  const { visitorId, path } = req.body;
+  const { visitorId, path, displayMode } = req.body;
   if (!visitorId) return res.status(400).json({ error: 'visitorId required' });
   const userId = req.user ? req.user.userId : null;
   const userAgent = (req.headers['user-agent'] || '').slice(0, 500);
+  const mode = ['standalone', 'browser'].includes(displayMode) ? displayMode : null;
   try {
     db.prepare(
-      'INSERT INTO page_views (visitor_id, user_id, path, user_agent, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)'
-    ).run(visitorId, userId, path || '/', userAgent);
+      'INSERT INTO page_views (visitor_id, user_id, path, user_agent, display_mode, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
+    ).run(visitorId, userId, path || '/', userAgent, mode);
   } catch (e) { /* don't fail */ }
   res.json({ ok: true });
 });

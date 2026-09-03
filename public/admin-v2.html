@@ -228,6 +228,17 @@ th[data-key] { cursor: pointer; white-space: nowrap; }
     <div class="chart-card"><div class="chart-title">Games Played by Hour</div><div class="chart-wrap"><canvas id="hourlyGamesChart"></canvas></div></div>
     <div class="chart-card"><div class="chart-title">Sign-ups by Hour</div><div class="chart-wrap"><canvas id="hourlySignupsChart"></canvas></div></div>
   </div>
+  <div class="section-header"><span class="section-title">Playing From</span><span class="nav-time" id="devicesNote"></span></div>
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="chart-card"><div class="chart-title">Home screen vs browser</div><div class="kv" id="installSplit"></div><div class="note" id="installNote"></div></div>
+    <div class="chart-card"><div class="chart-title">Device</div><div class="bars" id="deviceKinds"></div></div>
+    <div class="chart-card"><div class="chart-title">Operating system</div><div class="bars" id="osKinds"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-title">Browser</div><div class="bars" id="browserKinds"></div></div>
+    <div class="chart-card"><div class="chart-title">Most common combinations</div><div class="scroll"><table id="deviceCombos"></table></div></div>
+  </div>
+
   <div class="col-2">
     <div><div class="section-header"><span class="section-title">Top Players (by points)</span></div><div class="table-card" id="topPlayersTable"></div></div>
     <div><div class="section-header"><span class="section-title">Most Active</span></div><div class="table-card" id="activeTable"></div></div>
@@ -502,6 +513,7 @@ async function doLogin() {
   updateClock(); setInterval(updateClock, 1000);
   renderAll(await r.json());
   loadSeries();
+  loadDevices();
   setInterval(loadData, 60000);
 }
 function doLogout() { sessionStorage.removeItem('physiodle_admin_key'); location.reload(); }
@@ -527,7 +539,7 @@ function showTab(name) {
 }
 function refreshCurrent() {
   loaded[currentTab] = true;
-  ({ overview: () => { loadData(); loadSeries(); }, growth: loadGrowth, puzzles: loadPuzzlesTab, players: () => loadUsers(1), feedback: () => loadFeedbackTab(0), health: loadHealth })[currentTab]();
+  ({ overview: () => { loadData(); loadSeries(); loadDevices(); }, growth: loadGrowth, puzzles: loadPuzzlesTab, players: () => loadUsers(1), feedback: () => loadFeedbackTab(0), health: loadHealth })[currentTab]();
 }
 
 // ---------------- overview ----------------
@@ -567,7 +579,7 @@ const BUCKET_OPTIONS = { '6m': ['day', 'week'], '1y': ['day', 'week', 'month'], 
 document.getElementById('seriesRange').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   seriesRange = b.dataset.range; seriesBucket = ''; localStorage.setItem('pa_series_range', seriesRange); localStorage.removeItem('pa_series_bucket');
-  loadSeries();
+  loadSeries(); loadDevices();
 });
 document.getElementById('seriesBucket').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
@@ -583,6 +595,36 @@ function fmtBucket(b, bucket, long) {
   if (bucket === 'week') return (long ? 'Week of ' : '') + `${d} ${m}`;
   return `${d} ${m}` + (long ? ` ${y}` : '');
 }
+async function loadDevices() {
+  if (!K) return;
+  const range = ({ '24h': '1', '7d': '7', '30d': '30', '6m': '90', '1y': '365', 'all': '365' })[seriesRange] || '30';
+  let d; try { d = await api('/api/analytics/v2/devices?range=' + range); } catch (e) { console.error(e); return; }
+  document.getElementById('devicesNote').textContent = 'unique visitors, last ' + d.range.days + ' days';
+
+  const i = d.install;
+  document.getElementById('installSplit').innerHTML =
+    '<div>Home-screen app</div><div class="num" style="color:var(--green);font-weight:700">' + fmtN(i.standalone) + (i.standalonePct != null ? ' (' + i.standalonePct + '%)' : '') + '</div>' +
+    '<div>Browser tab</div><div class="num">' + fmtN(i.browser) + '</div>' +
+    (i.notRecorded ? '<div class="muted">Not recorded</div><div class="num muted">' + fmtN(i.notRecorded) + '</div>' : '');
+  document.getElementById('installNote').textContent = i.recorded ? d.trackingNote : 'No visits with a recorded mode yet. ' + d.trackingNote;
+
+  const bars = (el, rows) => {
+    const max = Math.max(...rows.map(r => r.visitors), 1);
+    document.getElementById(el).innerHTML = rows.map(r =>
+      '<div>' + esc(r.name) + '</div><div class="bar" style="width:' + Math.max(1, 100 * r.visitors / max) + '%"></div><div class="num">' + fmtN(r.visitors) + '</div>').join('')
+      || '<div class="muted">no data</div><div></div><div></div>';
+  };
+  bars('deviceKinds', d.devices);
+  bars('osKinds', d.os);
+  bars('browserKinds', d.browsers);
+
+  const total = d.combos.reduce((a, r) => a + r.visitors, 0) || 1;
+  document.getElementById('deviceCombos').innerHTML =
+    '<thead><tr><th>Operating system and browser</th><th class="num">Visitors</th><th class="num">Share</th></tr></thead><tbody>' +
+    d.combos.map(r => '<tr><td>' + esc(r.name) + '</td><td class="num">' + fmtN(r.visitors) + '</td><td class="num">' + Math.round(100 * r.visitors / total) + '%</td></tr>').join('') +
+    '</tbody>';
+}
+
 async function loadSeries() {
   if (!K) return;
   document.querySelectorAll('#seriesRange button').forEach(x => x.classList.toggle('active', x.dataset.range === seriesRange));

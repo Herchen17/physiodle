@@ -1756,6 +1756,10 @@
       display: inline-block; padding: 0 0.35rem; border: 1px solid #d1d5db; border-bottom-width: 2px;
       border-radius: 0.25rem; font-size: 0.75rem; background: #f9fafb; white-space: nowrap;
     }
+    .surprise-box { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed #e5e7eb; }
+    .surprise-or { font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; }
+    .surprise-hint { margin-top: 0.35rem; }
+    #reminderSurpriseBtn.active { background: #0d9488; border-color: #0d9488; color: white; }
     .install-section { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid #e5e7eb; }
     .install-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin-bottom: 0.4rem; }
     .install-note { font-size: 0.78rem; color: #6b7280; line-height: 1.5; }
@@ -2247,13 +2251,16 @@
               <option value="20">8:00 pm</option>
               <option value="21">9:00 pm</option>
               <option value="22">10:00 pm</option>
-              <option value="-1">Surprise me (same time for everyone)</option>
             </select>
             <button class="btn btn-primary btn-small" id="reminderOnBtn">Turn on reminders</button>
             <button class="btn btn-secondary btn-small" id="reminderTestBtn" style="display:none;">Send a test</button>
             <button class="btn btn-secondary btn-small" id="reminderOffBtn" style="display:none;">Turn off</button>
           </div>
-          <div class="install-note" id="surpriseHint" style="margin-top: 0.35rem; display:none;">Surprise mode drops at the same moment for everyone, somewhere between 7am and 9:30pm, and a different time each day.</div>
+          <div class="surprise-box">
+            <div class="surprise-or">or</div>
+            <button class="btn btn-secondary btn-small" id="reminderSurpriseBtn">Surprise me</button>
+            <div class="install-note surprise-hint">One shared moment for everyone, a different time each day, somewhere between 7am and 9:30pm. You'll never know when it's coming.</div>
+          </div>
           <div class="install-note" id="reminderStatus" style="margin-top: 0.4rem;"></div>
         </div>
       </div>
@@ -6059,17 +6066,22 @@
       const status = document.getElementById('reminderStatus');
       const onBtn = document.getElementById('reminderOnBtn');
       const offBtn = document.getElementById('reminderOffBtn');
+      const surpriseBox = document.querySelector('.surprise-box');
       const platform = detectPlatform();
       status.textContent = '';
+      // Shown only when reminders can actually be switched on here.
+      if (surpriseBox) surpriseBox.style.display = '';
 
       if (platform === 'ios' && !isStandalone()) {
         note.innerHTML = 'You\'re on an iPhone or iPad in the browser, and Apple only allows notifications from the home-screen version. Add Physiodle to your home screen (iPhone tab above), open it from the new icon, and the reminder switch will be here. This depends on the device you\'re using, not the tab selected above.';
         controls.style.display = 'none';
+        if (surpriseBox) surpriseBox.style.display = 'none';
         return;
       }
       if (!pushSupported()) {
         note.textContent = 'This browser can\'t show notifications. Try Chrome, Edge, Firefox or Safari.';
         controls.style.display = 'none';
+        if (surpriseBox) surpriseBox.style.display = 'none';
         return;
       }
       controls.style.display = '';
@@ -6085,8 +6097,11 @@
           const r = await fetch(`/api/push/status?endpoint=${encodeURIComponent(sub.endpoint)}`);
           const d = await r.json();
           if (d.subscribed) {
-            document.getElementById('reminderHour').value = String(d.hour);
-            onBtn.textContent = 'Update time';
+            const isSurprise = Number(d.hour) === -1;
+            if (!isSurprise) document.getElementById('reminderHour').value = String(d.hour);
+            document.getElementById('reminderSurpriseBtn').classList.toggle('active', isSurprise);
+            document.getElementById('reminderSurpriseBtn').textContent = isSurprise ? 'Surprise me is on' : 'Surprise me';
+            onBtn.textContent = isSurprise ? 'Use a set time' : 'Update time';
             offBtn.style.display = '';
             document.getElementById('reminderTestBtn').style.display = '';
             status.style.color = '';
@@ -6118,10 +6133,11 @@
       return msg;
     }
 
-    async function enableReminder() {
+    async function enableReminder(explicitHour) {
       const status = document.getElementById('reminderStatus');
-      const hour = parseInt(document.getElementById('reminderHour').value, 10);
-      const btn = document.getElementById('reminderOnBtn');
+      const surprise = explicitHour === -1;
+      const hour = surprise ? -1 : parseInt(document.getElementById('reminderHour').value, 10);
+      const btn = surprise ? document.getElementById('reminderSurpriseBtn') : document.getElementById('reminderOnBtn');
       const original = btn.textContent;
       btn.disabled = true; btn.textContent = 'Working...';
       status.style.color = ''; status.textContent = '';
@@ -6195,10 +6211,8 @@
       await updateReminderUI();
     }
 
-    document.getElementById('reminderHour').addEventListener('change', (e) => {
-      document.getElementById('surpriseHint').style.display = e.target.value === '-1' ? '' : 'none';
-    });
-    document.getElementById('reminderOnBtn').addEventListener('click', enableReminder);
+    document.getElementById('reminderOnBtn').addEventListener('click', () => enableReminder());
+    document.getElementById('reminderSurpriseBtn').addEventListener('click', () => enableReminder(-1));
     document.getElementById('reminderTestBtn').addEventListener('click', () => sendTestReminder(false));
     document.getElementById('reminderOffBtn').addEventListener('click', disableReminder);
 
@@ -6286,7 +6300,8 @@
             'Content-Type': 'application/json',
             ...(gameState.userToken && { 'Authorization': 'Bearer ' + gameState.userToken }),
           },
-          body: JSON.stringify({ visitorId: getVisitorId(), path: '/' }),
+          // Only the client knows whether this was launched from the home-screen icon.
+          body: JSON.stringify({ visitorId: getVisitorId(), path: '/', displayMode: isStandalone() ? 'standalone' : 'browser' }),
         });
       } catch (e) { /* ignore */ }
     }

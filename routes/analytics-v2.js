@@ -242,6 +242,103 @@ router.get('/series', requireAdmin, (req, res) => {
 });
 
 // ============================================================================
+// "Playing from": device, OS, browser and installed-app split
+// ============================================================================
+
+// Order matters throughout: Edge and Samsung both contain "Chrome", Chrome on
+// iOS is "CriOS", Firefox on iOS is "FxiOS", and every in-app browser
+// impersonates Safari or Chrome, so those are checked first.
+function parseUA(ua) {
+  const u = ua || '';
+  const has = (re) => re.test(u);
+
+  let os = 'Other';
+  if (has(/iPhone|iPod/)) os = 'iOS';
+  else if (has(/iPad/)) os = 'iPadOS';
+  else if (has(/Android/)) os = 'Android';
+  else if (has(/CrOS/)) os = 'ChromeOS';
+  else if (has(/Windows NT/)) os = 'Windows';
+  else if (has(/Macintosh|Mac OS X/)) os = 'macOS';
+  else if (has(/Linux/)) os = 'Linux';
+
+  let browser = 'Other';
+  if (has(/FBAN|FBAV|FB_IAB/)) browser = 'Facebook in-app';
+  else if (has(/Instagram/)) browser = 'Instagram in-app';
+  else if (has(/\bReddit\b/i)) browser = 'Reddit in-app';
+  else if (has(/TikTok|BytedanceWebview/i)) browser = 'TikTok in-app';
+  else if (has(/Twitter|\bX11.*Twitter\b/)) browser = 'X in-app';
+  else if (has(/Line\//)) browser = 'LINE in-app';
+  else if (has(/EdgiOS|Edg\//)) browser = 'Edge';
+  else if (has(/SamsungBrowser/)) browser = 'Samsung Internet';
+  else if (has(/OPiOS|OPR\//)) browser = 'Opera';
+  else if (has(/FxiOS|Firefox\//)) browser = 'Firefox';
+  else if (has(/CriOS/)) browser = 'Chrome';
+  else if (has(/Chrome\//)) browser = 'Chrome';
+  else if (has(/Safari\//)) browser = 'Safari';
+
+  let device = 'Desktop';
+  if (has(/iPad/) || (has(/Android/) && !has(/Mobile/))) device = 'Tablet';
+  else if (has(/Mobile|iPhone|iPod|Android/)) device = 'Phone';
+
+  return { os, browser, device };
+}
+
+router.get('/devices', requireAdmin, (req, res) => {
+  const days = RANGES[String(req.query.range)] || 30;
+  const from = aestMidnightUtc(days - 1);
+  const to = aestMidnightUtc(-1);
+
+  // Group in SQL first so a few hundred distinct agents are parsed, not every row.
+  const rows = safe(() => db.prepare(`
+    SELECT user_agent AS ua, display_mode AS mode, COUNT(DISTINCT visitor_id) AS visitors, COUNT(*) AS views
+    FROM page_views WHERE created_at >= ? AND created_at < ?
+    GROUP BY user_agent, display_mode
+  `).all(from, to), []);
+
+  const tally = (map, key, r) => {
+    if (!map[key]) map[key] = { visitors: 0, views: 0 };
+    map[key].visitors += r.visitors; map[key].views += r.views;
+  };
+  const devices = {}, oses = {}, browsers = {}, combos = {}, modes = {};
+  let installedVisitors = 0, browserVisitors = 0, unknownVisitors = 0;
+
+  rows.forEach(r => {
+    const { os, browser, device } = parseUA(r.ua);
+    tally(devices, device, r);
+    tally(oses, os, r);
+    tally(browsers, browser, r);
+    tally(combos, `${os} · ${browser}`, r);
+    const mode = r.mode || 'not recorded';
+    tally(modes, mode, r);
+    if (r.mode === 'standalone') installedVisitors += r.visitors;
+    else if (r.mode === 'browser') browserVisitors += r.visitors;
+    else unknownVisitors += r.visitors;
+  });
+
+  const sorted = (m) => Object.entries(m)
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.visitors - a.visitors);
+
+  // Installed share is only meaningful over rows that actually reported a mode.
+  const recorded = installedVisitors + browserVisitors;
+  res.json({
+    range: { days, from, to },
+    devices: sorted(devices),
+    os: sorted(oses),
+    browsers: sorted(browsers),
+    combos: sorted(combos).slice(0, 15),
+    install: {
+      standalone: installedVisitors,
+      browser: browserVisitors,
+      notRecorded: unknownVisitors,
+      recorded,
+      standalonePct: recorded ? Math.round((installedVisitors / recorded) * 100) : null,
+    },
+    trackingNote: 'Home-screen vs browser has only been recorded since 3 Sep 2026; earlier visits show as not recorded.',
+  });
+});
+
+// ============================================================================
 // Feedback list with filters (Feedback tab)
 // ============================================================================
 router.get('/feedback', requireAdmin, (req, res) => {

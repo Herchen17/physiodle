@@ -199,6 +199,14 @@ db.exec(`
   );
 `);
 
+// 2026-09-03: how the page was opened — 'standalone' (home-screen app) or
+// 'browser'. The user agent cannot tell these apart, so the client reports it.
+// Rows from before this date are NULL and show as "not recorded".
+if (!columnExists('page_views', 'display_mode')) {
+  console.log('[migration] adding page_views.display_mode column');
+  db.exec('ALTER TABLE page_views ADD COLUMN display_mode TEXT');
+}
+
 // 2026-09-03: star rating (1-5) from the feedback form and the Love Physiodle card.
 if (!columnExists('feedback', 'stars')) {
   console.log('[migration] adding feedback.stars column');
