@@ -1390,14 +1390,9 @@
         display: none; /* hide on very small — shown below logo instead */
       }
 
-      /* Five buttons plus the wordmark do not fit 375px. The icon alone still
-         identifies the app, and a long username is capped rather than pushing
-         the row wider. */
-      .logo-text { display: none; }
+      /* A long username is capped rather than pushing the button row wider. */
       #accountBtn { max-width: 4.5rem; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1.6; }
-      /* The streak is the one thing that must never be clipped by the button row. */
-      .header-left { flex: 0 0 auto; }
-      .streak-pill { flex: 0 0 auto; margin-left: 0.35rem; }
+      .header-left { flex: 0 1 auto; min-width: 0; }
 
       .header-right {
         gap: 0.25rem;
@@ -1554,12 +1549,16 @@
       .logo-text {
         font-size: 1rem;
       }
+      /* Below ~360px the wordmark and the first button start to touch. */
+      .header-top { gap: 0.4rem; }
 
       .header-btn {
         font-size: 0.6rem;
         padding: 0.2rem 0.3rem;
         min-height: 26px;
       }
+      .logo-text { font-size: 0.9rem; }
+      .logo-icon-img { width: 24px; height: 24px; }
     }
 
     /* ANIMATIONS */
@@ -1779,7 +1778,7 @@
       display: inline-flex; align-items: center; gap: 0.2rem;
       font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; color: #b45309;
       background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 999px; padding: 0.15rem 0.55rem 0.15rem 0.4rem;
-      cursor: pointer; margin-left: 0.5rem; line-height: 1.2;
+      cursor: pointer; line-height: 1.2; flex: 0 0 auto;
     }
     .streak-pill:hover { background: #fef3c7; }
     .streak-flame { display: inline-block; font-size: 0.9rem; transform-origin: 50% 90%; }
@@ -1896,21 +1895,14 @@
     .email-prompt { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.5rem; padding: 0.8rem 0.9rem; margin-bottom: 1rem; }
     .email-prompt-title { font-size: 0.85rem; font-weight: 700; color: #92400e; margin-bottom: 0.2rem; }
     .email-prompt-text { font-size: 0.75rem; color: #78350f; line-height: 1.45; margin-bottom: 0.5rem; }
-    /* "More" opens extra rows of the same pills inside the header, so nothing
-       introduces a second visual language. */
-    .caret {
-      display: inline-block; width: 0; height: 0; margin-left: 0.3rem;
-      border-left: 3.5px solid transparent; border-right: 3.5px solid transparent;
-      border-top: 4px solid currentColor; transition: transform 0.2s;
+    /* Second header row: streak on the left, actions right-aligned under row one. */
+    .header-row2 {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+      margin-top: 0.4rem;
     }
-    #moreBtn[aria-expanded="true"] .caret { transform: rotate(180deg); }
-    #moreBtn[aria-expanded="true"] { background: #0d9488; color: white; }
-    .header-expand {
-      display: none; flex-wrap: wrap; justify-content: flex-end; gap: 0.35rem;
-      padding-top: 0.5rem; margin-top: 0.5rem; border-top: 1px solid #d1fae5;
-    }
-    .header-expand.show { display: flex; }
-    .header-expand .header-btn { text-decoration: none; gap: 0.3rem; }
+    .header-row2-right { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
+    .header-row2 .header-btn { gap: 0.3rem; }
+    .header-row2 .app-icon { width: 14px; height: 14px; }
 
     /* Star rating */
     .stars { display: flex; gap: 0.15rem; justify-content: center; }
@@ -1976,26 +1968,22 @@
         <img class="logo-icon logo-icon-img" src="/favicon-96.png" alt="" width="28" height="28">
         <span class="logo-text">Physiodle</span>
         <span class="day-indicator" id="dayIndicator"></span>
-        <button class="streak-pill" id="streakPill" title="Current streak" style="display:none;" aria-label="Current streak">
-          <span class="streak-flame" aria-hidden="true">&#128293;</span><span id="streakCount">0</span>
-        </button>
       </div>
       <div class="header-right">
         <button class="header-btn" id="leaderboardBtn">Leaderboard</button>
+        <button class="header-btn" id="archiveBtn">Archive</button>
         <button class="header-btn" id="accountBtn">Account</button>
-        <button class="header-btn" id="moreBtn" aria-expanded="false" aria-controls="headerExpand">More <span class="caret" aria-hidden="true"></span></button>
       </div>
     </div>
-    <!-- "More" opens further rows of the same pills rather than a separate menu -->
-    <div class="header-expand" id="headerExpand">
-      <button class="header-btn" id="archiveBtn">Archive</button>
-      <button class="header-btn" id="friendsBtn">Friends</button>
-      <button class="header-btn" id="headerInstallBtn"><img class="app-icon" src="/favicon-32.png" alt="" width="14" height="14"><span id="moreInstallLabel">Add to home screen</span></button>
-      <button class="header-btn" data-menu="love">Love Physiodle?</button>
-      <button class="header-btn" data-menu="feedback">Leave feedback</button>
-      <a class="header-btn" href="/faq.html">How it works</a>
-      <a class="header-btn" href="/terms.html">Terms</a>
-      <a class="header-btn" href="/privacy.html">Privacy</a>
+    <!-- Second row: streak on the left, the rest right-aligned with row one -->
+    <div class="header-row2">
+      <button class="streak-pill" id="streakPill" title="Current streak" style="display:none;" aria-label="Current streak">
+        <span class="streak-flame" aria-hidden="true">&#128293;</span><span id="streakCount">0</span>
+      </button>
+      <div class="header-row2-right">
+        <button class="header-btn" id="friendsBtn">Friends</button>
+        <button class="header-btn" id="headerInstallBtn"><img class="app-icon" src="/favicon-32.png" alt="" width="14" height="14"><span id="moreInstallLabel">Daily reminder</span></button>
+      </div>
     </div>
   </header>
 
@@ -5765,28 +5753,6 @@
       } catch (e) { /* a rating is not worth interrupting anyone for */ }
     }
 
-    // ---- "More": extra rows of pills in the header ----
-    const moreBtn = document.getElementById('moreBtn');
-    const headerExpand = document.getElementById('headerExpand');
-    function closeMore() { headerExpand.classList.remove('show'); moreBtn.setAttribute('aria-expanded', 'false'); }
-    moreBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const open = !headerExpand.classList.contains('show');
-      document.getElementById('moreInstallLabel').textContent = isStandalone() ? 'Daily reminder' : 'Add to home screen';
-      headerExpand.classList.toggle('show', open);
-      moreBtn.setAttribute('aria-expanded', String(open));
-    });
-    document.addEventListener('click', (e) => { if (!headerExpand.contains(e.target) && e.target !== moreBtn) closeMore(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMore(); });
-    headerExpand.addEventListener('click', (e) => {
-      const item = e.target.closest('[data-menu]');
-      closeMore(); // any choice collapses the row again
-      if (!item) return; // Archive/Friends/install keep their own handlers; links navigate
-      const what = item.getAttribute('data-menu');
-      if (what === 'love') openLoveModal();
-      else if (what === 'feedback') openFeedbackForm(null);
-    });
-
     // ---- Love Physiodle ----
     let loveStarWidget = null;
     function openLoveModal() {
@@ -6018,7 +5984,6 @@
     if (isStandalone()) {
       document.body.classList.add('standalone');
       // Already installed: the install links become reminder links.
-      const h = document.getElementById('moreInstallLabel'); if (h) h.textContent = 'Daily reminder';
       const r = document.getElementById('resultInstallBtn'); if (r) r.querySelector('span').textContent = 'Set a daily reminder';
       const a = document.getElementById('accountInstallBtn'); if (a) a.querySelector('span').textContent = 'Daily reminder';
     }
