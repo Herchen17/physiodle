@@ -184,13 +184,16 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve static frontend
-// Static assets: long cache for images/fonts/css; never cache the HTML shell,
-// the service worker or the manifest, so a deploy is picked up on next load.
+// Static assets. Images and fonts are content-stable and get a long cache.
+// CSS and JS must NOT: they are shared across pages (header.css, site-header.js)
+// and a stale copy would leave a deployed change invisible for days. They use
+// no-cache with an ETag instead, so the browser revalidates and usually gets a
+// cheap 304. Same for the HTML shell, service worker and manifest.
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '7d',
   etag: true,
   setHeaders: (res, filePath) => {
-    if (/\.(html)$|sw\.js$|manifest\.webmanifest$/.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
+    if (/\.(html|css|js|webmanifest)$/.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
   },
 }));
 

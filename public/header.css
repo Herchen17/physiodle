@@ -1,0 +1,130 @@
+/* Physiodle site header.
+   The single source of truth for the top bar, shared by the game (index.html)
+   and every static page (faq, terms, privacy) via site-header.js. Editing the
+   header here changes it everywhere; do not copy these rules back into a page. */
+
+header {
+  background: white;
+  border-bottom: 2px solid #d1fae5;
+  padding: 0.5rem max(1rem, env(safe-area-inset-left)) 0.5rem max(1rem, env(safe-area-inset-right));
+  /* When added to the iOS home screen the status bar is translucent and the
+     Dynamic Island / notch overlaps the top of the page. Push the header
+     (and its buttons) below it. */
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* The logo is a link back to today's puzzle on every page. */
+a.header-left { text-decoration: none; }
+
+.logo-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.logo-icon-img { width: 28px; height: 28px; border-radius: 7px; display: inline-block; vertical-align: middle; }
+.app-icon { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; flex: 0 0 auto; }
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0d9488;
+  white-space: nowrap;
+}
+
+.day-indicator {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.header-btn {
+  background: #f0fdf4;
+  border: 1.5px solid #0d9488;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  color: #0d9488;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  min-height: 32px;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.header-btn:hover {
+  background: #0d9488;
+  border-color: #0d9488;
+  color: white;
+}
+
+/* Second header row: streak on the left, actions right-aligned under row one. */
+.header-row2 {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.header-row2-right { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
+.header-row2 .header-btn { gap: 0.3rem; }
+.header-row2 .app-icon { width: 14px; height: 14px; }
+
+@media (max-width: 640px) {
+  header {
+    /* shorthand must keep the top inset, or the notch / Dynamic Island
+       overlaps the header when running from the home screen */
+    padding: max(0.4rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) 0.4rem max(0.5rem, env(safe-area-inset-left));
+  }
+  .header-top { gap: 0.25rem; }
+  .header-left { gap: 0.3rem; min-width: 0; flex: 0 1 auto; }
+  .logo-icon { font-size: 1.1rem; }
+  .logo-text { font-size: 1.1rem; }
+  .day-indicator { font-size: 0.65rem; display: none; }
+  /* A long username is capped rather than pushing the button row wider. The
+     ellipsis goes on the inner label so the button keeps its flex centring. */
+  #accountBtn { max-width: 4.5rem; }
+  #accountBtn > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .header-right { gap: 0.2rem; }
+  .header-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.32rem;
+    min-height: 28px;
+    border-width: 1px;
+  }
+}
+
+@media (max-width: 375px) {
+  /* Below ~360px the wordmark and the first button start to touch. */
+  .header-top { gap: 0.4rem; }
+  .header-btn { font-size: 0.6rem; padding: 0.2rem 0.3rem; min-height: 26px; }
+  .logo-text { font-size: 0.9rem; }
+  .logo-icon-img { width: 24px; height: 24px; }
+}
