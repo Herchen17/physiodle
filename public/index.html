@@ -1752,6 +1752,10 @@
       flex: 0 0 1.4rem; height: 1.4rem; border-radius: 50%; background: #0d9488; color: white;
       font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
     }
+    .ios-glyph {
+      width: 0.95em; height: 0.95em; vertical-align: -0.14em; margin-right: 0.15em;
+      fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+    }
     .install-kbd {
       display: inline-block; padding: 0 0.35rem; border: 1px solid #d1d5db; border-bottom-width: 2px;
       border-radius: 0.25rem; font-size: 0.75rem; background: #f9fafb; white-space: nowrap;
@@ -2159,6 +2163,28 @@
       <div class="milestone-title" id="milestoneTitle"></div>
       <div class="milestone-sub" id="milestoneSub"></div>
       <button class="btn btn-primary" id="milestoneCloseBtn">Keep it going</button>
+    </div>
+  </div>
+
+  <!-- FIRST LAUNCH FROM THE HOME SCREEN: offer the daily reminder -->
+  <div class="modal-overlay" id="reminderInviteModal">
+    <div class="modal" style="max-width: 380px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Want a daily nudge?</h2>
+        <button class="modal-close" onclick="dismissReminderInvite()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: #374151; line-height: 1.55;">
+          Physiodle is on your home screen now. Turn on <strong>Surprise me</strong> and you'll get one notification a day
+          at a time nobody knows in advance, the same moment for everyone, somewhere between 7am and 9:30pm.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:0.45rem; margin-top:0.9rem;">
+          <button class="btn btn-primary btn-full" id="inviteSurpriseBtn">Turn on Surprise me</button>
+          <button class="btn btn-secondary btn-full" id="invitePickTimeBtn">Pick my own time</button>
+          <button class="btn-link" id="inviteNoBtn" style="font-size:0.8rem; color:#6b7280; margin-top:0.2rem;">Not now</button>
+        </div>
+        <div class="install-note" id="inviteStatus" style="margin-top:0.5rem;"></div>
+      </div>
     </div>
   </div>
 
@@ -5046,6 +5072,7 @@
       await initGame();
       checkFeedbackState();
       refreshStreak(false);
+      maybeOfferReminder();
       if (gameState.userToken && gameState.username) myReferralCode = gameState.username.toLowerCase();
 
       // After login, try to submit any completion done while logged out
@@ -5912,17 +5939,22 @@
       return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
     }
 
+    // Apple's own glyphs, drawn inline so they match the buttons people are
+    // actually looking for on the screen.
+    const ICON_SHARE = '<svg class="ios-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5"/><path d="M8.2 7.1 12 3.3l3.8 3.8"/><path d="M5.5 11.5v7a2.2 2.2 0 0 0 2.2 2.2h8.6a2.2 2.2 0 0 0 2.2-2.2v-7"/></svg>';
+    const ICON_ADD_HOME = '<svg class="ios-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="4.4"/><path d="M12 8.2v7.6M8.2 12h7.6"/></svg>';
+
     const INSTALL_GUIDES = {
       ios: {
         safari: [
           'Open <strong>physiodle.up.railway.app</strong> in <strong>Safari</strong>.',
-          'Tap the <span class="install-kbd">Share</span> button (the square with an arrow, bottom of the screen).',
-          'Scroll down and tap <span class="install-kbd">Add to Home Screen</span>',
+          'Tap the <span class="install-kbd">' + ICON_SHARE + ' Share</span> button at the bottom of the screen.',
+          '<strong>Scroll down</strong> the share sheet, past Copy and Add to Bookmarks, until you see <span class="install-kbd">' + ICON_ADD_HOME + ' Add to Home Screen</span>. Tap it.',
           'Tap <span class="install-kbd">Add</span>. The bone icon appears on your home screen.',
         ],
         other: [
-          'Tap the <span class="install-kbd">Share</span> icon in the address bar (Chrome, Edge and Firefox on iPhone all have one).',
-          'Tap <span class="install-kbd">Add to Home Screen</span>, then <span class="install-kbd">Add</span>',
+          'Tap the <span class="install-kbd">' + ICON_SHARE + ' Share</span> icon in the address bar (Chrome, Edge and Firefox on iPhone all have one).',
+          '<strong>Scroll down</strong> and tap <span class="install-kbd">' + ICON_ADD_HOME + ' Add to Home Screen</span>, then <span class="install-kbd">Add</span>',
           'If you don\'t see that option, open this page in <strong>Safari</strong> and use Share there.',
         ],
         note: 'Opens full-screen like an app, remembers your login, and keeps your streak in one tap.',
@@ -6102,6 +6134,10 @@
             document.getElementById('reminderSurpriseBtn').classList.toggle('active', isSurprise);
             document.getElementById('reminderSurpriseBtn').textContent = isSurprise ? 'Surprise me is on' : 'Surprise me';
             onBtn.textContent = isSurprise ? 'Use a set time' : 'Update time';
+            // Already subscribed: the set-time button leads again.
+            onBtn.classList.remove('btn-secondary'); onBtn.classList.add('btn-primary');
+            document.getElementById('reminderSurpriseBtn').classList.remove('btn-primary');
+            document.getElementById('reminderSurpriseBtn').classList.add('btn-secondary');
             offBtn.style.display = '';
             document.getElementById('reminderTestBtn').style.display = '';
             status.style.color = '';
@@ -6115,6 +6151,10 @@
       onBtn.textContent = 'Turn on reminders';
       offBtn.style.display = 'none';
       document.getElementById('reminderTestBtn').style.display = 'none';
+      // Not subscribed yet: lead with Surprise me.
+      const sBtn = document.getElementById('reminderSurpriseBtn');
+      sBtn.classList.remove('btn-secondary'); sBtn.classList.add('btn-primary');
+      onBtn.classList.remove('btn-primary'); onBtn.classList.add('btn-secondary');
     }
 
     function formatHour(h) {
@@ -6210,6 +6250,38 @@
       } catch (e) { /* ignore */ }
       await updateReminderUI();
     }
+
+    // A browser will not grant notification permission without a tap, so the
+    // closest thing to "on by default" is to ask once, on the first launch from
+    // the home-screen icon, with a single tap to accept.
+    const REMINDER_ASKED_KEY = 'physiodle_reminder_asked';
+    function dismissReminderInvite() {
+      try { localStorage.setItem(REMINDER_ASKED_KEY, '1'); } catch (e) { /* ignore */ }
+      document.getElementById('reminderInviteModal').classList.remove('show');
+    }
+    async function maybeOfferReminder() {
+      if (!isStandalone() || !pushSupported()) return;
+      try { if (localStorage.getItem(REMINDER_ASKED_KEY)) return; } catch (e) { return; }
+      if (Notification.permission !== 'default') { try { localStorage.setItem(REMINDER_ASKED_KEY, '1'); } catch (e) {} return; }
+      if (await getPushSubscription()) return; // already set up on this device
+      setTimeout(() => showModal('reminderInviteModal'), 2500);
+    }
+    document.getElementById('inviteNoBtn').addEventListener('click', dismissReminderInvite);
+    document.getElementById('invitePickTimeBtn').addEventListener('click', () => {
+      dismissReminderInvite();
+      openInstallModal();
+    });
+    document.getElementById('inviteSurpriseBtn').addEventListener('click', async (e) => {
+      const btn = e.target, status = document.getElementById('inviteStatus');
+      btn.disabled = true; btn.textContent = 'Turning on...';
+      try { localStorage.setItem(REMINDER_ASKED_KEY, '1'); } catch (e2) { /* ignore */ }
+      await enableReminder(-1);
+      // enableReminder writes the outcome into the reminder panel; mirror it here.
+      const msg = document.getElementById('reminderStatus').textContent;
+      status.textContent = msg || '';
+      btn.disabled = false; btn.textContent = 'Turn on Surprise me';
+      if (/on\./.test(msg) || /on\b/.test(msg)) setTimeout(() => document.getElementById('reminderInviteModal').classList.remove('show'), 1800);
+    });
 
     document.getElementById('reminderOnBtn').addEventListener('click', () => enableReminder());
     document.getElementById('reminderSurpriseBtn').addEventListener('click', () => enableReminder(-1));
