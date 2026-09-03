@@ -238,6 +238,10 @@ th[data-key] { cursor: pointer; white-space: nowrap; }
     <div class="chart-card"><div class="chart-title">Browser</div><div class="bars" id="browserKinds"></div></div>
     <div class="chart-card"><div class="chart-title">Most common combinations</div><div class="scroll"><table id="deviceCombos"></table></div></div>
   </div>
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-title">Adoption &middot; all registered players</div><div class="kv" id="adoption"></div></div>
+    <div class="chart-card"><div class="chart-title">How they find Physiodle</div><div class="kv" id="acquisition"></div></div>
+  </div>
 
   <div class="col-2">
     <div><div class="section-header"><span class="section-title">Top Players (by points)</span></div><div class="table-card" id="topPlayersTable"></div></div>
@@ -618,7 +622,31 @@ async function loadDevices() {
   bars('osKinds', d.os);
   bars('browserKinds', d.browsers);
 
-  const total = d.combos.reduce((a, r) => a + r.visitors, 0) || 1;
+  const a = d.adoption, q = d.acquisition;
+  const share = (n, of) => of ? ' <span class="muted">(' + Math.round(100 * n / of) + '%)</span>' : '';
+  document.getElementById('adoption').innerHTML = [
+    ['Registered players', fmtN(a.users)],
+    ['Added to home screen', fmtN(a.installed) + share(a.installed, a.users)],
+    ['Notifications on', fmtN(a.notificationsOn) + share(a.notificationsOn, a.users)],
+    ['&nbsp;&nbsp;devices subscribed', fmtN(a.pushDevices)],
+    ['&nbsp;&nbsp;on Surprise me', fmtN(a.surprise)],
+    ['&nbsp;&nbsp;on a set time', fmtN(a.setTime)],
+    ['Has an email', fmtN(a.withEmail) + share(a.withEmail, a.users)],
+    ['Email confirmed', fmtN(a.emailConfirmed) + share(a.emailConfirmed, a.users)],
+  ].map(([k, v]) => '<div>' + k + '</div><div class="num">' + v + '</div>').join('');
+
+  document.getElementById('acquisition').innerHTML = [
+    ['Sign-ups in this period', fmtN(q.signupsInRange)],
+    ['&nbsp;&nbsp;via a share link', fmtN(q.referredInRange) + share(q.referredInRange, q.signupsInRange)],
+    ['Referred players, all time', fmtN(q.referred)],
+    ['Arrived in an in-app browser', fmtN(q.inAppVisitors.reduce((x, r) => x + r.visitors, 0))],
+  ].map(([k, v]) => '<div>' + k + '</div><div class="num">' + v + '</div>').join('')
+    + (q.topReferrers.length ? '<div class="muted" style="grid-column:1/-1;margin-top:0.4rem">Top referrers</div>' +
+        q.topReferrers.map(r => '<div>&nbsp;&nbsp;' + esc(r.username) + '</div><div class="num">' + fmtN(r.c) + '</div>').join('') : '')
+    + (q.inAppVisitors.length ? '<div class="muted" style="grid-column:1/-1;margin-top:0.4rem">In-app browsers (cannot install)</div>' +
+        q.inAppVisitors.map(r => '<div>&nbsp;&nbsp;' + esc(r.name.replace(' in-app', '')) + '</div><div class="num">' + fmtN(r.visitors) + '</div>').join('') : '');
+
+  const total = d.combos.reduce((a2, r) => a2 + r.visitors, 0) || 1;
   document.getElementById('deviceCombos').innerHTML =
     '<thead><tr><th>Operating system and browser</th><th class="num">Visitors</th><th class="num">Share</th></tr></thead><tbody>' +
     d.combos.map(r => '<tr><td>' + esc(r.name) + '</td><td class="num">' + fmtN(r.visitors) + '</td><td class="num">' + Math.round(100 * r.visitors / total) + '%</td></tr>').join('') +
@@ -773,12 +801,14 @@ async function openUser(id) {
       <div>Email updates</div><div>${u.consent ? '<span class="pill ok">ticked</span>' : '<span class="pill">not ticked</span>'}${u.consentAt ? ' <span class="muted">' + fmtDate(u.consentAt) + '</span>' : ''}</div>
       <div>Level</div><div>${esc((u.level || '').replace(/_/g, ' ')) || '<span class="muted">unset</span>'}</div>
       <div>Terms version</div><div>${u.termsVersion || '<span class="muted">pre-terms</span>'}</div>
-      <div>Reminder subscriptions</div><div>${d.pushSubscriptions}</div>
+      <div>Home screen</div><div>${d.everInstalled ? '<span class="pill ok">installed</span>' : '<span class="pill">browser only</span>'}</div>
+      <div>Reminders</div><div>${d.reminders.length ? d.reminders.map(r => '<span class="pill ok">' + (r.hour === -1 ? 'Surprise me' : r.hour + ':00') + '</span>').join(' ') : '<span class="pill">off</span>'}</div>
       <div>Referral link</div><div>?ref=${esc(u.referralCode || '')} &middot; ${d.referrals.length} joined</div>
     </div></div>
     <div class="section"><h4>Play</h4><div class="kv"><div>Games</div><div>${fmtN(t.games)}</div><div>Wins</div><div>${fmtN(t.wins)}</div><div>Points</div><div>${fmtN(t.points)}</div><div>Friends</div><div>${d.friends.length}</div></div>
       <div class="result-grid" style="margin-top:0.5rem">${d.results.map(r => `<div class="rcell ${r.won ? 'w' : 'l'}" title="Day ${r.day}: ${r.won ? 'solved on guess ' + r.score : 'missed'}">${r.day % 100}</div>`).join('')}</div>
       <div class="note">Last 60 days played, newest first. Green = solved.</div></div>
+    ${d.playsOn && d.playsOn.length ? '<div class="section"><h4>Plays on</h4><div class="kv">' + d.playsOn.map(p => '<div>' + esc(p.name) + '</div><div class="num">' + fmtN(p.views) + ' views</div>').join('') + '</div><div class="note">Most recently used first. "home screen" means opened from the installed icon.</div></div>' : ''}
     ${d.feedback.length ? '<div class="section"><h4>Feedback</h4>' + d.feedback.map(f => `<div class="fb-row"><div class="who">Day ${f.day_number}<br>${fmtDate(f.created_at)}</div><div class="body">${f.category ? '<span class="tag">' + esc(f.category.replace(/_/g, ' ')) + '</span>' : ''}${f.issue_type ? '<span class="tag warn">' + esc(f.issue_type.replace(/_/g, ' ')) + '</span>' : ''}${esc(f.comment || '')}</div></div>`).join('') + '</div>' : ''}
     <div class="section"><h4>Actions</h4><div class="toolbar">
       ${u.email && !u.emailConfirmed ? `<button class="btn ghost btn-sm" onclick="userAction(${u.id}, 'resend')">Resend confirmation</button>` : ''}

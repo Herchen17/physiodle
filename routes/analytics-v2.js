@@ -321,8 +321,36 @@ router.get('/devices', requireAdmin, (req, res) => {
 
   // Installed share is only meaningful over rows that actually reported a mode.
   const recorded = installedVisitors + browserVisitors;
+  const one = (sql, ...a) => safe(() => db.prepare(sql).get(...a).c, 0);
+  const totalUsers = one('SELECT COUNT(*) AS c FROM users');
+  const adoption = {
+    users: totalUsers,
+    installed: one("SELECT COUNT(DISTINCT user_id) AS c FROM page_views WHERE display_mode = 'standalone' AND user_id IS NOT NULL"),
+    notificationsOn: one('SELECT COUNT(DISTINCT user_id) AS c FROM push_subscriptions WHERE user_id IS NOT NULL'),
+    pushDevices: one('SELECT COUNT(*) AS c FROM push_subscriptions'),
+    surprise: one('SELECT COUNT(*) AS c FROM push_subscriptions WHERE hour_local = -1'),
+    setTime: one('SELECT COUNT(*) AS c FROM push_subscriptions WHERE hour_local >= 0'),
+    withEmail: one('SELECT COUNT(*) AS c FROM users WHERE email IS NOT NULL'),
+    emailConfirmed: one('SELECT COUNT(*) AS c FROM users WHERE email_confirmed_at IS NOT NULL'),
+  };
+
+  // Where players come from. Referrals are exact; the rest is inferred from the
+  // browser they arrived in, which is all we have without a referrer header.
+  const acquisition = {
+    referred: one('SELECT COUNT(*) AS c FROM users WHERE referred_by IS NOT NULL'),
+    referredInRange: one('SELECT COUNT(*) AS c FROM users WHERE referred_by IS NOT NULL AND created_at >= ? AND created_at < ?', from, to),
+    signupsInRange: one('SELECT COUNT(*) AS c FROM users WHERE created_at >= ? AND created_at < ?', from, to),
+    topReferrers: safe(() => db.prepare(`
+      SELECT r.username, COUNT(*) AS c FROM users u JOIN users r ON u.referred_by = r.id
+      GROUP BY r.id ORDER BY c DESC LIMIT 10
+    `).all(), []),
+    inAppVisitors: sorted(browsers).filter(b => /in-app/.test(b.name)),
+  };
+
   res.json({
     range: { days, from, to },
+    adoption,
+    acquisition,
     devices: sorted(devices),
     os: sorted(oses),
     browsers: sorted(browsers),
@@ -392,11 +420,30 @@ router.get('/users/:id', requireAdmin, (req, res) => {
   const feedback = safe(() => db.prepare('SELECT day_number, comment, category, issue_type, created_at FROM feedback WHERE user_id = ? ORDER BY created_at DESC LIMIT 20').all(id), []);
   const referrals = safe(() => db.prepare('SELECT id, username, created_at FROM users WHERE referred_by = ? ORDER BY created_at DESC').all(id), []);
   const referrer = u.referred_by ? safe(() => db.prepare('SELECT id, username FROM users WHERE id = ?').get(u.referred_by), null) : null;
-  const push = safe(() => db.prepare('SELECT COUNT(*) AS c FROM push_subscriptions WHERE user_id = ?').get(id).c, 0);
+  const pushRows = safe(() => db.prepare('SELECT hour_local, tz, platform, last_sent_day, failures, created_at FROM push_subscriptions WHERE user_id = ?').all(id), []);
+  const push = pushRows.length;
+  // What this person actually plays on, newest first.
+  const uaRows = safe(() => db.prepare(`
+    SELECT user_agent AS ua, display_mode AS mode, COUNT(*) AS views, MAX(created_at) AS last
+    FROM page_views WHERE user_id = ? GROUP BY user_agent, display_mode ORDER BY last DESC LIMIT 20
+  `).all(id), []);
+  const seen = {};
+  uaRows.forEach(r => {
+    const { os, browser, device } = parseUA(r.ua);
+    const key = `${device} · ${os} · ${browser}` + (r.mode === 'standalone' ? ' · home screen' : '');
+    if (!seen[key]) seen[key] = { name: key, views: 0, last: r.last, standalone: r.mode === 'standalone' };
+    seen[key].views += r.views;
+    if (r.last > seen[key].last) seen[key].last = r.last;
+  });
+  const playsOn = Object.values(seen).sort((a, b) => (a.last < b.last ? 1 : -1));
+  const everInstalled = uaRows.some(r => r.mode === 'standalone');
   const totals = safe(() => db.prepare('SELECT COUNT(*) AS games, SUM(won) AS wins, SUM(CASE WHEN won = 1 THEN 6 - score ELSE 0 END) AS points FROM game_results WHERE user_id = ?').get(id), {});
   res.json({
     user: { id: u.id, username: u.username, email: u.email, createdAt: u.created_at, level: u.profession_level, consent: !!u.marketing_consent, consentAt: u.consent_updated_at, termsVersion: u.terms_version, emailConfirmed: !!u.email_confirmed_at, emailConfirmedAt: u.email_confirmed_at, referralCode: u.referral_code },
-    totals, results: results.map(r => ({ day: r.day_number, won: !!r.won, score: r.score, at: r.completed_at })), friends, feedback, referrals, referrer, pushSubscriptions: push,
+    totals, results: results.map(r => ({ day: r.day_number, won: !!r.won, score: r.score, at: r.completed_at })), friends, feedback, referrals, referrer,
+    pushSubscriptions: push,
+    reminders: pushRows.map(r => ({ hour: r.hour_local, tz: r.tz, platform: r.platform, lastSentDay: r.last_sent_day, failures: r.failures })),
+    playsOn, everInstalled,
   });
 });
 
