@@ -1,0 +1,875 @@
+/*
+ * Physiodle Apple-style sandbox.
+ *
+ * Material is reserved for controls that float above content: the app header,
+ * the mobile action dock, the sticky guess control and sheet headers. Clinical
+ * content stays opaque so the visual treatment never competes with reading.
+ */
+
+:root {
+  color-scheme: light dark;
+  --ios-canvas: #f2f7f5;
+  --ios-surface: #ffffff;
+  --ios-surface-2: #f7faf9;
+  --ios-label: #17211f;
+  --ios-secondary: #66736f;
+  --ios-tertiary: #8d9895;
+  --ios-separator: rgba(23, 33, 31, 0.11);
+  --ios-accent: #128c7e;
+  --ios-accent-pressed: #0d756a;
+  --ios-glass: rgba(248, 252, 250, 0.78);
+  --ios-glass-strong: rgba(255, 255, 255, 0.9);
+  --ios-scrim: rgba(10, 18, 16, 0.38);
+  --ios-danger: #d92d3a;
+  --ios-success: #16815f;
+  --ios-control-radius: 14px;
+  --ios-card-radius: 18px;
+  --ios-sheet-radius: 24px;
+  --ios-elevation: 0 12px 32px rgba(23, 54, 47, 0.12);
+}
+
+html {
+  background: var(--ios-canvas);
+}
+
+body {
+  background: var(--ios-canvas);
+  color: var(--ios-label);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body::before,
+body::after {
+  display: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Floating application chrome */
+.app-shell {
+  width: min(calc(100% - 24px), 920px);
+  margin: max(10px, env(safe-area-inset-top)) auto 0;
+  padding: 8px;
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ios-glass);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: var(--ios-card-radius);
+  box-shadow: 0 8px 24px rgba(30, 69, 60, 0.08);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+}
+
+.app-shell-header {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  position: static;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.header-top {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.header-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logo-icon-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.55);
+}
+
+.brand-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.logo-text {
+  color: var(--ios-label);
+  font-size: 1.05rem;
+  font-weight: 720;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.day-indicator {
+  color: var(--ios-secondary);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.header-meta,
+.primary-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.primary-nav {
+  position: static;
+  flex: 0 0 auto;
+}
+
+.header-btn,
+.streak-pill {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--ios-secondary);
+  font-size: 0.78rem;
+  font-weight: 590;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 120ms ease-out, color 120ms ease-out, transform 120ms ease-out;
+}
+
+.header-btn:hover,
+.header-btn:focus-visible,
+.streak-pill:hover,
+.streak-pill:focus-visible {
+  background: rgba(18, 140, 126, 0.09);
+  color: var(--ios-accent);
+}
+
+.header-btn:active,
+.streak-pill:active {
+  transform: scale(0.97);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.streak-pill {
+  color: #a45b0a;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-flame {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.account-rank-badge {
+  margin-left: auto;
+  padding: 0.35rem 0.65rem;
+  text-align: center;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 0.5rem;
+}
+
+.account-rank-label,
+.account-panel-title {
+  color: var(--ios-secondary);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.account-panel {
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+  background: var(--ios-surface-2);
+  border-radius: 0.5rem;
+}
+
+.account-panel-title {
+  margin-bottom: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.account-profile-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--ios-label);
+  font-size: 0.8rem;
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .app-shell {
+    flex-wrap: wrap;
+  }
+
+  .app-shell-header,
+  .primary-nav {
+    flex: 1 0 100%;
+  }
+
+  .primary-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: 4px;
+    border-top: 1px solid var(--ios-separator);
+  }
+}
+
+/* Main reading hierarchy */
+.container {
+  max-width: 720px;
+  padding: 24px 16px 40px;
+}
+
+.puzzle-prompt {
+  margin: 0 0 12px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--ios-secondary);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.puzzle-prompt-alt {
+  color: var(--ios-secondary);
+}
+
+.guess-section {
+  top: calc(72px + env(safe-area-inset-top, 0px));
+  margin: 0 0 16px;
+  padding: 8px;
+  background: var(--ios-glass-strong);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: var(--ios-card-radius);
+  box-shadow: 0 8px 24px rgba(30, 69, 60, 0.08);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+}
+
+.guess-row {
+  gap: 8px;
+}
+
+.guess-input,
+.form-input,
+.fb-textarea,
+.reminder-row select {
+  background: var(--ios-surface);
+  color: var(--ios-label);
+  border: 1px solid var(--ios-separator);
+  border-radius: var(--ios-control-radius);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.42);
+}
+
+.guess-input {
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.guess-input::placeholder,
+.form-input::placeholder,
+.fb-textarea::placeholder {
+  color: var(--ios-tertiary);
+}
+
+.guess-input:focus,
+.form-input:focus,
+.fb-textarea:focus,
+.reminder-row select:focus {
+  border-color: var(--ios-accent);
+  box-shadow: 0 0 0 3px rgba(18, 140, 126, 0.13);
+}
+
+.btn {
+  border-radius: var(--ios-control-radius);
+  min-height: 44px;
+  font-weight: 650;
+  transition: background-color 120ms ease-out, color 120ms ease-out, transform 120ms ease-out;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--ios-accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--ios-accent-pressed);
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-secondary {
+  background: var(--ios-surface-2);
+  color: var(--ios-label);
+  border: 1px solid var(--ios-separator);
+}
+
+.btn-ghost {
+  color: var(--ios-accent);
+  border-color: var(--ios-separator);
+}
+
+.btn-link,
+.autocomplete-item strong {
+  color: var(--ios-accent);
+}
+
+.card,
+.card.clue-card.revealed {
+  background: var(--ios-surface);
+  border: 1px solid var(--ios-separator);
+  border-radius: var(--ios-card-radius);
+  box-shadow: none;
+}
+
+.card.clue-card {
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.card.clue-card.blurred {
+  background: var(--ios-surface-2);
+  border-color: transparent;
+}
+
+.clue-label {
+  margin-bottom: 6px;
+  color: var(--ios-accent);
+  font-size: 0.66rem;
+  font-weight: 720;
+  letter-spacing: 0.07em;
+}
+
+.clue-text {
+  color: var(--ios-label);
+  font-size: 0.96rem;
+  line-height: 1.52;
+}
+
+.autocomplete-dropdown {
+  top: calc(100% + 6px);
+  background: var(--ios-surface);
+  border: 1px solid var(--ios-separator);
+  border-radius: var(--ios-control-radius);
+  box-shadow: var(--ios-elevation);
+  overflow: hidden auto;
+}
+
+.autocomplete-item {
+  min-height: 44px;
+  border-color: var(--ios-separator);
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background: rgba(18, 140, 126, 0.09);
+  color: var(--ios-accent);
+}
+
+.answer-summary,
+.account-stat-card,
+.auth-card,
+.feedback-form {
+  background: var(--ios-surface);
+  color: var(--ios-label);
+  border-color: var(--ios-separator);
+  border-radius: var(--ios-card-radius);
+}
+
+.answer-summary {
+  background: #eff9f5;
+}
+
+.answer-summary.lost {
+  background: #fff2f2;
+}
+
+.account-stat-value,
+.account-perf-value,
+.auth-title,
+.modal-title,
+.result-title,
+.result-answer {
+  color: var(--ios-label);
+}
+
+.account-stat-label,
+.account-perf-label,
+.auth-subtitle,
+.form-hint,
+.install-note,
+.love-note,
+.star-caption {
+  color: var(--ios-secondary);
+}
+
+/* Sheets and overlays */
+.modal-overlay,
+.result-overlay {
+  background: var(--ios-scrim);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.modal,
+.result-area {
+  background: var(--ios-surface);
+  color: var(--ios-label);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--ios-sheet-radius);
+  box-shadow: var(--ios-elevation);
+}
+
+.modal-header {
+  padding: 18px 20px 14px;
+  background: var(--ios-glass-strong);
+  border-color: var(--ios-separator);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-close,
+.result-close {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  color: var(--ios-secondary);
+  background: var(--ios-surface-2);
+}
+
+.modal-tabs {
+  border-color: var(--ios-separator);
+}
+
+.modal-tab {
+  color: var(--ios-secondary);
+}
+
+.modal-tab.active {
+  color: var(--ios-accent);
+  border-bottom-color: var(--ios-accent);
+}
+
+.result-explanation,
+.answer-summary-explanation {
+  color: var(--ios-label);
+  border-color: var(--ios-separator);
+}
+
+.result-area {
+  animation: ios-dialog-in 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes ios-dialog-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Keep the sibling recommendation clear of the mobile action dock. */
+.sibling-popout {
+  border-color: var(--ios-separator);
+  border-radius: var(--ios-card-radius);
+  box-shadow: var(--ios-elevation);
+}
+
+.feedback-section {
+  padding-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell-header {
+    width: calc(100% - 16px);
+    margin: max(8px, env(safe-area-inset-top)) auto 0;
+    top: max(6px, env(safe-area-inset-top));
+    padding: 6px;
+    position: sticky;
+    z-index: 100;
+    display: flex;
+    background: var(--ios-glass);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    border-radius: var(--ios-card-radius);
+    box-shadow: 0 8px 24px rgba(30, 69, 60, 0.08);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    backdrop-filter: blur(24px) saturate(170%);
+  }
+
+  .app-shell {
+    display: contents;
+  }
+
+  .logo-icon-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+
+  .logo-text {
+    font-size: 1rem;
+  }
+
+  .day-indicator {
+    display: none;
+  }
+
+  .header-meta {
+    gap: 2px;
+  }
+
+  .header-meta .header-btn,
+  .header-meta .streak-pill {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 10px;
+  }
+
+  .header-utility .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .primary-nav {
+    width: min(calc(100% - 24px), 360px);
+    padding: 6px;
+    position: fixed;
+    left: 50%;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 190;
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    background: var(--ios-glass-strong);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    border-radius: var(--ios-sheet-radius);
+    box-shadow: var(--ios-elevation);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    backdrop-filter: blur(26px) saturate(180%);
+  }
+
+  .primary-nav .header-btn {
+    min-width: 44px;
+    min-height: 52px;
+    padding: 4px 2px;
+    flex-direction: column;
+    gap: 3px;
+    border-radius: var(--ios-card-radius);
+    color: var(--ios-secondary);
+    font-size: 0.64rem;
+  }
+
+  .primary-nav .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .container {
+    padding: 18px 12px calc(32px + env(safe-area-inset-bottom));
+  }
+
+  .puzzle-prompt {
+    margin-bottom: 10px;
+    font-size: 0.7rem;
+  }
+
+  .guess-section {
+    top: calc(70px + env(safe-area-inset-top, 0px));
+    margin-bottom: 16px;
+    padding: 7px;
+  }
+
+  .guess-input {
+    min-height: 48px;
+    padding: 0 12px;
+  }
+
+  #submitBtn {
+    min-height: 48px;
+    padding: 0 16px;
+    font-size: 0.9rem;
+  }
+
+  .card.clue-card {
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  .clue-label {
+    font-size: 0.66rem;
+  }
+
+  .clue-text {
+    font-size: 0.96rem;
+    line-height: 1.52;
+  }
+
+  .modal-overlay.show,
+  .result-overlay.show {
+    align-items: flex-end;
+    justify-content: center;
+    padding: max(8px, env(safe-area-inset-top)) 0 max(8px, env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+
+  .modal,
+  .result-area {
+    width: 100%;
+    max-width: none !important;
+    max-height: calc(92vh - env(safe-area-inset-top));
+    margin: 0;
+    border-radius: var(--ios-sheet-radius) var(--ios-sheet-radius) 0 0;
+    border-bottom: 0;
+    overflow-y: auto;
+    animation: ios-sheet-in 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .modal::before,
+  .result-area::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 8px auto 0;
+    border-radius: 99px;
+    background: var(--ios-separator);
+  }
+
+  .modal-header {
+    padding-top: 8px;
+  }
+
+  .result-area {
+    padding: 8px 20px calc(22px + env(safe-area-inset-bottom));
+  }
+
+  #siblingPopout {
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .sibling-popout-dismiss {
+    width: 44px;
+    height: 44px;
+    top: -17px;
+    right: -17px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    isolation: isolate;
+  }
+
+  .sibling-popout-dismiss::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    z-index: -1;
+    background: var(--ios-surface);
+    border: 1px solid var(--ios-separator);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .sibling-popout {
+    max-width: min(280px, calc(100vw - 32px));
+  }
+}
+
+@keyframes ios-sheet-in {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ios-canvas: #111816;
+    --ios-surface: #1c1c1e;
+    --ios-surface-2: #252a29;
+    --ios-label: #f2f2f7;
+    --ios-secondary: #aeb7b4;
+    --ios-tertiary: #7e8985;
+    --ios-separator: rgba(235, 245, 241, 0.14);
+    --ios-accent: #5ac8b7;
+    --ios-accent-pressed: #73d5c5;
+    --ios-glass: rgba(28, 35, 33, 0.78);
+    --ios-glass-strong: rgba(32, 39, 37, 0.9);
+    --ios-scrim: rgba(0, 0, 0, 0.58);
+    --ios-elevation: 0 16px 40px rgba(0, 0, 0, 0.34);
+  }
+
+  .card,
+  .card.clue-card.revealed,
+  .modal,
+  .result-area,
+  .account-stat-card,
+  .auth-card,
+  .feedback-form {
+    background: #1c1c1e;
+  }
+
+  .account-rank-badge,
+  .account-panel,
+  .account-section,
+  .account-section .account-stat-card {
+    background: var(--ios-surface-2);
+    border-color: var(--ios-separator);
+  }
+
+  .account-stat-value,
+  .account-profile-label,
+  .account-select {
+    color: var(--ios-label);
+  }
+
+  .account-rank-label,
+  .account-panel-title,
+  .account-section-title,
+  .account-stat-label,
+  .account-stat-note,
+  #accountJoined,
+  #accountEmailLine {
+    color: var(--ios-secondary) !important;
+  }
+
+  .account-select,
+  .form-input {
+    background: var(--ios-surface);
+    border-color: var(--ios-separator);
+  }
+
+  .clue-text,
+  .result-explanation,
+  .answer-summary-explanation,
+  .love-lead,
+  .modal-body p {
+    color: #f2f2f7;
+  }
+
+  #loginPromptOverlay p,
+  #loginPromptSkip,
+  #loginPromptOverlay a {
+    color: var(--ios-secondary) !important;
+  }
+
+  .card.clue-card.blurred {
+    background: #252a29;
+  }
+
+  .answer-summary {
+    background: #172721;
+  }
+
+  .answer-summary.lost {
+    background: #2b1d1e;
+  }
+
+  .guess-input.disabled {
+    background: #252a29;
+  }
+
+  .guess-item {
+    background: #3a2023;
+    color: #ffb3b8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .modal,
+  .result-area {
+    animation-name: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-shell-header,
+  .app-shell,
+  .primary-nav,
+  .guess-section,
+  .modal-header {
+    background: var(--ios-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-shell-header,
+  .app-shell,
+  .primary-nav,
+  .guess-section,
+  .modal-header {
+    background: var(--ios-surface);
+  }
+}
