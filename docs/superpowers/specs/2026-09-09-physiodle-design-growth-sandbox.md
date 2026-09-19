@@ -48,6 +48,7 @@ The migration will be incremental but complete within the player-facing scope: i
 - Clinical content remains opaque and prioritises legibility.
 - Translucent material is reserved for floating navigation, controls and sheet headers.
 - One teal accent and one neutral family define the product; status colours remain semantic.
+- The light canvas retains Physiodle's recognisable calm mint-green identity rather than reading as white; stronger decorative side gradients do not return.
 - Typography and whitespace create hierarchy; boxes and borders are used only where they communicate grouping or state.
 - Touch targets are at least 44 CSS pixels.
 - The Home Screen PWA is the primary compact experience, while browser and desktop layouts remain first-class.

@@ -1,5 +1,6 @@
 import functools
 import http.server
+import math
 import threading
 import unittest
 from pathlib import Path
@@ -64,6 +65,30 @@ class AppleShellTests(unittest.TestCase):
                 self.assertIsNotNone(box)
                 self.assertGreaterEqual(box["height"], 44)
                 self.assertGreaterEqual(box["width"], 44)
+        finally:
+            context.close()
+
+    def test_light_canvas_is_visibly_mint_not_near_white(self):
+        """Catches the branded green canvas being washed out until it reads as white."""
+        context, page = self.open_page(393, 852)
+        try:
+            colour = page.locator("body").evaluate(
+                "el => getComputedStyle(el).backgroundColor.match(/\\d+/g).map(Number)"
+            )
+            red, green, blue = colour[:3]
+            distance_from_white = math.sqrt(
+                (255 - red) ** 2 + (255 - green) ** 2 + (255 - blue) ** 2
+            )
+            self.assertGreater(green, red)
+            self.assertGreater(green, blue)
+            self.assertGreaterEqual(distance_from_white, 40)
+            theme_hex = page.locator(
+                'meta[name="theme-color"][media="(prefers-color-scheme: light)"]'
+            ).get_attribute("content")
+            self.assertEqual(
+                theme_hex.lower(),
+                f"#{red:02x}{green:02x}{blue:02x}",
+            )
         finally:
             context.close()
 
