@@ -82,9 +82,7 @@ class AppleShellTests(unittest.TestCase):
             self.assertGreater(green, red)
             self.assertGreater(green, blue)
             self.assertGreaterEqual(distance_from_white, 40)
-            theme_hex = page.locator(
-                'meta[name="theme-color"][media="(prefers-color-scheme: light)"]'
-            ).get_attribute("content")
+            theme_hex = page.locator('meta[name="theme-color"]').get_attribute("content")
             self.assertEqual(
                 theme_hex.lower(),
                 f"#{red:02x}{green:02x}{blue:02x}",
@@ -156,44 +154,24 @@ class AppleShellTests(unittest.TestCase):
         finally:
             context.close()
 
-    def test_dark_mode_uses_a_dark_clinical_surface(self):
-        """Catches dark mode falling back to the light canvas or low-contrast clue text."""
+    def test_system_dark_appearance_does_not_change_physiodle(self):
+        """Catches an operating-system dark setting unexpectedly changing the game."""
         context, page = self.open_page(393, 852, color_scheme="dark")
         try:
             page.locator("#cluesContainer").evaluate(
                 "el => el.innerHTML = '<article class=\"card clue-card revealed\"><span class=\"clue-text\">Clinical clue</span></article>'"
             )
-            styles = page.locator(".clue-card").evaluate(
-                "el => ({background: getComputedStyle(el).backgroundColor, color: getComputedStyle(el.querySelector(\'.clue-text\')).color})"
+            styles = page.locator("body").evaluate(
+                "el => ({canvas: getComputedStyle(el).backgroundColor, scheme: getComputedStyle(document.documentElement).colorScheme, clue: getComputedStyle(document.querySelector('.clue-card')).backgroundColor})"
             )
-            self.assertEqual(styles["background"], "rgb(28, 28, 30)")
-            self.assertEqual(styles["color"], "rgb(242, 242, 247)")
-        finally:
-            context.close()
-
-    def test_dark_mode_overrides_legacy_inline_welcome_colours(self):
-        """Catches the first-run message retaining low-contrast legacy grey in dark mode."""
-        context, page = self.open_page(393, 852, color_scheme="dark")
-        try:
-            colour = page.locator("#loginPromptOverlay p").evaluate("el => getComputedStyle(el).color")
-            self.assertEqual(colour, "rgb(174, 183, 180)")
-        finally:
-            context.close()
-
-    def test_dark_mode_account_panels_use_semantic_surfaces(self):
-        """Catches legacy light profile and rank cards appearing inside the dark account sheet."""
-        context, page = self.open_page(393, 852, color_scheme="dark")
-        try:
-            rank = page.locator("#accountRankBadge").evaluate(
-                "el => ({background: getComputedStyle(el).backgroundColor, label: getComputedStyle(el.querySelector('.account-rank-label')).color})"
+            self.assertEqual(styles["canvas"], "rgb(219, 238, 232)")
+            self.assertEqual(styles["scheme"], "light")
+            self.assertEqual(styles["clue"], "rgb(255, 255, 255)")
+            self.assertEqual(page.locator('meta[name="theme-color"]').count(), 1)
+            self.assertEqual(
+                page.locator('meta[name="theme-color"]').get_attribute("content"),
+                "#dbeee8",
             )
-            panels = page.locator(".account-panel").evaluate_all(
-                "els => els.map(el => getComputedStyle(el).backgroundColor)"
-            )
-            self.assertEqual(rank["background"], "rgb(37, 42, 41)")
-            self.assertEqual(rank["label"], "rgb(174, 183, 180)")
-            self.assertTrue(panels)
-            self.assertTrue(all(colour == "rgb(37, 42, 41)" for colour in panels))
         finally:
             context.close()
 

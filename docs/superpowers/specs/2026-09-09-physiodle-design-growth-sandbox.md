@@ -21,7 +21,7 @@ Nothing in this specification deploys to Railway, reads or copies production use
 - Installation, notification reminder, feedback and sibling-game promotion.
 - Toasts, loading, empty, success, warning and error states.
 - FAQ, terms and privacy pages and their shared player navigation.
-- Light and dark appearance, reduced motion/transparency, safe areas and responsive layouts.
+- A deliberate light-only appearance, reduced motion/transparency, safe areas and responsive layouts.
 - Synthetic sandbox users, games, friendships and archive history.
 - A visual comparison page.
 - Technical search/discoverability fixes and privacy-safe acquisition attribution.
@@ -48,7 +48,7 @@ The migration will be incremental but complete within the player-facing scope: i
 - Clinical content remains opaque and prioritises legibility.
 - Translucent material is reserved for floating navigation, controls and sheet headers.
 - One teal accent and one neutral family define the product; status colours remain semantic.
-- The light canvas retains Physiodle's recognisable calm mint-green identity rather than reading as white; stronger decorative side gradients do not return.
+- The canvas retains Physiodle's recognisable calm mint-green identity rather than reading as white; stronger decorative side gradients do not return. Operating-system dark mode does not change the interface.
 - Typography and whitespace create hierarchy; boxes and borders are used only where they communicate grouping or state.
 - Touch targets are at least 44 CSS pixels.
 - The Home Screen PWA is the primary compact experience, while browser and desktop layouts remain first-class.
@@ -184,7 +184,7 @@ Clinical educational copy will be marked for Lizzy’s review before publication
 
 ### Automated
 
-- Browser tests at 320, 393, 641, 768, 900 and 1280 pixels in light and dark appearance.
+- Browser tests at 320, 393, 641, 768, 900 and 1280 pixels, including a dark-system environment that must retain Physiodle's light appearance.
 - Reduced-motion and reduced-transparency fallbacks.
 - No horizontal overflow and 44-pixel interactive targets.
 - Every player-facing modal and generated state via deterministic fixtures.

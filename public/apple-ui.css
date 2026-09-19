@@ -7,7 +7,7 @@
  */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --ios-canvas: #dbeee8;
   --ios-surface: #ffffff;
   --ios-surface-2: #f7faf9;
@@ -741,99 +741,6 @@ button {
 @keyframes ios-sheet-in {
   from { transform: translateY(24px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ios-canvas: #111816;
-    --ios-surface: #1c1c1e;
-    --ios-surface-2: #252a29;
-    --ios-label: #f2f2f7;
-    --ios-secondary: #aeb7b4;
-    --ios-tertiary: #7e8985;
-    --ios-separator: rgba(235, 245, 241, 0.14);
-    --ios-accent: #5ac8b7;
-    --ios-accent-pressed: #73d5c5;
-    --ios-glass: rgba(28, 35, 33, 0.78);
-    --ios-glass-strong: rgba(32, 39, 37, 0.9);
-    --ios-scrim: rgba(0, 0, 0, 0.58);
-    --ios-elevation: 0 16px 40px rgba(0, 0, 0, 0.34);
-  }
-
-  .card,
-  .card.clue-card.revealed,
-  .modal,
-  .result-area,
-  .account-stat-card,
-  .auth-card,
-  .feedback-form {
-    background: #1c1c1e;
-  }
-
-  .account-rank-badge,
-  .account-panel,
-  .account-section,
-  .account-section .account-stat-card {
-    background: var(--ios-surface-2);
-    border-color: var(--ios-separator);
-  }
-
-  .account-stat-value,
-  .account-profile-label,
-  .account-select {
-    color: var(--ios-label);
-  }
-
-  .account-rank-label,
-  .account-panel-title,
-  .account-section-title,
-  .account-stat-label,
-  .account-stat-note,
-  #accountJoined,
-  #accountEmailLine {
-    color: var(--ios-secondary) !important;
-  }
-
-  .account-select,
-  .form-input {
-    background: var(--ios-surface);
-    border-color: var(--ios-separator);
-  }
-
-  .clue-text,
-  .result-explanation,
-  .answer-summary-explanation,
-  .love-lead,
-  .modal-body p {
-    color: #f2f2f7;
-  }
-
-  #loginPromptOverlay p,
-  #loginPromptSkip,
-  #loginPromptOverlay a {
-    color: var(--ios-secondary) !important;
-  }
-
-  .card.clue-card.blurred {
-    background: #252a29;
-  }
-
-  .answer-summary {
-    background: #172721;
-  }
-
-  .answer-summary.lost {
-    background: #2b1d1e;
-  }
-
-  .guess-input.disabled {
-    background: #252a29;
-  }
-
-  .guess-item {
-    background: #3a2023;
-    color: #ffb3b8;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
