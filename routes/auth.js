@@ -41,14 +41,14 @@ async function crossRegister({ username, email, passwordHash }) {
 
 // Ask each sibling in parallel; return the first one that knows this user.
 // identifier can be email or username.
-async function verifySibling(identifier) {
+async function verifySibling(identifier, password) {
   if (SIBLING_URLS.length === 0 || !SIBLING_SECRET) return null;
   const attempts = SIBLING_URLS.map(async (url) => {
     try {
       const resp = await fetch(`${url}/api/auth/cross-verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-sibling-secret': SIBLING_SECRET },
-        body: JSON.stringify({ identifier }),
+        body: JSON.stringify({ identifier, username: identifier }),
         signal: AbortSignal.timeout(5000),
       });
       if (!resp.ok) return null;
@@ -58,7 +58,17 @@ async function verifySibling(identifier) {
     }
   });
   const results = await Promise.all(attempts);
-  return results.find(r => r && r.username && r.password_hash) || null;
+  // Passwords can differ after a local reset. An account lookup alone
+  // does not authenticate the supplied password; check every sibling.
+  for (const sibling of results) {
+    if (!sibling || !sibling.username || !sibling.password_hash) continue;
+    try {
+      if (await verifyPassword(password, sibling.password_hash)) return sibling;
+    } catch (err) {
+      // A malformed hash must not block another sibling with a valid hash.
+    }
+  }
+  return null;
 }
 
 function looksLikeEmail(s) {
@@ -196,7 +206,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     if (!user) {
       // Not found locally — check sibling app
-      const sibling = await verifySibling(id);
+      const sibling = await verifySibling(id, password);
       if (sibling) {
         try {
           const result = db.prepare(
@@ -223,7 +233,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     if (!valid) {
       // Local hash mismatch — try re-import from sibling in case their
       // password was updated there, or a bcrypt encoding mismatch.
-      const sibling = await verifySibling(id);
+      const sibling = await verifySibling(id, password);
       if (sibling) {
         const newHash = await hashPassword(password);
         // Also back-fill email if sibling has one and we don't.
